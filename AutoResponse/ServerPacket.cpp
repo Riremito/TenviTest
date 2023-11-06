@@ -44,5 +44,14 @@ void ServerPacket::Encode8(ULONGLONG val) {
 }
 
 void ServerPacket::EncodeFloat(float val) {
-	Encode4((DWORD)val);
+	unsigned int n;
+	char strTmp[1024];
+	memcpy(&n, &val, sizeof(float));
+	sprintf_s(strTmp, "%08X", n);
+	std::string temp = std::string(strTmp);
+	std::string temp1 = temp.substr(0, 2) + temp.substr(2, 2);
+	std::string temp2 = temp.substr(4, 2) + temp.substr(6, 2);
+	Encode2((WORD)strtol(temp2.c_str(), NULL, 16));
+	Encode2((WORD)strtol(temp1.c_str(), NULL, 16));
+	// Encode4((DWORD)val);
 }
