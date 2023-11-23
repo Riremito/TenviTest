@@ -38,11 +38,11 @@ public:
 	WORD sp; // skill point
 	WORD ap;
 	// stat
-	WORD stat_str; // óÕ
-	WORD stat_dex; // ïqè∑
-	WORD stat_hp; // ëÃóÕ
-	WORD stat_int; // ímî\
-	WORD stat_mp; //ímåb
+	WORD stat_str;
+	WORD stat_dex;
+	WORD stat_hp;
+	WORD stat_int;
+	WORD stat_mp;
 	// data
 	float x;
 	float y;
@@ -55,7 +55,7 @@ public:
 
 	void TestSilva();
 	bool UseSP(WORD skill_id);
-	bool UseAP(BYTE stat_id);
+	bool UseAP(BYTE stat_id, BYTE amount);
 	void SetMapReturn(WORD map_return_id);
 };
 

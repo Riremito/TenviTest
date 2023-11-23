@@ -68,28 +68,28 @@ bool TenviCharacter::UseSP(WORD skill_id) {
 	return false;
 }
 
-bool TenviCharacter::UseAP(BYTE stat_id) {
-	if (0 < ap) {
-		ap--;
+bool TenviCharacter::UseAP(BYTE stat_id, BYTE amount) {
+	if (amount <= ap) {
+		ap-=amount;
 		switch (stat_id) {
 		case TS_STR: {
-			stat_str++;
+			stat_str+=amount;
 			return true;
 		}
 		case TS_DEX: {
-			stat_dex++;
+			stat_dex+=amount;
 			return true;
 		}
 		case TS_HP: {
-			stat_hp++;
+			stat_hp+=amount;
 			return true;
 		}
 		case TS_INT: {
-			stat_int++;
+			stat_int+=amount;
 			return true;
 		}
 		case TS_MP: {
-			stat_mp++;
+			stat_mp+=amount;
 			return true;
 		}
 		default:

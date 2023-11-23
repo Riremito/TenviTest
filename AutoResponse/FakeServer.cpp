@@ -512,41 +512,41 @@ void PlayerStatPacket(TenviCharacter &chr) {
 	sp.Encode2(4000); // 00495713, MAXHP
 	sp.Encode2(1000); // 0049572F, MP
 	sp.Encode2(2000); // 0049574B, MAXMP
-	sp.Encode2(chr.stat_str); // 00495767, 力 (STR)
-	sp.Encode2(chr.stat_dex); // 00495783, 敏捷 (DEX)
-	sp.Encode2(chr.stat_hp); // 0049579F, 体力 (HP)
-	sp.Encode2(chr.stat_int); // 004957BB, 知能 (INT)
-	sp.Encode2(chr.stat_mp); // 004957D7, 知恵 (MP)
-	sp.Encode2(988); // 004957F3, 物理ダメージ Min
-	sp.Encode2(1006); // 0049580F, 物理ダメージ Max
-	sp.Encode2(1000); // 0049582B, 物理攻撃力
-	sp.Encode2(2718); // 00495847, 魔法攻撃力
-	sp.Encode2(1887); // 00495863, 防御力
-	sp.Encode2(9130); // 0049587F, 物理命中率
-	sp.Encode2(9763); // 004958A7, 魔法命中率
-	sp.Encode2(129); // 004958CF, 回避率
-	sp.Encode2(189); // 004958F7, 物理クリティカル
-	sp.Encode2(2279); // 0049591F, 魔法クリティカル
+	sp.Encode2(chr.stat_str); // 00495767, STR
+	sp.Encode2(chr.stat_dex); // 00495783, DEX
+	sp.Encode2(chr.stat_hp); // 0049579F, HP
+	sp.Encode2(chr.stat_int); // 004957BB, INT
+	sp.Encode2(chr.stat_mp); // 004957D7, MP
+	sp.Encode2(988); // 004957F3, Physical damage Min
+	sp.Encode2(1006); // 0049580F, Physical damage Max
+	sp.Encode2(1000); // 0049582B, Physical attack
+	sp.Encode2(2718); // 00495847, Magic attack
+	sp.Encode2(1887); // 00495863, Defense
+	sp.Encode2(9130); // 0049587F, Physical hit rate
+	sp.Encode2(9763); // 004958A7, Magic hit rate
+	sp.Encode2(129); // 004958CF, Avoid rate
+	sp.Encode2(189); // 004958F7, Physical critical
+	sp.Encode2(2279); // 0049591F, Magic critical
 
 	if (GetRegion() == TENVI_KRX) {
 		sp.Encode2(0);
 	}
 
-	sp.Encode2(131); // 00495947, 飛行スピード
-	sp.Encode2(100); // 0049596F, 歩行スピード
-	sp.Encode2(22); // 00495997, 炎抵抗力
-	sp.Encode2(23); // 004959B3, 氷抵抗力
+	sp.Encode2(131); // 00495947, Flight speed
+	sp.Encode2(100); // 0049596F, Walk speed
+	sp.Encode2(22); // 00495997, Fire resistance
+	sp.Encode2(23); // 004959B3, Ice resistance
 
 	if (GetRegion() != TENVI_KRX) {
-		sp.Encode2(24); // 004959CF, 生抵抗力
+		sp.Encode2(24); // 004959CF, Plant resistance
 	}
 
-	sp.Encode2(25); // 004959EB, 光抵抗力
-	sp.Encode2(26); // 00495A07, 闇抵抗力
+	sp.Encode2(25); // 004959EB, Light resistance
+	sp.Encode2(26); // 00495A07, Dark resistance
 
 	if (GetRegion() != TENVI_KRX) {
-		sp.Encode2(0); // 00495A23, 力差分
-		sp.Encode2(0); // 00495A42, 敏捷差分
+		sp.Encode2(0); // 00495A23
+		sp.Encode2(0); // 00495A42
 		sp.Encode2(0); // 00495A61
 		sp.Encode2(0); // 00495A80
 		sp.Encode2(0); // 00495A9F
@@ -609,19 +609,19 @@ void WorldMapUpdatePacketTest(BYTE area_code) {
 
 	std::vector<BYTE> activated_area;
 
-	activated_area.push_back(8); // シルヴァアイランド
-	activated_area.push_back(2); // リブラアイランド
-	activated_area.push_back(5); // タリーB1アイランド
-	activated_area.push_back(6); // ミノスアイランド
+	activated_area.push_back(8); // Silva
+	activated_area.push_back(2); // Libra
+	activated_area.push_back(5); // TalliB1
+	activated_area.push_back(6); // Minos
 
 	if (GetRegion() != TENVI_HK) {
-		activated_area.push_back(1); // ビキウィニーアイランド
-		activated_area.push_back(3); // ファントムアイランド
-		activated_area.push_back(4); // プチポチパーク
+		activated_area.push_back(1); // BikiWinee
+		activated_area.push_back(3); // Phantom
+		activated_area.push_back(4); // Puchipochi
 	}
 
 	if (GetRegion() == TENVI_HK || GetRegion() == TENVI_KR || GetRegion() == TENVI_KRX) {
-		activated_area.push_back(7); // 蓋亞藩
+		activated_area.push_back(7); // Gaia Farm
 	}
 
 	sp.Encode1(activated_area.size()); // Number of Islands
@@ -869,7 +869,11 @@ bool FakeServer(ClientPacket &cp) {
 	case CP_USE_AP: {
 		TenviCharacter &chr = TA.GetOnline();
 		BYTE stat = cp.Decode1();
-		chr.UseAP(stat);
+		BYTE amount = 1;
+		if (GetRegion() == TENVI_KR || GetRegion() == TENVI_KRX) {
+			amount = cp.Decode1();
+		}
+		chr.UseAP(stat, amount);
 		PlayerAPPacket(chr);
 		PlayerStatPacket(chr);
 		return true;
