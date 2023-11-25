@@ -246,7 +246,7 @@ void CharacterSpawnPacket(TenviCharacter &chr, float x = 0, float y = 0) {
 	sp.EncodeFloat(x); // 0048DBA5, coordinate x
 	sp.EncodeFloat(y); // 0048DBAF, corrdinate y
 	sp.Encode1(0); // 0048DBB9, direction 0 = left, 1 = right
-	sp.Encode1(1); // 0048DBC6, guardian, 0 = guardian off, 1 = guardian on
+	sp.Encode1(chr.guardian_flag); // 0048DBC6, guardian, 0 = guardian off, 1 = guardian on
 	sp.Encode1(1); // 0048DBD3, death, 0 = death, 1 = alive
 	sp.Encode1(0); // 0048DBE0, battle, 0 = change channel OK, 1 = change channel NG
 	sp.Encode4(4444); // 0048DBFB, ???
@@ -936,8 +936,9 @@ bool FakeServer(ClientPacket &cp) {
 		return true;
 	}
 	case CP_GUARDIAN_SUMMON: {
-		BYTE flag = cp.Decode1(); // on off
-		GuardianSummonPacket(TA.GetOnline(), flag ? true : false);
+		TenviCharacter& chr = TA.GetOnline();
+		chr.guardian_flag = cp.Decode1(); // on off
+		GuardianSummonPacket(TA.GetOnline(), chr.guardian_flag ? true : false);
 		return true;
 	}
 	case CP_EMOTION: {
@@ -997,7 +998,7 @@ bool FakeServer(ClientPacket &cp) {
 		return true;
 	}
 	case CP_PLAYER_REVIVE: {
-		//cp.Decode1();
+		BYTE option = cp.Decode1(); // 0: tomb, 1: same pos, 2: revive potion
 		PlayerRevivePacket(TA.GetOnline());
 		return true;
 	}

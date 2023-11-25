@@ -47,6 +47,7 @@ public:
 	float x;
 	float y;
 
+	BYTE guardian_flag;
 	std::vector<WORD> equipped;
 	std::vector<WORD> gequipped;
 	std::vector<TenviSkill> skill;

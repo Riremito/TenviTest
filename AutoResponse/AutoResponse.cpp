@@ -224,7 +224,8 @@ bool AutoResponseHook() {
 		// portal id to map id
 		//r.Patch(0x00410513 + 0x02, L"18");
 		return true;
-	}	default: {
+	}	
+	default: {
 		break;
 	}
 	}

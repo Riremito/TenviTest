@@ -29,6 +29,7 @@ TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WO
 	stat_mp = 158;
 	x = 0.0;
 	y = 0.0;
+	guardian_flag = 1;
 }
 
 void TenviCharacter::SetMapReturn(WORD map_return_id) {
