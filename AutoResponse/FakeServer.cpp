@@ -1,10 +1,28 @@
 #include"FakeServer.h"
 #include"AutoResponse.h"
 #include"TemporaryData.h"
+#include"fstream"
 
 TenviAccount TA;
 // ========== TENVI Packet Response ==========
 #define TENVI_VERSION 0x1023
+
+
+void writePacketInfo(std::wstring wstr) {
+	std::ofstream out;
+	std::string msg;
+	out.open("DebugLog.txt", std::ios_base::app);
+	msg.assign(wstr.begin(), wstr.end());
+	out << msg.c_str() << std::endl;
+	out.close();
+}
+
+void writePacketInfoStr(std::string str) {
+	std::ofstream out;
+	out.open("DebugLog.txt", std::ios_base::app);
+	out << str << std::endl;
+	out.close();
+}
 
 // 0x01
 void VersionPacket() {
@@ -108,7 +126,7 @@ void WorldListPacket() {
 	ServerPacket sp(SP_WORLD_LIST);
 	sp.EncodeWStr2(L""); // 004938BC, Message
 
-	if (GetRegion() == TENVI_JP || GetRegion() == TENVI_CN) {
+	if (GetRegion() == TENVI_JP || GetRegion() == TENVI_CN || GetRegion() == TENVI_KR) {
 		sp.Encode1(0); // 004938C8, NetCafe
 	}
 
@@ -140,6 +158,10 @@ void WorldListPacket() {
 
 	sp.Encode1(0); // 00493A92
 
+	if (GetRegion() == TENVI_KR) {
+		DelaySendPacket(sp);
+		return;
+	}
 	SendPacket(sp);
 }
 
@@ -507,7 +529,7 @@ void PlayerHitPacket(TenviCharacter &chr) {
 	ServerPacket sp(SP_PLAYER_HIT);
 	sp.Encode4(1); // 0048693A
 	sp.Encode4(chr.id); // 00486941
-	sp.Encode4(0); // 0045D825, 0 or 4,8 (“_–Å)
+	sp.Encode4(0); // 0045D825, 0 or 4,8 (?–Å)
 	sp.Encode2(0); // 0045D82F
 	sp.Encode1(1); // 0045D83C, hit count
 	sp.Encode2(1337); // 0045D84D, damage
