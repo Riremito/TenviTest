@@ -89,7 +89,6 @@ void __fastcall LoginNaive_Hook(void* ecx) {
 	WorldListPacket();
 }
 
-
 void (__thiscall *_WorldSelectButton)(void *) = NULL;
 void __fastcall WorldSelectButton_Hook(void *ecx) {
 	_WorldSelectButton(ecx);

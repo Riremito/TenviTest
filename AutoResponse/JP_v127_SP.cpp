@@ -25,7 +25,10 @@ void SetServerPacketHeader_JP_v127() {
 	// 0x22 Object Movement
 	header[SP_HIT] = 0x21;
 	header[SP_SHOW_OBJECT] = 0x23;
+	header[SP_EQUIP_SLOT] = 0x2F;
 	// 0x29 Object Teleport
+	header[SP_UNEQUIP_SLOT] = 0x30; // not sure
+	header[SP_EDIT_INVENTORY] = 0x32;
 	header[SP_IN_MAP_TELEPORT] = 0x3C;
 	header[SP_ACCOUNT_DATA] = 0x3D;
 	header[SP_PLAYER_HIT] = 0x41;
@@ -36,6 +39,7 @@ void SetServerPacketHeader_JP_v127() {
 	header[SP_PLAYER_STAT_ALL] = 0x47;
 	header[SP_GUARDIAN_SUMMON] = 0x4A,
 	header[SP_EMOTION] = 0x4B;
+	header[SP_EQUIP_CHARACTER] = 0x4D;
 	header[SP_WORLD_MAP_UPDATE] = 0x54;
 	header[SP_PLAYER_REVIVE] = 0x5B,
 	header[SP_ITEM_SHOP_ERROR] = 0x5C;

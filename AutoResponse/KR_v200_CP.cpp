@@ -10,7 +10,10 @@ void SetClientPacketHeader_KR_v200() {
 	header[CP_DELETE_CHARACTER] = 0x06;
 	header[CP_INVITED] = 0x07;
 	header[CP_BACK_TO_LOGIN_SERVER] = 0x0A;
+	header[CP_EQUIP] = 0x0D;
+	header[CP_UNEQUIP] = 0x0E;
 	header[CP_LOGOUT] = 0x09;
+	header[CP_MOVE_ITEM] = 0x13;
 	header[CP_GUARDIAN_RIDE] = 0x18;
 	header[CP_GUARDIAN_MOVEMENT] = 0x19;
 	header[CP_USE_AP] = 0x1A;

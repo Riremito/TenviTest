@@ -2,6 +2,7 @@
 #include"AutoResponse.h"
 #include"TemporaryData.h"
 #include"fstream"
+#include<map>
 
 TenviAccount TA;
 // ========== TENVI Packet Response ==========
@@ -92,8 +93,8 @@ void CharacterListPacket_Test() {
 			sp.Encode2(0);
 		}
 		// guardian equip, max 15
-		for (auto gequip : chr.gequipped) {
-			sp.Encode2(gequip);
+		for (int i = 0; i < 15; i++) {
+			sp.Encode2(chr.gequipped[i].itemID);
 		}
 		sp.Encode2(chr.map); // mapid
 	}
@@ -269,16 +270,16 @@ void CharacterSpawnPacket(TenviCharacter &chr, float x = 0, float y = 0) {
 	sp.Encode2(chr.gcolor); // 0048DCEF
 	sp.Encode1(0); // 0048DCFD
 
+	// guardian equip
+	for (int i = 0; i < 15; i++) {
+		sp.Encode8(chr.gequipped[i].inventoryID);
+		sp.Encode2(chr.gequipped[i].itemID);
+	}
+
 	// character equip
 	for (auto equip : chr.equipped) {
 		sp.Encode8(0);
-		sp.Encode2(equip);
-	}
-
-	// guardian equip
-	for (auto gequip : chr.gequipped) {
-		sp.Encode8(0);
-		sp.Encode2(gequip);
+		sp.Encode2(equip.itemID);
 	}
 
 	sp.Encode2(0); // 0048DDC3
@@ -426,6 +427,97 @@ void ShowObjectPacket(TenviRegen &regen) {
 	sp.EncodeFloat(regen.area.bottom);
 	SendPacket(sp);
 }
+
+// 0x2F
+void EquipSlot(BYTE type, DWORD inventoryID, DWORD itemID) {
+	TenviCharacter& chr = TA.GetOnline();
+	ServerPacket sp(SP_EQUIP_SLOT);
+	sp.Encode1(0);
+	sp.Encode4(chr.id); // char id
+	sp.Encode1(0); // cash item slot
+	sp.Encode1(type); // normal item slot
+	sp.Encode8(inventoryID); // inventory id
+	sp.Encode2(chr.skin);
+	sp.Encode2(chr.hair);
+	sp.Encode2(chr.face);
+	sp.Encode2(chr.cloth);
+	sp.Encode2(chr.gcolor);
+	SendPacket(sp);
+
+	ServerPacket sp2(SP_EQUIP_CHARACTER);
+	sp2.Encode1(0);
+	sp2.Encode4(chr.id); // chr id
+	sp2.Encode1(1);
+	sp2.Encode2(itemID); // itemid
+	SendPacket(sp2);
+}
+
+// 0x2F
+void UnequipSlot(BYTE type, DWORD inventoryID) {
+	TenviCharacter& chr = TA.GetOnline();
+	ServerPacket sp(SP_EQUIP_SLOT);
+	sp.Encode1(0);
+	sp.Encode4(chr.id); // char id
+	sp.Encode1(0); // cash item slot
+	sp.Encode1(type); // normal item slot
+	sp.Encode8(inventoryID); // inventory id
+	sp.Encode2(0);
+	SendPacket(sp);
+}
+
+// 0x32
+void EditInventory(BYTE loc, DWORD inventoryID, WORD itemID, BYTE isDelay = 0) {
+	ServerPacket sp(SP_EDIT_INVENTORY);
+	sp.Encode1(0); // 장비, 기타, 캐시
+	sp.Encode1(loc); // 몇 번째 슬롯
+	sp.Encode1(1); // 004992BD 0이면 사라짐??
+	sp.Encode8(inventoryID); // inventory ID
+	sp.Encode2(itemID); // 아이템 id
+	sp.Encode4(1); // 소지수
+	sp.Encode1(0); // 업그레이드 수
+	sp.Encode1(1); // should be 1
+	sp.Encode1(0); // 교환가능횟수
+	sp.Encode2(20); // 내구도
+	sp.Encode1(0);
+	sp.Encode1(0);
+	sp.Encode4(0);
+	sp.Encode4(0);
+	sp.Encode4(0);
+	sp.Encode1(0);
+	sp.Encode1(0);
+	sp.Encode1(0);
+	if (isDelay) {
+		DelaySendPacket(sp);
+	}
+	else {
+		SendPacket(sp);
+	}
+}
+
+// 0x32
+void InitEquip(TenviCharacter& chr) {
+	for (int i = 0; i < chr.gequipped.size(); i++) {
+		EditInventory(0, chr.gequipped[i].inventoryID, chr.gequipped[i].itemID);
+	}
+	EditInventory(0, 0xFFFF, 0);
+}
+
+// 0x32
+void InitInventory(TenviCharacter& chr) {
+	for (const auto& pair : chr.inventory) {
+		EditInventory(pair.first, pair.second.inventoryID, pair.second.itemID);
+	}
+}
+
+// 0x32
+void RemoveFromInventory(BYTE loc) {
+	ServerPacket sp(SP_EDIT_INVENTORY);
+	sp.Encode1(0); // 장비, 기타, 캐시
+	sp.Encode1(loc); // 몇 번째 슬롯
+	sp.Encode1(0);
+	DelaySendPacket(sp);
+}
+
 
 // 0x3C
 void InMapTeleportPacket(TenviCharacter &chr) {
@@ -867,6 +959,8 @@ bool FakeServer(ClientPacket &cp) {
 				PlayerSPPacket(chr);
 				PlayerAPPacket(chr);
 				InitSkillPacket(chr);
+				InitEquip(chr);
+				InitInventory(chr);
 
 				SetMap(chr, chr.map);
 				BoardPacket(Board_Spawn, L"Riremito", L"Tenvi JP v127");
@@ -891,10 +985,10 @@ bool FakeServer(ClientPacket &cp) {
 		WORD guardian_body = cp.Decode2();
 		WORD guardian_weapon = cp.Decode2();
 
-		std::vector<WORD> guardian_equip;
-		guardian_equip.push_back(guardian_head);
-		guardian_equip.push_back(guardian_body);
-		guardian_equip.push_back(guardian_weapon);
+		std::map<BYTE, Item> guardian_equip;
+		guardian_equip[_do] = TA.MakeItem(guardian_head, _do);
+		guardian_equip[am] = TA.MakeItem(guardian_body, am);
+		guardian_equip[rh] = TA.MakeItem(guardian_weapon, rh);
 
 		TA.AddCharacter(character_name, job_mask, job_id, character_skin, character_hair, character_face, character_cloth, guardian_color, guardian_equip);
 		CharacterListPacket_Test();
@@ -935,16 +1029,72 @@ bool FakeServer(ClientPacket &cp) {
 		PlayerStatPacket(chr);
 		return true;
 	}
+	case CP_EQUIP: {
+		// 인벤토리에서 장비 장착
+		TenviCharacter& chr = TA.GetOnline();
+		cp.Decode1();
+		BYTE loc = cp.Decode1();
+		BYTE type = cp.Decode1();
+
+		if (type == 0xFF) {
+			type = chr.inventory[loc].type;
+		}
+		EquipSlot(type, chr.inventory[loc].inventoryID, chr.inventory[loc].itemID);
+		if (chr.gequipped[type].inventoryID) {
+			EditInventory(loc, chr.gequipped[type].inventoryID, chr.gequipped[type].itemID, 1);
+		}
+		else {
+			RemoveFromInventory(loc);
+		}
+		std::swap(chr.gequipped[type], chr.inventory[loc]);
+		return true;
+
+	}
+
 	case CP_GUARDIAN_SUMMON: {
 		TenviCharacter& chr = TA.GetOnline();
 		chr.guardian_flag = cp.Decode1(); // on off
 		GuardianSummonPacket(TA.GetOnline(), chr.guardian_flag ? true : false);
 		return true;
 	}
+	case CP_UNEQUIP: {
+		// 장비 해제
+		TenviCharacter& chr = TA.GetOnline();
+		cp.Decode1();
+		BYTE type = cp.Decode1();
+		BYTE loc = cp.Decode1();
+
+		// 인벤토리에 장비 넣기
+		EditInventory(loc, chr.gequipped[type].inventoryID, chr.gequipped[type].itemID);
+		chr.inventory[loc] = chr.gequipped[type];
+
+		// 장비창에서 장비 삭제
+		UnequipSlot(type, chr.gequipped[type].inventoryID);
+		chr.gequipped[type] = TenviAccount::MakeItem(0, type);
+
+		return true;
+	}
 	case CP_EMOTION: {
 		TenviCharacter &chr = TA.GetOnline();
 		BYTE emotion = cp.Decode1();
 		EmotionPacket(chr, emotion);
+		return true;
+	}
+	case CP_MOVE_ITEM: {
+		DWORD inventoryID = cp.Decode8();
+		BYTE loc = cp.Decode1();
+		BYTE priorLoc = 0;
+
+		TenviCharacter& chr = TA.GetOnline();
+		for (auto const& pair : chr.inventory) {
+			if (pair.second.inventoryID == inventoryID) {
+				priorLoc = pair.first;
+			}
+		}
+		EditInventory(loc, inventoryID, chr.inventory[priorLoc].itemID, 1);
+		EditInventory(priorLoc, chr.inventory[loc].inventoryID, chr.inventory[loc].itemID, 1);
+		
+		std::swap(chr.inventory[priorLoc], chr.inventory[loc]);
 		return true;
 	}
 	case CP_UPDATE_PROFILE: {

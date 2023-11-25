@@ -1,9 +1,10 @@
 #include"TemporaryData.h"
 
 DWORD TenviCharacter::id_counter = 1337;
+DWORD TenviAccount::inventoryCount = 1;
 
 // new character
-TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, std::vector<WORD> &nGEquipped) {
+TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, std::map<BYTE, Item> &nGEquipped) {
 	id = id_counter++;
 	name = nName;
 	job_mask = nJob_Mask; // gender and job
@@ -15,7 +16,6 @@ TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WO
 	gcolor = nGColor;
 	equipped.resize(15);
 	gequipped = nGEquipped;
-	gequipped.resize(15);
 	map = 2002;
 	map_return = 0;
 	level = 30;
@@ -30,6 +30,14 @@ TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WO
 	x = 0.0;
 	y = 0.0;
 	guardian_flag = 1;
+
+	InitItem();
+}
+void TenviCharacter::InitItem() {
+	inventory[0] = TenviAccount::MakeItem(218, cp);
+	inventory[1] = TenviAccount::MakeItem(21969, lp);
+	inventory[2] = TenviAccount::MakeItem(219, cp);
+	// add more
 }
 
 void TenviCharacter::SetMapReturn(WORD map_return_id) {
@@ -40,12 +48,6 @@ void TenviCharacter::TestSilva() {
 	gcolor = 187;
 	//hair = 137;
 	map = 8003;
-	//map = 8037;
-	//equipped.clear();
-	//equipped.push_back(228); // hat
-	//equipped.push_back(105); // overall
-	//equipped.push_back(22508); // weapon
-	//equipped.push_back(28715); // weapon ava?
 	equipped.resize(15);
 }
 
@@ -108,24 +110,63 @@ TenviAccount::TenviAccount() {
 	slot = 6;
 
 	// default characters
-	std::vector<WORD> silva_equip;
-	silva_equip.push_back(20002);
-	silva_equip.push_back(20502);
-	silva_equip.push_back(22508);
+	std::map<BYTE, Item> silva_equip; // itemID, type, inventoryID
+	silva_equip[cl] = MakeItem(0, cl);
+	silva_equip[cp] = MakeItem(0, cp);
+	silva_equip[nc] = MakeItem(0, nc);
+	silva_equip[ri] = MakeItem(0, ri);
+	silva_equip[ri + 1] = MakeItem(0, ri + 1);
+	silva_equip[5] = MakeItem(0, 5);
+	silva_equip[am] = MakeItem(20502, am);
+	silva_equip[_do] = MakeItem(20002, _do);
+	silva_equip[wp] = MakeItem(0, wp);
+	silva_equip[lp] = MakeItem(0, lp);
+	silva_equip[pp] = MakeItem(0, pp);
+	silva_equip[op] = MakeItem(0, op);
+	silva_equip[dc] = MakeItem(0, dc);
+	silva_equip[rh] = MakeItem(22508, rh);
+	silva_equip[lh] = MakeItem(0, lh);
+
 	TenviCharacter silva(L"Silva", (1 << 4) | 4, 6, 3, 19, 24, 479, 157, silva_equip);
 	silva.TestSilva(); // test
 
-	std::vector<WORD> talli_equip;
-	talli_equip.push_back(20001);
-	talli_equip.push_back(20811);
-	talli_equip.push_back(22507);
+	std::map<BYTE, Item> talli_equip;
+	talli_equip[cl] = MakeItem(0, cl);
+	talli_equip[cp] = MakeItem(0, cp);
+	talli_equip[nc] = MakeItem(0, nc);
+	talli_equip[ri] = MakeItem(0, ri);
+	talli_equip[ri + 1] = MakeItem(0, ri + 1);
+	talli_equip[5] = MakeItem(0, 5);
+	talli_equip[am] = MakeItem(20811, am);
+	talli_equip[_do] = MakeItem(20001, _do);
+	talli_equip[wp] = MakeItem(0, wp);
+	talli_equip[lp] = MakeItem(0, lp);
+	talli_equip[pp] = MakeItem(0, pp);
+	talli_equip[op] = MakeItem(0, op);
+	talli_equip[dc] = MakeItem(0, dc);
+	talli_equip[rh] = MakeItem(22507, rh);
+	talli_equip[lh] = MakeItem(0, lh);
+
 	TenviCharacter talli(L"Talli", (1 << 4) | 2, 5, 2, 18, 25, 476, 155, talli_equip);
 
 
-	std::vector<WORD> andras_equip;
-	andras_equip.push_back(20310);
-	andras_equip.push_back(20500);
-	andras_equip.push_back(22500);
+	std::map<BYTE, Item> andras_equip;
+	andras_equip[cl] = MakeItem(0, cl);
+	andras_equip[cp] = MakeItem(0, cp);
+	andras_equip[nc] = MakeItem(0, nc);
+	andras_equip[ri] = MakeItem(0, ri);
+	andras_equip[ri + 1] = MakeItem(0, ri + 1);
+	andras_equip[5] = MakeItem(0, 5);
+	andras_equip[am] = MakeItem(20500, am);
+	andras_equip[_do] = MakeItem(20310, _do);
+	andras_equip[wp] = MakeItem(0, wp);
+	andras_equip[lp] = MakeItem(0, lp);
+	andras_equip[pp] = MakeItem(0, pp);
+	andras_equip[op] = MakeItem(0, op);
+	andras_equip[dc] = MakeItem(0, dc);
+	andras_equip[rh] = MakeItem(22500, rh);
+	andras_equip[lh] = MakeItem(0, lh);
+
 	TenviCharacter andras(L"Andras", (1 << 4) | 1, 4, 1, 17, 23, 473, 8, andras_equip);
 
 	characters.push_back(silva);
@@ -134,7 +175,7 @@ TenviAccount::TenviAccount() {
 }
 
 
-bool TenviAccount::AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, std::vector<WORD> &nGEquipped) {
+bool TenviAccount::AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, std::map<BYTE, Item> &nGEquipped) {
 	if (slot <= GetCharacters().size()) {
 		return false;
 	}
@@ -163,6 +204,13 @@ std::vector<TenviCharacter>& TenviAccount::GetCharacters() {
 bool TenviAccount::Login(DWORD id) {
 	online_id = id;
 	return true;
+}
+
+Item TenviAccount::MakeItem(WORD itemID, BYTE type) {
+	if (itemID == 0) {
+		return Item{ 0, type, 0 };
+	}
+	return Item{ itemID, type, inventoryCount++ };
 }
 
 TenviCharacter& TenviAccount::GetOnline() {
