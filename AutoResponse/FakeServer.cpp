@@ -88,13 +88,13 @@ void CharacterListPacket_Test() {
 		sp.Encode2(chr.face);
 		sp.Encode2(chr.cloth);
 		sp.Encode2(chr.gcolor);
-		// character equip, max 15
-		for (int i = 0; i < 15; i++) {
-			sp.Encode2(0);
-		}
 		// guardian equip, max 15
 		for (int i = 0; i < 15; i++) {
 			sp.Encode2(chr.gequipped[i].itemID);
+		}
+		// character equip, max 15
+		for (int i = 0; i < 15; i++) {
+			sp.Encode2(0);
 		}
 		sp.Encode2(chr.map); // mapid
 	}

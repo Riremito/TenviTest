@@ -18,7 +18,7 @@ TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WO
 	gequipped = nGEquipped;
 	map = 2002;
 	map_return = 0;
-	level = 30;
+	level = 150;
 	sp = 500;
 	ap = 300;
 	// test stat
@@ -37,6 +37,11 @@ void TenviCharacter::InitItem() {
 	inventory[0] = TenviAccount::MakeItem(218, cp);
 	inventory[1] = TenviAccount::MakeItem(21969, lp);
 	inventory[2] = TenviAccount::MakeItem(219, cp);
+	inventory[3] = TenviAccount::MakeItem(23556, th);
+	inventory[4] = TenviAccount::MakeItem(23566, th);
+	inventory[5] = TenviAccount::MakeItem(23831, th);
+	inventory[6] = TenviAccount::MakeItem(23919, th);
+	inventory[7] = TenviAccount::MakeItem(23971, th);
 	// add more
 }
 
@@ -112,7 +117,7 @@ TenviAccount::TenviAccount() {
 	// default characters
 	std::map<BYTE, Item> silva_equip; // itemID, type, inventoryID
 	silva_equip[cl] = MakeItem(0, cl);
-	silva_equip[cp] = MakeItem(0, cp);
+	silva_equip[cp] = MakeItem(270, cp);
 	silva_equip[nc] = MakeItem(0, nc);
 	silva_equip[ri] = MakeItem(0, ri);
 	silva_equip[ri + 1] = MakeItem(0, ri + 1);
@@ -121,10 +126,10 @@ TenviAccount::TenviAccount() {
 	silva_equip[_do] = MakeItem(20002, _do);
 	silva_equip[wp] = MakeItem(0, wp);
 	silva_equip[lp] = MakeItem(0, lp);
-	silva_equip[pp] = MakeItem(0, pp);
+	silva_equip[pp] = MakeItem(22319, pp);
 	silva_equip[op] = MakeItem(0, op);
 	silva_equip[dc] = MakeItem(0, dc);
-	silva_equip[rh] = MakeItem(22508, rh);
+	silva_equip[rh] = MakeItem(22848, rh);
 	silva_equip[lh] = MakeItem(0, lh);
 
 	TenviCharacter silva(L"Silva", (1 << 4) | 4, 6, 3, 19, 24, 479, 157, silva_equip);
@@ -141,10 +146,10 @@ TenviAccount::TenviAccount() {
 	talli_equip[_do] = MakeItem(20001, _do);
 	talli_equip[wp] = MakeItem(0, wp);
 	talli_equip[lp] = MakeItem(0, lp);
-	talli_equip[pp] = MakeItem(0, pp);
+	talli_equip[pp] = MakeItem(22411, pp);
 	talli_equip[op] = MakeItem(0, op);
 	talli_equip[dc] = MakeItem(0, dc);
-	talli_equip[rh] = MakeItem(22507, rh);
+	talli_equip[rh] = MakeItem(23968, th);
 	talli_equip[lh] = MakeItem(0, lh);
 
 	TenviCharacter talli(L"Talli", (1 << 4) | 2, 5, 2, 18, 25, 476, 155, talli_equip);
@@ -161,7 +166,7 @@ TenviAccount::TenviAccount() {
 	andras_equip[_do] = MakeItem(20310, _do);
 	andras_equip[wp] = MakeItem(0, wp);
 	andras_equip[lp] = MakeItem(0, lp);
-	andras_equip[pp] = MakeItem(0, pp);
+	andras_equip[pp] = MakeItem(22350, pp);
 	andras_equip[op] = MakeItem(0, op);
 	andras_equip[dc] = MakeItem(0, dc);
 	andras_equip[rh] = MakeItem(22500, rh);
