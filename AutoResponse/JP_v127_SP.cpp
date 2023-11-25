@@ -22,9 +22,13 @@ void SetServerPacketHeader_JP_v127() {
 	header[SP_REMOVE_OBJECT] = 0x12;
 	header[SP_CREATE_OBJECT] = 0x14;
 	header[SP_ACTIVATE_OBJECT] = 0x20;
+	// 0x22 Object Movement
+	header[SP_HIT] = 0x21;
 	header[SP_SHOW_OBJECT] = 0x23;
+	// 0x29 Object Teleport
 	header[SP_IN_MAP_TELEPORT] = 0x3C;
 	header[SP_ACCOUNT_DATA] = 0x3D;
+	header[SP_PLAYER_HIT] = 0x41;
 	header[SP_PLAYER_LEVEL_UP] = 0x42;
 	header[SP_PLAYER_STAT_EXP] = 0x43;
 	header[SP_PLAYER_STAT_SP] = 0x45;

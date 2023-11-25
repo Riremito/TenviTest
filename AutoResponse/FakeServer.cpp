@@ -227,7 +227,7 @@ void CharacterSpawnPacket(TenviCharacter &chr, float x = 0, float y = 0) {
 	sp.Encode1(1); // 0048DBC6, guardian, 0 = guardian off, 1 = guardian on
 	sp.Encode1(1); // 0048DBD3, death, 0 = death, 1 = alive
 	sp.Encode1(0); // 0048DBE0, battle, 0 = change channel OK, 1 = change channel NG
-	sp.Encode4(0); // 0048DBFB, ???
+	sp.Encode4(4444); // 0048DBFB, ???
 	sp.Encode1(chr.job_mask); // 0048DC08
 	sp.Encode1((BYTE)chr.level); // 0048DC2B
 
@@ -371,7 +371,25 @@ void CreateObjectPacket(TenviRegen &regen) {
 void ActivateObjectPacket(TenviRegen &regen) {
 	ServerPacket sp(SP_ACTIVATE_OBJECT);
 	sp.Encode4(regen.id);
-	sp.Encode1(3); // ?
+	sp.Encode1(3); // 1 = fade in, 2 = !, 3 = walk, 4 = dash
+	SendPacket(sp);
+}
+
+// 0x21
+void HitPacket(DWORD hit_from, DWORD hit_to) {
+	ServerPacket sp(SP_HIT);
+	sp.Encode4(hit_from); // 004867C1
+	sp.Encode4(hit_to); // 004867C8
+	sp.Encode1(0); // 00470977, Knock back
+	sp.Encode4(0); // 00470984
+	sp.Encode2(0); // 0047098E
+	sp.Encode1(1); // 0047099B, hit count
+	sp.Encode4(1337); // 004709AC, damage
+	sp.Encode1(0); // 004709C1
+	sp.Encode1(0); // 004709CE
+	sp.Encode1(0); // 004709DB
+	sp.Encode2(0); // 004709E8
+	sp.Encode1(0); // 004709F5
 	SendPacket(sp);
 }
 
@@ -481,6 +499,23 @@ void AccountDataPacket(TenviCharacter &chr) {
 		sp.Encode1(0);
 	}
 
+	SendPacket(sp);
+}
+
+// 0x41
+void PlayerHitPacket(TenviCharacter &chr) {
+	ServerPacket sp(SP_PLAYER_HIT);
+	sp.Encode4(1); // 0048693A
+	sp.Encode4(chr.id); // 00486941
+	sp.Encode4(0); // 0045D825, 0 or 4,8 (“_–Å)
+	sp.Encode2(0); // 0045D82F
+	sp.Encode1(1); // 0045D83C, hit count
+	sp.Encode2(1337); // 0045D84D, damage
+	sp.Encode2(0); // 0045D865
+	sp.Encode1(0); // 0045D872
+	sp.Encode1(0); // 0045D87F
+	sp.Encode2(0); // 0045D88C
+	sp.Encode1(0); // 0045D899
 	SendPacket(sp);
 }
 
@@ -903,6 +938,25 @@ bool FakeServer(ClientPacket &cp) {
 	case CP_ITEM_SHOP: {
 		BYTE flag = cp.Decode1();
 		ItemShop(TA.GetOnline(), flag ? true : false);
+		return true;
+	}
+	case CP_HIT: {
+		TenviCharacter &chr = TA.GetOnline();
+
+		DWORD hit_from = cp.Decode4();
+		DWORD hit_to = cp.Decode4();
+
+		if (chr.id != hit_to) {
+			HitPacket(hit_from, hit_to);
+			RemoveObjectPacket(hit_to);
+			return true;
+		}
+
+		if (hit_to == chr.id) {
+			PlayerHitPacket(chr);
+			return true;
+		}
+
 		return true;
 	}
 	case CP_USE_SP: {
