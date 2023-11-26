@@ -35,15 +35,11 @@ TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WO
 	InitItem();
 }
 void TenviCharacter::InitItem() {
-	inventory[0] = TenviAccount::MakeItem(218);
-	inventory[1] = TenviAccount::MakeItem(21969);
-	inventory[2] = TenviAccount::MakeItem(219);
-	inventory[3] = TenviAccount::MakeItem(23556);
-	inventory[4] = TenviAccount::MakeItem(23566);
-	inventory[5] = TenviAccount::MakeItem(23831);
-	inventory[6] = TenviAccount::MakeItem(23919);
-	inventory[7] = TenviAccount::MakeItem(23971);
-	// add more
+	int i = 0;
+	std::vector<WORD> equipInventory = {218, 21969, 219, 23556, 23831, 23919, 23971};
+	for (auto& itemID : equipInventory) {
+		inventory[i++] = TenviAccount::MakeItem(itemID);
+	}
 }
 
 void TenviCharacter::SetMapReturn(WORD map_return_id) {
@@ -110,69 +106,29 @@ bool TenviCharacter::UseAP(BYTE stat_id, BYTE amount) {
 	return false;
 }
 
+std::map<BYTE, Item> easyEquip(std::vector<WORD> itemVec) {
+	std::map<BYTE, Item> equips;
+	for (auto& itemID : itemVec) {
+		equips[FindType(itemID)] = TenviAccount::MakeItem(itemID);
+	}
+	return equips;
+}
+
 // init
 TenviAccount::TenviAccount() {
 	// account info
 	slot = 6;
 
 	// default characters
-	std::map<BYTE, Item> silva_equip; // itemID, type, inventoryID
-	silva_equip[cl] = MakeItem(0);
-	silva_equip[cp] = MakeItem(270);
-	silva_equip[nc] = MakeItem(0);
-	silva_equip[ri] = MakeItem(0);
-	silva_equip[ri + 1] = MakeItem(0);
-	silva_equip[5] = MakeItem(0);
-	silva_equip[am] = MakeItem(20502);
-	silva_equip[_do] = MakeItem(20002);
-	silva_equip[wp] = MakeItem(0);
-	silva_equip[lp] = MakeItem(0);
-	silva_equip[pp] = MakeItem(22319);
-	silva_equip[op] = MakeItem(0);
-	silva_equip[dc] = MakeItem(0);
-	silva_equip[rh] = MakeItem(22848);
-	silva_equip[lh] = MakeItem(0);
-
+	std::map<BYTE, Item> silva_equip = easyEquip({ 270, 20502, 20002, 22319, 22848 });
 	TenviCharacter silva(L"Silva", (1 << 4) | 4, 6, 3, 19, 24, 479, 157, silva_equip);
 	silva.TestSilva(); // test
 
-	std::map<BYTE, Item> talli_equip;
-	talli_equip[cl] = MakeItem(0);
-	talli_equip[cp] = MakeItem(0);
-	talli_equip[nc] = MakeItem(0);
-	talli_equip[ri] = MakeItem(0);
-	talli_equip[ri + 1] = MakeItem(0);
-	talli_equip[5] = MakeItem(0);
-	talli_equip[am] = MakeItem(20811);
-	talli_equip[_do] = MakeItem(20001);
-	talli_equip[wp] = MakeItem(0);
-	talli_equip[lp] = MakeItem(0);
-	talli_equip[pp] = MakeItem(22411);
-	talli_equip[op] = MakeItem(0);
-	talli_equip[dc] = MakeItem(0);
-	talli_equip[rh] = MakeItem(23968);
-	talli_equip[lh] = MakeItem(0);
-
+	std::map<BYTE, Item> talli_equip = easyEquip({20811, 20001, 22411, 23968});
 	TenviCharacter talli(L"Talli", (1 << 4) | 2, 5, 2, 18, 25, 476, 155, talli_equip);
 
 
-	std::map<BYTE, Item> andras_equip;
-	andras_equip[cl] = MakeItem(0);
-	andras_equip[cp] = MakeItem(0);
-	andras_equip[nc] = MakeItem(0);
-	andras_equip[ri] = MakeItem(0);
-	andras_equip[ri + 1] = MakeItem(0);
-	andras_equip[5] = MakeItem(0);
-	andras_equip[am] = MakeItem(20500);
-	andras_equip[_do] = MakeItem(20310);
-	andras_equip[wp] = MakeItem(0);
-	andras_equip[lp] = MakeItem(0);
-	andras_equip[pp] = MakeItem(22350);
-	andras_equip[op] = MakeItem(0);
-	andras_equip[dc] = MakeItem(0);
-	andras_equip[rh] = MakeItem(22500);
-	andras_equip[lh] = MakeItem(0);
-
+	std::map<BYTE, Item> andras_equip = easyEquip({20500, 20310, 22350, 22500});
 	TenviCharacter andras(L"Andras", (1 << 4) | 1, 4, 1, 17, 23, 473, 8, andras_equip);
 
 	characters.push_back(silva);
