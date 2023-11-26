@@ -367,6 +367,17 @@ void CreateObjectPacket(TenviRegen &regen) {
 	SendPacket(sp);
 }
 
+// 0x1B
+void PlayerChatPacket(TenviCharacter &chr, std::wstring msg) {
+	ServerPacket sp(SP_PLAYER_CHAT);
+	sp.Encode1(0); // 0048D7DD
+	sp.EncodeWStr1(chr.name); // 0048D80D, character name
+	sp.Encode1(1); // 0048D829, number of parts
+	sp.Encode1(0); // 0048D83E, 0 : msg
+	sp.EncodeWStr1(msg); // 0048D8FE, message
+	SendPacket(sp);
+}
+
 // 0x20
 void ActivateObjectPacket(TenviRegen &regen) {
 	ServerPacket sp(SP_ACTIVATE_OBJECT);
@@ -1001,6 +1012,7 @@ bool FakeServer(ClientPacket &cp) {
 			return true;
 		}
 
+		PlayerChatPacket(TA.GetOnline(), message);
 		return true;
 	}
 	case CP_PARK: {
