@@ -96,6 +96,7 @@ public:
 	static DWORD inventoryCount;
 
 	TenviAccount();
+	void LateInit();
 	bool FindCharacter(DWORD id, TenviCharacter *found);
 	std::vector<TenviCharacter>& GetCharacters();
 	bool AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, std::map<BYTE, Item> &nGEquipped);

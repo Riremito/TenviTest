@@ -1,28 +1,14 @@
 #include"FakeServer.h"
 #include"AutoResponse.h"
 #include"TemporaryData.h"
-#include"fstream"
 #include<map>
 
-TenviAccount TA;
 // ========== TENVI Packet Response ==========
 #define TENVI_VERSION 0x1023
+TenviAccount TA;
 
-
-void writePacketInfo(std::wstring wstr) {
-	std::ofstream out;
-	std::string msg;
-	out.open("DebugLog.txt", std::ios_base::app);
-	msg.assign(wstr.begin(), wstr.end());
-	out << msg.c_str() << std::endl;
-	out.close();
-}
-
-void writePacketInfoStr(std::string str) {
-	std::ofstream out;
-	out.open("DebugLog.txt", std::ios_base::app);
-	out << str << std::endl;
-	out.close();
+void LateInit_TA() {
+	TA.LateInit();
 }
 
 // 0x01

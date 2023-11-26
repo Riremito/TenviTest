@@ -2,8 +2,17 @@
 #include"../EmuMainTenvi/ConfigTenvi.h"
 #include<locale>
 #include<codecvt>
+#include<fstream>
 
 TenviData tenvi_data; // global
+
+void writeDebugLog(std::string str) {
+	std::ofstream out;
+	out.open("DebugLog.txt", std::ios_base::app);
+	out << str << std::endl;
+	out.close();
+}
+
 
 TenviMap* TenviData::get_map(DWORD id) {
 	// map data is already loaded

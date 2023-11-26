@@ -17,5 +17,6 @@ public:
 	std::string get_region_str();
 };
 
+void writeDebugLog(std::string str);
 extern TenviData tenvi_data;
 #endif

@@ -34,11 +34,12 @@ TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WO
 
 	InitItem();
 }
+
 void TenviCharacter::InitItem() {
-	int i = 0;
-	std::vector<WORD> equipInventory = {218, 21969, 219, 23556, 23831, 23919, 23971};
+	BYTE loc = 0;
+	std::vector<WORD> equipInventory = { 218, 21969, 219, 23556, 23831, 23919, 23971 };
 	for (auto& itemID : equipInventory) {
-		inventory[i++] = TenviAccount::MakeItem(itemID);
+		inventory[loc++] = TenviAccount::MakeItem(itemID);
 	}
 }
 
@@ -116,19 +117,21 @@ std::map<BYTE, Item> easyEquip(std::vector<WORD> itemVec) {
 
 // init
 TenviAccount::TenviAccount() {
-	// account info
 	slot = 6;
+}
 
+// lateinit
+void TenviAccount::LateInit() {
 	// default characters
 	std::map<BYTE, Item> silva_equip = easyEquip({ 270, 20502, 20002, 22319, 22848 });
 	TenviCharacter silva(L"Silva", (1 << 4) | 4, 6, 3, 19, 24, 479, 157, silva_equip);
 	silva.TestSilva(); // test
 
-	std::map<BYTE, Item> talli_equip = easyEquip({20811, 20001, 22411, 23968});
+	std::map<BYTE, Item> talli_equip = easyEquip({ 20811, 20001, 22411, 23968 });
 	TenviCharacter talli(L"Talli", (1 << 4) | 2, 5, 2, 18, 25, 476, 155, talli_equip);
 
 
-	std::map<BYTE, Item> andras_equip = easyEquip({20500, 20310, 22350, 22500});
+	std::map<BYTE, Item> andras_equip = easyEquip({ 20500, 20310, 22350, 22500 });
 	TenviCharacter andras(L"Andras", (1 << 4) | 1, 4, 1, 17, 23, 473, 8, andras_equip);
 
 	characters.push_back(silva);

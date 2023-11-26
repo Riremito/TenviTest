@@ -16,58 +16,47 @@ std::string string_format(const std::string& format, Args ... args) {
 	return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside }
 }
 
+rapidxml::xml_node<>* getNode(WORD itemID, std::string name) {
+	std::string itemID_str = string_format("%05d", itemID);
+	std::string item_xml = std::string("./") + tenvi_data.get_region_str() + "/item/" + itemID_str + ".xml";
+
+	rapidxml::xml_document<> doc;
+	try {
+		rapidxml::file<> xmlFile(item_xml.c_str());
+		doc.parse<0>(xmlFile.data());
+
+		rapidxml::xml_node<>* item;
+		rapidxml::xml_node<>* basic = doc.first_node()->first_node();
+		for (item = basic->first_node(); item; item = item->next_sibling()) {
+			if (std::string(item->name()) == name) {
+				return item;
+			}
+		}
+		return NULL;
+	}
+	catch (...) {
+		return NULL;
+	}
+
+}
 
 BYTE FindType(DWORD itemID) {
-
 	static std::map<std::string, BYTE> type_map = { {"cl", 0}, {"cp", 1}, {"nc", 2}, {"ri", 3},
 		{"am", 6}, {"do", 7}, {"wp", 8}, {"lp", 9}, {"pp", 10}, 
 		{"op", 11}, {"dc", 12}, {"rh", 13}, {"lh", 14}, {"rh,lh", 13} };
 
-	std::string itemID_str = string_format("%05d", itemID);
-	std::string item_xml = std::string("./") + "KR" + "/item/" + itemID_str + ".xml";
-
-	rapidxml::xml_document<> doc;
-	
-	try {
-		rapidxml::file<> xmlFile(item_xml.c_str());
-		doc.parse<0>(xmlFile.data());
-
-		rapidxml::xml_node<>* item;
-		rapidxml::xml_node<>* basic = doc.first_node()->first_node();
-		for (item = basic->first_node(); item; item = item->next_sibling()) {
-			if (std::string(item->name()) == "slot") {
-				return type_map[item->first_attribute("value")->value()];
-			}
-		}
-		return false;
+	rapidxml::xml_node<>* item = getNode(itemID, "slot");
+	if (item) {
+		return type_map[item->first_attribute("value")->value()];
 	}
-	catch (...) {
-		return false;
-	}
-	return false;
+	return NULL;
 }
 
+
 BYTE FindIsCash(DWORD itemID) {
-	std::string itemID_str = string_format("%05d", itemID);
-	std::string item_xml = std::string("./") + "KR" + "/item/" + itemID_str + ".xml";
-
-	rapidxml::xml_document<> doc;
-
-	try {
-		rapidxml::file<> xmlFile(item_xml.c_str());
-		doc.parse<0>(xmlFile.data());
-		rapidxml::xml_node<>* item;
-		rapidxml::xml_node<>* basic = doc.first_node()->first_node();
-		for (item = basic->first_node(); item; item = item->next_sibling()) {
-			if (std::string(item->name()) == "cash") {
-				return std::stoi(item->first_attribute("value")->value());
-			}
-		}
-		return false;
+	rapidxml::xml_node<>* item = getNode(itemID, "cash");
+	if (item) {
+		return std::stoi(item->first_attribute("value")->value());
 	}
-	catch (...) {
-		return false;
-	}
-	return false;
-
+	return NULL;
 }

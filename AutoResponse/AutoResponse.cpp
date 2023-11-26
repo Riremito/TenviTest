@@ -122,8 +122,10 @@ void __fastcall ProcessPacketCaller_Hook(void *ecx) {
 	DelayExecution();
 }
 
+
 bool AutoResponseHook() {
 	Rosemary r;
+	LateInit_TA();
 
 	switch (GetRegion()) {
 	case TENVI_JP: {
