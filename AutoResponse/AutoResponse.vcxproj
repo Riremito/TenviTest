@@ -166,6 +166,7 @@
     <ClCompile Include="KRX_v107_SP.cpp" />
     <ClCompile Include="TemporaryData.cpp" />
     <ClCompile Include="TenviData.cpp" />
+    <ClCompile Include="TenviItem.cpp" />
     <ClCompile Include="TenviMap.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -180,6 +181,7 @@
     <ClInclude Include="ServerPacket.h" />
     <ClInclude Include="TemporaryData.h" />
     <ClInclude Include="TenviData.h" />
+    <ClInclude Include="TenviItem.h" />
     <ClInclude Include="TenviMap.h" />
     <ClInclude Include="TenviPacket.h" />
   </ItemGroup>

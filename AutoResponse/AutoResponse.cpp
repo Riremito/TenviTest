@@ -1,3 +1,4 @@
+#include"TenviData.h"
 #include"AutoResponse.h"
 
 DWORD Addr_OnPacketClass = 0;

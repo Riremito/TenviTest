@@ -87,6 +87,9 @@
     <ClCompile Include="ServerPacket.cpp">
       <Filter>ソース ファイル\packet</Filter>
     </ClCompile>
+    <ClCompile Include="TenviItem.cpp">
+      <Filter>ソース ファイル\data</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AutoResponse.h">
@@ -127,6 +130,9 @@
     </ClInclude>
     <ClInclude Include="ServerPacket.h">
       <Filter>ヘッダー ファイル\packet</Filter>
+    </ClInclude>
+    <ClInclude Include="TenviItem.h">
+      <Filter>ヘッダー ファイル\data</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -14,6 +14,7 @@ typedef struct{
 typedef struct {
 	WORD itemID;
 	BYTE type;
+	BYTE isCash;
 	DWORD inventoryID;
 } Item;
 
@@ -98,7 +99,7 @@ public:
 	bool FindCharacter(DWORD id, TenviCharacter *found);
 	std::vector<TenviCharacter>& GetCharacters();
 	bool AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, std::map<BYTE, Item> &nGEquipped);
-	static Item MakeItem(WORD itemID, BYTE type);
+	static Item MakeItem(WORD itemID);
 	bool Login(DWORD id);
 	TenviCharacter& GetOnline();
 };

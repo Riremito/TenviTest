@@ -986,9 +986,9 @@ bool FakeServer(ClientPacket &cp) {
 		WORD guardian_weapon = cp.Decode2();
 
 		std::map<BYTE, Item> guardian_equip;
-		guardian_equip[_do] = TA.MakeItem(guardian_head, _do);
-		guardian_equip[am] = TA.MakeItem(guardian_body, am);
-		guardian_equip[rh] = TA.MakeItem(guardian_weapon, rh);
+		guardian_equip[_do] = TA.MakeItem(guardian_head);
+		guardian_equip[am] = TA.MakeItem(guardian_body);
+		guardian_equip[rh] = TA.MakeItem(guardian_weapon);
 
 		TA.AddCharacter(character_name, job_mask, job_id, character_skin, character_hair, character_face, character_cloth, guardian_color, guardian_equip);
 		CharacterListPacket_Test();
@@ -1070,7 +1070,7 @@ bool FakeServer(ClientPacket &cp) {
 
 		// 장비창에서 장비 삭제
 		UnequipSlot(type, chr.gequipped[type].inventoryID);
-		chr.gequipped[type] = TenviAccount::MakeItem(0, type);
+		chr.gequipped[type] = TenviAccount::MakeItem(0);
 
 		return true;
 	}
