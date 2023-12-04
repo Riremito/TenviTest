@@ -1,4 +1,4 @@
-#include"rapidxml/rapidxml.hpp"
+	#include"rapidxml/rapidxml.hpp"
 #include"rapidxml/rapidxml_utils.hpp"
 #include"TenviItem.h"
 #include"TenviData.h"
@@ -52,6 +52,13 @@ BYTE FindType(DWORD itemID) {
 	return NULL;
 }
 
+bool FindIsTh(DWORD itemID) {
+	rapidxml::xml_node<>* item = getNode(itemID, "slot");
+	if (item) {
+		return std::string(item->first_attribute("value")->value()) == "rh,lh";
+	}
+	return false;
+}
 
 BYTE FindIsCash(DWORD itemID) {
 	rapidxml::xml_node<>* item = getNode(itemID, "cash");

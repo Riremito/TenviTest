@@ -7,5 +7,6 @@
 
 BYTE FindType(DWORD itemID);
 BYTE FindIsCash(DWORD itemID);
+bool FindIsTh(DWORD itemID);
 
 #endif

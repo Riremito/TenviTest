@@ -66,6 +66,10 @@ bool TenviMap::LoadXML() {
 	}
 
 	LoadSubXML();
+
+	rapidxml::xml_node<>* map_attr = xml_find_dir(root, "attr");
+	return_id = atoi(map_attr->first_attribute("return")->value());
+
 	return true;
 }
 
@@ -176,4 +180,23 @@ TenviPortal TenviMap::FindPortal(DWORD id) {
 
 	TenviPortal fake_portal = {};
 	return fake_portal;
+}
+
+TenviPortal TenviMap::FindTomb() {
+	for (auto& portal : data_portal) {
+		if (portal.next_mapid == 1) {
+			return portal;
+		}
+	}
+
+	TenviPortal fake_portal = {};
+	return fake_portal;
+}
+
+DWORD TenviMap::FindReturn() {
+	writeDebugLog(std::to_string(return_id));
+	if (return_id) {
+		return return_id;
+	}
+	return id;
 }

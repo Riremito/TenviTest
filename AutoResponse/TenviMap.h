@@ -47,6 +47,7 @@ private:
 	std::vector<TenviSpawnPoint> data_spawn_point;
 	std::vector<TenviPortal> data_portal;
 	std::vector<TenviRegen> data_regen;
+	DWORD return_id = 0;
 
 	bool LoadXML();
 	bool LoadSubXML();
@@ -60,6 +61,8 @@ public:
 	std::vector<TenviRegen>& GetRegen();
 	TenviSpawnPoint FindSpawnPoint(DWORD id = 0);
 	TenviPortal FindPortal(DWORD id);
+	TenviPortal FindTomb();
+	DWORD FindReturn();
 };
 
 #endif

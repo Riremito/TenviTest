@@ -21,6 +21,7 @@ void SetServerPacketHeader_KR_v200() {
 	header[SP_CHARACTER_SPAWN] = 0x11;
 	header[SP_REMOVE_OBJECT] = 0x12;
 	header[SP_CREATE_OBJECT] = 0x14;
+	header[SP_PLAYER_CHAT] = 0x1B;
 	header[SP_ACTIVATE_OBJECT] = 0x20;
 	header[SP_HIT] = 0x21;
 	header[SP_SHOW_OBJECT] = 0x23;

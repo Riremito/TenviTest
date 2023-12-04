@@ -37,7 +37,7 @@ TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WO
 
 void TenviCharacter::InitItem() {
 	BYTE loc = 0;
-	std::vector<WORD> equipInventory = { 218, 21969, 219, 23556, 23831, 23919, 23971 };
+	std::vector<WORD> equipInventory = {655, 657, 659, 228, 230, 232, 20355, 20361, 20367, 20000, 20001, 20002, 238, 392, 391, 20357, 20363, 20369, 22000, 22001, 22002, 20356, 20362, 20368, 22500, 22505, 22508, 23001, 23000, 23029, 22495, 23432, 23442, 234, 235, 418};
 	for (auto& itemID : equipInventory) {
 		inventory[loc++] = TenviAccount::MakeItem(itemID);
 	}

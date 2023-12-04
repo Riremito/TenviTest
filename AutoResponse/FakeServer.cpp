@@ -1,11 +1,12 @@
 #include"FakeServer.h"
 #include"AutoResponse.h"
 #include"TemporaryData.h"
+#include"TenviItem.h"
 #include<map>
 
+TenviAccount TA;
 // ========== TENVI Packet Response ==========
 #define TENVI_VERSION 0x1023
-TenviAccount TA;
 
 void LateInit_TA() {
 	TA.LateInit();
@@ -376,6 +377,18 @@ void CreateObjectPacket(TenviRegen &regen) {
 	SendPacket(sp);
 }
 
+// 0x1B
+void ChatPacket(std::wstring msg) {
+	TenviCharacter& chr = TA.GetOnline();
+	ServerPacket sp(SP_PLAYER_CHAT);
+	sp.Encode1(0); // 0048D7DD
+	sp.EncodeWStr1(chr.name); // 0048D80D, character name
+	sp.Encode1(1); // 0048D829
+	sp.Encode1(0); // 0048D83E
+	sp.EncodeWStr1(msg); // 0048D8FE, message
+	SendPacket(sp);
+}
+
 // 0x20
 void ActivateObjectPacket(TenviRegen &regen) {
 	ServerPacket sp(SP_ACTIVATE_OBJECT);
@@ -385,19 +398,19 @@ void ActivateObjectPacket(TenviRegen &regen) {
 }
 
 // 0x21
-void HitPacket(DWORD hit_from, DWORD hit_to) {
+void HitPacket(DWORD hit_from, DWORD hit_to, DWORD skill_id) {
 	ServerPacket sp(SP_HIT);
 	sp.Encode4(hit_from); // 004867C1
 	sp.Encode4(hit_to); // 004867C8
 	sp.Encode1(0); // 00470977, Knock back
-	sp.Encode4(0); // 00470984
-	sp.Encode2(0); // 0047098E
+	sp.Encode4(hit_from); // 00470984
+	sp.Encode2(skill_id); // 0047098E
 	sp.Encode1(1); // 0047099B, hit count
-	sp.Encode4(1337); // 004709AC, damage
+	sp.Encode4(1); // 004709AC, damage
 	sp.Encode1(0); // 004709C1
 	sp.Encode1(0); // 004709CE
 	sp.Encode1(0); // 004709DB
-	sp.Encode2(0); // 004709E8
+	sp.Encode2(0); // 004709E8 skill id?
 	sp.Encode1(0); // 004709F5
 	SendPacket(sp);
 }
@@ -449,6 +462,23 @@ void UnequipSlot(BYTE type, DWORD inventoryID) {
 	sp.Encode8(inventoryID); // inventory id
 	sp.Encode2(0);
 	SendPacket(sp);
+
+	WORD unequipPretender[15][2] = { 
+		{655, 657}, {400, 401}, {0, 0}, {0, 0} , {0, 0} , {0, 0}, 
+		{20355, 20361}, {20000, 20001}, {238, 392}, {20357, 20363},
+		{22000, 22001}, {0, 0}, {20356, 20362}, {22500, 22505}, {23001, 23000} };
+
+	ServerPacket sp2(SP_EQUIP_CHARACTER);
+	sp2.Encode1(0);
+	sp2.Encode4(chr.id); // chr id
+	sp2.Encode1(1);
+	if (type == 0) {
+		sp2.Encode2(chr.cloth);
+	}
+	else {
+		sp2.Encode2(unequipPretender[type][(chr.job % 3) % 2]); // itemid
+	}
+	SendPacket(sp2);
 }
 
 // 0x32
@@ -479,31 +509,6 @@ void EditInventory(BYTE loc, DWORD inventoryID, WORD itemID, BYTE isDelay = 0) {
 		SendPacket(sp);
 	}
 }
-
-// 0x32
-void InitEquip(TenviCharacter& chr) {
-	for (int i = 0; i < chr.gequipped.size(); i++) {
-		EditInventory(0, chr.gequipped[i].inventoryID, chr.gequipped[i].itemID);
-	}
-	EditInventory(0, 0xFFFF, 0);
-}
-
-// 0x32
-void InitInventory(TenviCharacter& chr) {
-	for (const auto& pair : chr.inventory) {
-		EditInventory(pair.first, pair.second.inventoryID, pair.second.itemID);
-	}
-}
-
-// 0x32
-void RemoveFromInventory(BYTE loc) {
-	ServerPacket sp(SP_EDIT_INVENTORY);
-	sp.Encode1(0); // 장비, 기타, 캐시
-	sp.Encode1(loc); // 몇 번째 슬롯
-	sp.Encode1(0);
-	DelaySendPacket(sp);
-}
-
 
 // 0x3C
 void InMapTeleportPacket(TenviCharacter &chr) {
@@ -603,19 +608,19 @@ void AccountDataPacket(TenviCharacter &chr) {
 }
 
 // 0x41
-void PlayerHitPacket(TenviCharacter &chr) {
+void PlayerHitPacket(TenviCharacter& chr, DWORD hit_from) {
 	ServerPacket sp(SP_PLAYER_HIT);
 	sp.Encode4(1); // 0048693A
 	sp.Encode4(chr.id); // 00486941
-	sp.Encode4(0); // 0045D825, 0 or 4,8 (?뽅)
+	sp.Encode4(hit_from); // 0045D825,
 	sp.Encode2(0); // 0045D82F
 	sp.Encode1(1); // 0045D83C, hit count
-	sp.Encode2(1337); // 0045D84D, damage
-	sp.Encode2(0); // 0045D865
+	sp.Encode2(55); // 0045D84D, damage
+	sp.Encode2(64); // 0045D865 knockback
 	sp.Encode1(0); // 0045D872
 	sp.Encode1(0); // 0045D87F
 	sp.Encode2(0); // 0045D88C
-	sp.Encode1(0); // 0045D899
+	sp.Encode1(1); // 0045D899
 	SendPacket(sp);
 }
 
@@ -643,9 +648,9 @@ void PlayerAPPacket(TenviCharacter &chr) {
 // 0x47
 void PlayerStatPacket(TenviCharacter &chr) {
 	ServerPacket sp(SP_PLAYER_STAT_ALL);
-	sp.Encode2(3000); // 004956F5, HP
+	sp.Encode2(4000); // 004956F5, HP
 	sp.Encode2(4000); // 00495713, MAXHP
-	sp.Encode2(1000); // 0049572F, MP
+	sp.Encode2(2000); // 0049572F, MP
 	sp.Encode2(2000); // 0049574B, MAXMP
 	sp.Encode2(chr.stat_str); // 00495767, STR
 	sp.Encode2(chr.stat_dex); // 00495783, DEX
@@ -895,6 +900,12 @@ void UsePortal(TenviCharacter &chr, DWORD portal_id) {
 	ChangeMap(chr, portal.next_mapid, next_portal.x, next_portal.y);
 }
 
+void GoTomb(TenviCharacter& chr) {
+	DWORD return_id = tenvi_data.get_map(chr.map)->FindReturn();
+	TenviPortal tomb_portal = tenvi_data.get_map(return_id)->FindTomb();
+	ChangeMap(chr, return_id, tomb_portal.x, tomb_portal.y);
+}
+
 void ItemShop(TenviCharacter &chr, bool bEnter) {
 	if (bEnter) {
 		SetMap(chr, MAPID_ITEM_SHOP);
@@ -921,6 +932,28 @@ void Event(TenviCharacter &chr, bool bEnter) {
 		SetMap(chr, chr.map_return);
 	}
 }
+
+void InitEquip(TenviCharacter& chr) {
+	for (int i = 0; i < chr.gequipped.size(); i++) {
+		EditInventory(0, chr.gequipped[i].inventoryID, chr.gequipped[i].itemID);
+	}
+	EditInventory(0, 0xFFFF, 0);
+}
+
+void InitInventory(TenviCharacter& chr) {
+	for (const auto& pair : chr.inventory) {
+		EditInventory(pair.first, pair.second.inventoryID, pair.second.itemID);
+	}
+}
+
+void RemoveFromInventory(BYTE loc) {
+	ServerPacket sp(SP_EDIT_INVENTORY);
+	sp.Encode1(0); // 장비, 기타, 캐시
+	sp.Encode1(loc); // 몇 번째 슬롯
+	sp.Encode1(0);
+	DelaySendPacket(sp);
+}
+
 
 // ========== TENVI Server Main ==========
 bool FakeServer(ClientPacket &cp) {
@@ -1025,6 +1058,18 @@ bool FakeServer(ClientPacket &cp) {
 		if (type == 0xFF) {
 			type = chr.inventory[loc].type;
 		}
+		if (type == 14 && FindIsTh(chr.gequipped[13].itemID)) {
+			EditInventory(loc, chr.inventory[loc].inventoryID, chr.inventory[loc].itemID, 1);
+			return true;
+		}
+		else if (FindIsTh(chr.inventory[loc].itemID) && chr.gequipped[14].itemID) {
+			EditInventory(loc, chr.inventory[loc].inventoryID, chr.inventory[loc].itemID, 1);
+			return true;
+		}
+		else if (type == 3 && chr.gequipped[3].itemID && !chr.gequipped[4].itemID) {
+			type = 4;
+		}
+
 		EquipSlot(type, chr.inventory[loc].inventoryID, chr.inventory[loc].itemID);
 		if (chr.gequipped[type].inventoryID) {
 			EditInventory(loc, chr.gequipped[type].inventoryID, chr.gequipped[type].itemID, 1);
@@ -1104,15 +1149,16 @@ bool FakeServer(ClientPacket &cp) {
 
 		DWORD hit_from = cp.Decode4();
 		DWORD hit_to = cp.Decode4();
+		WORD skill_id = cp.Decode2();
 
 		if (chr.id != hit_to) {
-			HitPacket(hit_from, hit_to);
-			RemoveObjectPacket(hit_to);
+			HitPacket(hit_from, hit_to, skill_id);
+//			RemoveObjectPacket(hit_to);
 			return true;
 		}
 
 		if (hit_to == chr.id) {
-			PlayerHitPacket(chr);
+			PlayerHitPacket(chr, skill_id);
 			return true;
 		}
 
@@ -1134,8 +1180,12 @@ bool FakeServer(ClientPacket &cp) {
 		return true;
 	}
 	case CP_PLAYER_REVIVE: {
-		BYTE option = cp.Decode1(); // 0: tomb, 1: same pos, 2: revive potion
+		TenviCharacter& chr = TA.GetOnline();
+		BYTE option = cp.Decode1(); // 1: tomb, 2: same pos, 3: revive potion
 		PlayerRevivePacket(TA.GetOnline());
+		if (option == 1) {
+			GoTomb(chr);
+		}
 		return true;
 	}
 	case CP_CHANGE_CHANNEL: {
@@ -1154,6 +1204,8 @@ bool FakeServer(ClientPacket &cp) {
 		cp.Decode1(); // 1
 		cp.Decode1(); // 0
 		std::wstring message = cp.DecodeWStr1();
+
+		ChatPacket(message);
 
 		// command test
 		if (message.length() && message.at(0) == L'@') {
