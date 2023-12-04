@@ -19,6 +19,7 @@ void SetClientPacketHeader_KR_v200() {
 	header[CP_USE_AP] = 0x1A;
 	header[CP_GUARDIAN_SUMMON] = 0x1B;
 	header[CP_EMOTION] = 0x1C;
+	header[CP_UPDATE_PROFILE] = 0x20;
 	header[CP_WORLD_MAP_OPEN] = 0x23;
 	header[CP_ITEM_SHOP] = 0x38;
 	header[CP_HIT] = 0x44,

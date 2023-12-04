@@ -38,7 +38,7 @@ void SetServerPacketHeader_KR_v200() {
 	header[SP_PLAYER_STAT_ALL] = 0x47;
 	header[SP_GUARDIAN_SUMMON] = 0x4A,
 	header[SP_EMOTION] = 0x4B;
-	header[SP_EQUIP_CHARACTER] = 0x4D;
+	header[SP_UPDATE_PROFILE] = 0x4D;
 	header[SP_WORLD_MAP_UPDATE] = 0x54;
 	header[SP_PLAYER_REVIVE] = 0x5B,
 	header[SP_ITEM_SHOP_ERROR] = 0x5C;

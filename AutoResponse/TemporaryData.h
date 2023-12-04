@@ -73,6 +73,7 @@ public:
 	float y;
 
 	BYTE guardian_flag;
+	std::wstring profile;
 	std::vector<Item> equipped;
 	std::map<BYTE, Item> gequipped;
 	std::map<BYTE, Item> inventory;

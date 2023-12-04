@@ -443,7 +443,7 @@ void EquipSlot(BYTE type, DWORD inventoryID, DWORD itemID) {
 	sp.Encode2(chr.gcolor);
 	SendPacket(sp);
 
-	ServerPacket sp2(SP_EQUIP_CHARACTER);
+	ServerPacket sp2(SP_UPDATE_PROFILE);
 	sp2.Encode1(0);
 	sp2.Encode4(chr.id); // chr id
 	sp2.Encode1(1);
@@ -468,7 +468,7 @@ void UnequipSlot(BYTE type, DWORD inventoryID) {
 		{20355, 20361}, {20000, 20001}, {238, 392}, {20357, 20363},
 		{22000, 22001}, {0, 0}, {20356, 20362}, {22500, 22505}, {23001, 23000} };
 
-	ServerPacket sp2(SP_EQUIP_CHARACTER);
+	ServerPacket sp2(SP_UPDATE_PROFILE);
 	sp2.Encode1(0);
 	sp2.Encode4(chr.id); // chr id
 	sp2.Encode1(1);
@@ -579,7 +579,7 @@ void AccountDataPacket(TenviCharacter &chr) {
 		}
 
 	}
-	sp.EncodeWStr1(L"TenviTest"); // 00499044, Profile Message
+	sp.EncodeWStr1(chr.profile); // 00499044, Profile Message
 	sp.Encode1(0); // 0049906C, ???
 	sp.Encode1(0); // 004990B3
 	// loop
@@ -725,6 +725,14 @@ void EmotionPacket(TenviCharacter &chr, BYTE emotion) {
 	ServerPacket sp(SP_EMOTION);
 	sp.Encode4(chr.id); // 0048608E, character id
 	sp.Encode1(emotion); // 00486099, emotion
+	SendPacket(sp);
+}
+
+// 0x4D
+void UpdateProfile(std::wstring wText) {
+	ServerPacket sp(SP_UPDATE_PROFILE);
+	sp.Encode1(2);
+	sp.EncodeWStr1(wText);
 	SendPacket(sp);
 }
 
@@ -1088,6 +1096,7 @@ bool FakeServer(ClientPacket &cp) {
 		GuardianSummonPacket(TA.GetOnline(), chr.guardian_flag ? true : false);
 		return true;
 	}
+
 	case CP_UNEQUIP: {
 		// 장비 해제
 		TenviCharacter& chr = TA.GetOnline();
@@ -1129,7 +1138,10 @@ bool FakeServer(ClientPacket &cp) {
 		return true;
 	}
 	case CP_UPDATE_PROFILE: {
+		TenviCharacter& chr = TA.GetOnline();
 		std::wstring wText = cp.DecodeWStr1();
+		chr.profile = wText;
+		UpdateProfile(wText);
 		return true;
 	}
 	case CP_WORLD_MAP_OPEN:
