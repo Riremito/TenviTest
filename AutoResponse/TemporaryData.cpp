@@ -126,14 +126,19 @@ void TenviAccount::LateInit() {
 	// default characters
 	std::map<BYTE, Item> silva_equip = easyEquip({ 270, 20502, 20002, 22319, 22848 });
 	TenviCharacter silva(L"Silva", (1 << 4) | 4, 6, 3, 19, 24, 479, 157, silva_equip);
+	std::vector<TenviSkill> silva_basic = { {1, 1}, {50003, 1}, {40019, 1}, {50000, 1} };
+	silva.skill.insert(std::end(silva.skill), std::begin(silva_basic), std::end(silva_basic));
 	silva.TestSilva(); // test
 
 	std::map<BYTE, Item> talli_equip = easyEquip({ 20811, 20001, 22411, 23968 });
 	TenviCharacter talli(L"Talli", (1 << 4) | 2, 5, 2, 18, 25, 476, 155, talli_equip);
-
+	std::vector<TenviSkill> talli_basic = { { 1, 1 }, {30004, 1}, {20000, 1 }, {30001, 1} };
+	talli.skill.insert(std::end(talli.skill), std::begin(talli_basic), std::end(talli_basic));
 
 	std::map<BYTE, Item> andras_equip = easyEquip({ 20500, 20310, 22350, 22500 });
 	TenviCharacter andras(L"Andras", (1 << 4) | 1, 4, 1, 17, 23, 473, 8, andras_equip);
+	std::vector<TenviSkill> andras_basic = {{ 1, 1 }, {10004, 1}, { 2, 1 }, {10001, 1} };
+	andras.skill.insert(std::end(andras.skill), std::begin(andras_basic), std::end(andras_basic));
 
 	characters.push_back(silva);
 	characters.push_back(talli);

@@ -42,6 +42,8 @@ void SetServerPacketHeader_KR_v200() {
 	header[SP_WORLD_MAP_UPDATE] = 0x54;
 	header[SP_PLAYER_REVIVE] = 0x5B,
 	header[SP_ITEM_SHOP_ERROR] = 0x5C;
+	header[SP_KEY_SET] = 0x63;
 	header[SP_UPDATE_SKILL] = 0x65;
-	//header[SP_BOARD] = 0xE0;
+	header[SP_PLAYER_SKILL_ALL] = 0x6C;
+//	header[SP_BOARD] = 0xE3;
 }

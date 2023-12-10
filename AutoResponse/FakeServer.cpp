@@ -437,10 +437,6 @@ void EquipSlot(BYTE type, DWORD inventoryID, DWORD itemID) {
 	sp.Encode1(type); // normal item slot
 	sp.Encode8(inventoryID); // inventory id
 	sp.Encode2(chr.skin);
-	sp.Encode2(chr.hair);
-	sp.Encode2(chr.face);
-	sp.Encode2(chr.cloth);
-	sp.Encode2(chr.gcolor);
 	SendPacket(sp);
 
 	ServerPacket sp2(SP_UPDATE_PROFILE);
@@ -805,7 +801,7 @@ void UpdateSkillPacket(TenviCharacter &chr, WORD skill_id) {
 	DelaySendPacket(sp);
 }
 
-// 0x6D
+// 0x6C
 void InitSkillPacket(TenviCharacter &chr) {
 	ServerPacket sp(SP_PLAYER_SKILL_ALL);
 	sp.Encode1((BYTE)chr.skill.size()); // 0049977E, number of skills
@@ -857,6 +853,14 @@ void BoardPacket(BoardAction action, std::wstring owner = L"", std::wstring msg 
 	}
 	}
 
+	SendPacket(sp);
+}
+
+// 0x63
+void InitKeySet() {
+	ServerPacket sp(SP_KEY_SET);
+	sp.Encode1(0);
+	sp.Encode1(0);
 	SendPacket(sp);
 }
 
@@ -988,10 +992,10 @@ bool FakeServer(ClientPacket &cp) {
 				InitSkillPacket(chr);
 				InitEquip(chr);
 				InitInventory(chr);
-
+				InitKeySet();
 				SetMap(chr, chr.map);
-				BoardPacket(Board_Spawn, L"Riremito", L"Tenvi JP v127");
-				BoardPacket(Board_AddInfo, L"Riremito", L"Tenvi JP v127");
+//				BoardPacket(Board_Spawn, L"Suhan", L"Tenvi KR v200");
+//				BoardPacket(Board_AddInfo, L"Suhan", L"Tenvi KR v200");
 				return true;
 			}
 		}
