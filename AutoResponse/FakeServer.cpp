@@ -832,10 +832,10 @@ void BoardPacket(BoardAction action, std::wstring owner = L"", std::wstring msg 
 		sp.Encode4(1337); // 0048AF00 ???
 		sp.EncodeWStr1(owner); // 0048AF0E ???
 		sp.EncodeWStr1(msg); // 0048AF1D message
-		sp.Encode4(0); // 0048AF28
-		sp.Encode4(0); // 0048AF32
+		sp.EncodeFloat(-50); // 0048AF28
+		sp.EncodeFloat(0); // 0048AF32
 		sp.Encode1(0); // 0048AF3C
-		sp.Encode1(3); // 0048AF46 board type
+		sp.Encode1(0); // 0048AF46 board type
 		break;
 	}
 	case Board_Remove: {
@@ -994,8 +994,8 @@ bool FakeServer(ClientPacket &cp) {
 				InitInventory(chr);
 				InitKeySet();
 				SetMap(chr, chr.map);
-//				BoardPacket(Board_Spawn, L"Suhan", L"Tenvi KR v200");
-//				BoardPacket(Board_AddInfo, L"Suhan", L"Tenvi KR v200");
+				BoardPacket(Board_Spawn, L"Suhan", L"Read me");
+				BoardPacket(Board_AddInfo, L"Suhan", L"KR Tenvi v200. Non-commercial use only! If you're good at analysing code and wanna help, contact discord=suhan01");
 				return true;
 			}
 		}
