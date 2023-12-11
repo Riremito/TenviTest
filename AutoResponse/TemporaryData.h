@@ -13,8 +13,9 @@ typedef struct{
 
 typedef struct {
 	WORD itemID;
-	BYTE type;
+	BYTE slot;
 	BYTE isCash;
+	BYTE type;
 	DWORD inventoryID;
 } Item;
 
@@ -76,7 +77,10 @@ public:
 	std::wstring profile;
 	std::vector<Item> equipped;
 	std::map<BYTE, Item> gequipped;
-	std::map<BYTE, Item> inventory;
+	std::map<BYTE, Item> inventory_equip;
+	std::map<BYTE, Item> inventory_extra;
+	std::map<BYTE, Item> inventory_quest;
+	std::map<BYTE, Item> inventory_cash;
 	std::vector<TenviSkill> skill;
 
 	TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, std::map<BYTE, Item> &nGEquipped);

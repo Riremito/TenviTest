@@ -41,13 +41,29 @@ rapidxml::xml_node<>* getNode(WORD itemID, std::string name) {
 }
 
 BYTE FindType(DWORD itemID) {
-	static std::map<std::string, BYTE> type_map = { {"cl", 0}, {"cp", 1}, {"nc", 2}, {"ri", 3},
+	static std::map<std::string, BYTE> type_map = { {"0", 0}, {"1", 0}, {"2", 1}, {"3", 2},
+		{"4", 1}, {"5", 3}, {"6", 3}, {"11", 1}, {"12", 3}, {"13", 1}, {"14", 3}, {"16", 3}};
+
+	if (FindIsCash(itemID)) {
+		return 3;
+	}
+
+	rapidxml::xml_node<>* item = getNode(itemID, "type");
+	if (item) {
+		return type_map[item->first_attribute("value")->value()];
+	}
+	return NULL;
+}
+
+
+BYTE FindSlot(DWORD itemID) {
+	static std::map<std::string, BYTE> slot_map = { {"cl", 0}, {"cp", 1}, {"nc", 2}, {"ri", 3},
 		{"am", 6}, {"do", 7}, {"wp", 8}, {"lp", 9}, {"pp", 10}, 
 		{"op", 11}, {"dc", 12}, {"rh", 13}, {"lh", 14}, {"rh,lh", 13} };
 
 	rapidxml::xml_node<>* item = getNode(itemID, "slot");
 	if (item) {
-		return type_map[item->first_attribute("value")->value()];
+		return slot_map[item->first_attribute("value")->value()];
 	}
 	return NULL;
 }

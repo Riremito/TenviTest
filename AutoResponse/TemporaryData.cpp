@@ -37,10 +37,32 @@ TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WO
 }
 
 void TenviCharacter::InitItem() {
-	BYTE loc = 0;
-	std::vector<WORD> equipInventory = {655, 657, 659, 228, 230, 232, 20355, 20361, 20367, 20000, 20001, 20002, 238, 392, 391, 20357, 20363, 20369, 22000, 22001, 22002, 20356, 20362, 20368, 22500, 22505, 22508, 23001, 23000, 23029, 22495, 23432, 23442, 234, 235, 418};
-	for (auto& itemID : equipInventory) {
-		inventory[loc++] = TenviAccount::MakeItem(itemID);
+	std::vector<WORD> inventory = {
+		// equip
+		655, 657, 659, 228, 230, 232, 20355, 20361, 20367, 20000, 20001, 20002, 238, 392, 391, 20357, 20363, 20369, 22000, 22001, 22002, 20356, 20362, 20368, 22500, 22505, 22508, 23001, 23000, 23029, 22495, 23432, 23442, 234, 235, 418,
+		// extra
+		60000,
+		// quest
+		42107,
+		// cash
+		2493, 63163, 40
+	};
+	BYTE equipLoc = 0, extraLoc = 0, questLoc = 0, cashLoc = 0;
+	for (auto& itemID : inventory) {
+		switch (FindType(itemID)) {
+		case 0:
+			inventory_equip[equipLoc++] = TenviAccount::MakeItem(itemID);
+			break;
+		case 1:
+			inventory_extra[extraLoc++] = TenviAccount::MakeItem(itemID);
+			break;
+		case 2:
+			inventory_quest[questLoc++] = TenviAccount::MakeItem(itemID);
+			break;
+		case 3:
+			inventory_cash[cashLoc++] = TenviAccount::MakeItem(itemID);
+			break;
+		}
 	}
 }
 
@@ -111,7 +133,7 @@ bool TenviCharacter::UseAP(BYTE stat_id, BYTE amount) {
 std::map<BYTE, Item> easyEquip(std::vector<WORD> itemVec) {
 	std::map<BYTE, Item> equips;
 	for (auto& itemID : itemVec) {
-		equips[FindType(itemID)] = TenviAccount::MakeItem(itemID);
+		equips[FindSlot(itemID)] = TenviAccount::MakeItem(itemID);
 	}
 	return equips;
 }
@@ -181,7 +203,7 @@ Item TenviAccount::MakeItem(WORD itemID) {
 	if (itemID == 0) {
 		return Item{ 0, 0, 0, 0};
 	}
-	return Item{ itemID, FindType(itemID), FindIsCash(itemID), inventoryCount++ };
+	return Item{ itemID, FindSlot(itemID), FindIsCash(itemID), FindType(itemID), inventoryCount++ };
 }
 
 TenviCharacter& TenviAccount::GetOnline() {
