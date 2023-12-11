@@ -70,6 +70,16 @@ void DelayExecution() {
 		packet_queue.erase(packet_queue.begin());
 	}
 }
+// void* this, char a2, int a3
+DWORD(__thiscall* _sample)(void* ecx, char* ArgList) = NULL;
+DWORD __fastcall sample_Hook(void* ecx, void* edx, char* ArgList) {
+//	writeDebugLog(std::to_string(ArgList));
+	//DWORD res = _sample(ecx, itemID);
+	//writeDebugLog(std::to_string(itemID));
+	//return res;
+	return 0;
+}
+
 
 // Login Button Click
 DWORD (__thiscall *_LoginButton)(void *ecx) = NULL;
@@ -218,6 +228,8 @@ bool AutoResponseHook() {
 		SHookFunction(EnterSendPacket, 0x00593F4B);
 		SHookFunction(ConnectCaller, 0x00566AB8);
 		SHookFunction(ProcessPacketCaller, 0x00566EF8);
+//		SHookFunction(sample, 0x005C3FD8);
+//		SHookFunction(sample, 0x0043D458);
 
 		Addr_OnPacketClass2 = 0x0073178C;
 		Addr_OnPacket2 = 0x004B202F;

@@ -75,7 +75,7 @@ public:
 
 	BYTE guardian_flag;
 	std::wstring profile;
-	std::vector<Item> equipped;
+	std::map<BYTE, Item> equipped;
 	std::map<BYTE, Item> gequipped;
 	std::map<BYTE, Item> inventory_equip;
 	std::map<BYTE, Item> inventory_extra;
@@ -83,7 +83,7 @@ public:
 	std::map<BYTE, Item> inventory_cash;
 	std::vector<TenviSkill> skill;
 
-	TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, std::map<BYTE, Item> &nGEquipped);
+	TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, std::map<BYTE, Item> &nEquipped, std::map<BYTE, Item> &nGEquipped);
 	void InitItem();
 	void TestSilva();
 	bool UseSP(WORD skill_id);
@@ -104,7 +104,7 @@ public:
 	void LateInit();
 	bool FindCharacter(DWORD id, TenviCharacter *found);
 	std::vector<TenviCharacter>& GetCharacters();
-	bool AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, std::map<BYTE, Item> &nGEquipped);
+	bool AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, std::map<BYTE, Item> &nEquipped, std::map<BYTE, Item> &nGEquipped);
 	static Item MakeItem(WORD itemID);
 	bool Login(DWORD id);
 	TenviCharacter& GetOnline();

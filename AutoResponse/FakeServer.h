@@ -11,6 +11,7 @@
 
 bool FakeServer(ClientPacket &cp);
 // test
+bool IsEquip(DWORD itemID);
 void LateInit_TA();
 void WorldListPacket();
 void CharacterSelectPacket();
