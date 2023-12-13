@@ -57,15 +57,18 @@ BYTE FindType(DWORD itemID) {
 
 
 BYTE FindSlot(DWORD itemID) {
-	static std::map<std::string, BYTE> slot_map = { {"cl", 0}, {"cp", 1}, {"nc", 2}, {"ri", 3},
+	static std::map<std::string, BYTE> slot_map = { {"cl", 0}, {"cp", 1}, {"nc", 2}, {"ri", 3}, {"fa", 5},
 		{"am", 6}, {"do", 7}, {"wp", 8}, {"lp", 9}, {"pp", 10}, 
-		{"op", 11}, {"dc", 12}, {"rh", 13}, {"lh", 14}, {"rh,lh", 13} };
+		{"op", 11}, {"dc", 12}, {"rh", 13}, {"lh", 14}, {"rh,lh", 13}};
 
 	rapidxml::xml_node<>* item = getNode(itemID, "slot");
 	if (item) {
-		return slot_map[item->first_attribute("value")->value()];
+		std::string slot_str = item->first_attribute("value")->value();
+		if (slot_map.count(slot_str) != 0) {
+			return slot_map[slot_str];
+		}
 	}
-	return NULL;
+	return 15;
 }
 
 bool FindIsTh(DWORD itemID) {

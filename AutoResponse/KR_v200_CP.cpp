@@ -12,6 +12,7 @@ void SetClientPacketHeader_KR_v200() {
 	header[CP_BACK_TO_LOGIN_SERVER] = 0x0A;
 	header[CP_EQUIP] = 0x0D;
 	header[CP_UNEQUIP] = 0x0E;
+	header[CP_SWITCH_RING] = 0x0F;
 	header[CP_LOGOUT] = 0x09;
 	header[CP_MOVE_ITEM] = 0x13;
 	header[CP_GUARDIAN_RIDE] = 0x18;

@@ -365,16 +365,6 @@ void CreateObjectPacket(TenviRegen &regen) {
 	sp.EncodeFloat(regen.area.bottom);
 	sp.Encode1(0);
 	sp.Encode1(0);
-	{
-		/*
-		sp.Encode4(1);
-		sp.Encode2(0);
-		sp.Encode1(1);
-		sp.Encode4(1);
-		sp.Encode4(1337); // character id
-		sp.Encode1(1);
-		*/
-	}
 
 	if (GetRegion() != TENVI_JP) {
 		sp.Encode1(0);
@@ -433,7 +423,7 @@ void ShowObjectPacket(TenviRegen &regen) {
 }
 
 // 0x2F
-void EquipSlot(BYTE slot, DWORD inventoryID, DWORD itemID, BYTE isCash, BYTE isDelay=0) {
+void EquipSlot(BYTE slot, DWORD inventoryID, DWORD itemID, BYTE isCash) {
 	TenviCharacter& chr = TA.GetOnline();
 	ServerPacket sp(SP_EQUIP_SLOT);
 	sp.Encode1(0);
@@ -441,23 +431,23 @@ void EquipSlot(BYTE slot, DWORD inventoryID, DWORD itemID, BYTE isCash, BYTE isD
 	sp.Encode1(isCash);
 	sp.Encode1(slot); // item slot
 	sp.Encode8(inventoryID); // inventory id
-	sp.Encode2(chr.skin);
+	sp.Encode2(itemID);
+	SendPacket(sp);
+}
+
+// 0x4D (item)
+void EquipItemProfile(TenviCharacter &chr, DWORD itemID) {
+	ServerPacket sp(SP_UPDATE_PROFILE);
+	sp.Encode1(0);
+	sp.Encode4(chr.id); // chr id
+	sp.Encode1(1);
+	sp.Encode2(itemID);
 	SendPacket(sp);
 
-	if (!isCash && chr.equipped[slot].inventoryID != 0) {
-		return;
-	}
-
-	ServerPacket sp2(SP_UPDATE_PROFILE);
-	sp2.Encode1(0);
-	sp2.Encode4(chr.id); // chr id
-	sp2.Encode1(1);
-	sp2.Encode2(itemID); // itemid
-	SendPacket(sp2);
 }
 
 // 0x2F
-void UnequipSlot(BYTE slot, DWORD inventoryID, BYTE isCash) {
+void UnequipSlot(BYTE slot, DWORD inventoryID, DWORD itemID, BYTE isCash) {
 	TenviCharacter& chr = TA.GetOnline();
 	ServerPacket sp(SP_EQUIP_SLOT);
 	sp.Encode1(0);
@@ -480,26 +470,50 @@ void UnequipSlot(BYTE slot, DWORD inventoryID, BYTE isCash) {
 
 	if (!isCash && chr.equipped[slot].inventoryID != 0) {
 		// 캐시 장비가 있으면 캐시 장비 표시
-		sp2.Encode2(chr.equipped[slot].itemID);
-		DelaySendPacket(sp2);
+		EquipItemProfile(chr, chr.equipped[slot].itemID);
 		return;
 	}
 	else if (isCash && chr.gequipped[slot].inventoryID != 0) {
 		// 일반 장비가 있으면 일반 장비 표시
-		sp2.Encode2(chr.gequipped[slot].itemID);
-		DelaySendPacket(sp2);
+		EquipItemProfile(chr, chr.gequipped[slot].itemID);
 		return;
 	}
 
+	if (slot == 5) {
+		EquipItemProfile(chr, 2845);
+		EquipItemProfile(chr, 464);
+		if (chr.gequipped[1].itemID) {
+			EquipItemProfile(chr, chr.gequipped[1].itemID);
+		}
+		else if(chr.equipped[1].itemID){
+			EquipItemProfile(chr, chr.equipped[1].itemID);
+		}
+		return;
+	}
+	else if (slot == 13 && chr.job == 6) {
+		// 두니보르 지팡이 => 투명 지팡이 23865
+		EquipItemProfile(chr, 23865);
+		if (chr.gequipped[14].itemID) {
+			EquipItemProfile(chr, chr.gequipped[14].itemID);
+		}
+		if (chr.equipped[14].itemID) {
+			EquipItemProfile(chr, chr.equipped[14].itemID);
+		}
+		return;
+	}
+	else if (slot == 14 && chr.job == 6) {
+		// 망상의 마도서 => 투명 마도서 24445
+		EquipItemProfile(chr, 24445);
+		return;
+	}
+	
 	if (slot == 0) {
-		sp2.Encode2(chr.cloth);
+		EquipItemProfile(chr, chr.cloth);
+		return;
 	}
 	else {
-//		sp2.Encode2(0xFFFF);
-		sp2.Encode2(unequipPretender[slot][(chr.job % 3) % 2]); // itemid
-		writeDebugLog(std::to_string(unequipPretender[slot][(chr.job % 3) % 2]));
+		EquipItemProfile(chr, unequipPretender[slot][(chr.job % 3) % 2]);
 	}
-	DelaySendPacket(sp2);
 }
 
 // 0x32
@@ -1000,7 +1014,6 @@ void RemoveFromInventory(BYTE loc, BYTE type) {
 	DelaySendPacket(sp);
 }
 
-
 // ========== TENVI Server Main ==========
 bool FakeServer(ClientPacket &cp) {
 	CLIENT_PACKET header = cp.DecodeHeader();
@@ -1100,6 +1113,7 @@ bool FakeServer(ClientPacket &cp) {
 		BYTE type = cp.Decode1(); // 0: normal equip, 3: cash equip
 		BYTE loc = cp.Decode1();
 		BYTE slot = cp.Decode1();
+
 		std::map<BYTE, Item> *inventory, *equip;
 		if (type == 0) {
 			inventory = &chr.inventory_equip;
@@ -1108,6 +1122,12 @@ bool FakeServer(ClientPacket &cp) {
 		else {
 			inventory = &chr.inventory_cash;
 			equip = &chr.equipped;
+		}
+
+		if (FindSlot((*inventory)[loc].itemID) == 15) {
+			EquipItemProfile(chr, (*inventory)[loc].itemID);
+			EditInventory(loc, (*inventory)[loc].inventoryID, (*inventory)[loc].itemID, (*inventory)[loc].type, 1);
+			return true;
 		}
 
 		if (slot == 0xFF) {
@@ -1158,7 +1178,7 @@ bool FakeServer(ClientPacket &cp) {
 
 			// 장비창에서 장비 삭제
 			chr.gequipped[slot] = TenviAccount::MakeItem(0);
-			UnequipSlot(slot, chr.gequipped[slot].inventoryID, type);
+			UnequipSlot(slot, chr.gequipped[slot].inventoryID, chr.gequipped[slot].itemID, type);
 		}
 		else {
 			// 인벤토리에 장비 넣기
@@ -1167,9 +1187,27 @@ bool FakeServer(ClientPacket &cp) {
 
 			// 장비창에서 장비 삭제
 			chr.equipped[slot] = TenviAccount::MakeItem(0);
-			UnequipSlot(slot, chr.equipped[slot].inventoryID, type);
+			UnequipSlot(slot, chr.equipped[slot].inventoryID, chr.equipped[slot].itemID, type);
 		}
 
+		return true;
+	}
+	case CP_SWITCH_RING: {
+		TenviCharacter& chr = TA.GetOnline();
+		BYTE r1 = cp.Decode1();
+		BYTE r2 = cp.Decode1();
+		BYTE isCash = cp.Decode1();
+		if ((r1 == 3 && r2 == 4) || (r1 == 4 && r2 == 3)) {
+			if (isCash) {
+				EquipSlot(3, chr.equipped[4].inventoryID, chr.equipped[4].itemID, isCash);
+				EquipSlot(4, chr.equipped[3].inventoryID, chr.equipped[3].itemID, isCash);
+				std::swap(chr.equipped[3], chr.equipped[4]);
+				return true;
+			}
+			EquipSlot(3, chr.gequipped[4].inventoryID, chr.gequipped[4].itemID, isCash);
+			EquipSlot(4, chr.gequipped[3].inventoryID, chr.gequipped[3].itemID, isCash);
+			std::swap(chr.gequipped[3], chr.gequipped[4]);
+		}
 		return true;
 	}
 	case CP_EMOTION: {
@@ -1248,7 +1286,6 @@ bool FakeServer(ClientPacket &cp) {
 	case CP_USE_PORTAL: {
 		TenviCharacter &chr = TA.GetOnline();
 		DWORD portal_id = cp.Decode4();
-		// cp.DecodeWStr1();
 		UsePortal(chr, portal_id);
 		return true;
 	}
