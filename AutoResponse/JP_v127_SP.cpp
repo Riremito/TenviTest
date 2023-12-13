@@ -25,9 +25,9 @@ void SetServerPacketHeader_JP_v127() {
 	// 0x22 Object Movement
 	header[SP_HIT] = 0x21;
 	header[SP_SHOW_OBJECT] = 0x23;
-	header[SP_EQUIP_SLOT] = 0x2F;
 	// 0x29 Object Teleport
-	header[SP_UNEQUIP_SLOT] = 0x30; // not sure
+	header[SP_EQUIP_ITEM] = 0x2F;
+	header[SP_UNEQUIP_ITEM] = 0x30;
 	header[SP_EDIT_INVENTORY] = 0x32;
 	header[SP_IN_MAP_TELEPORT] = 0x3C;
 	header[SP_ACCOUNT_DATA] = 0x3D;
