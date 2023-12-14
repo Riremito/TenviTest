@@ -47,6 +47,7 @@ void SetServerPacketHeader_JP_v127() {
 	header[SP_PLAYER_SKILL_ALL] = 0x6D;
 	header[SP_FRIEND_REQUEST] = 0x87;
 	header[SP_GUILD_RANK_DOWN] = 0x92;
+	header[SP_TELESCOPE] = 0xCE;
 	header[SP_GM_MSG] = 0xD0;
 	header[SP_BOARD] = 0xE0;
 }

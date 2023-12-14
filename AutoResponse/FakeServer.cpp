@@ -579,10 +579,10 @@ void PlayerHitPacket(TenviCharacter& chr, DWORD hit_from) {
 	sp.Encode4(1); // 0048693A
 	sp.Encode4(chr.id); // 00486941
 	sp.Encode4(hit_from); // 0045D825,
-	sp.Encode2(0); // 0045D82F
+	sp.Encode2(0); // 0045D82F, skill id, 0: body attack
 	sp.Encode1(1); // 0045D83C, hit count
 	sp.Encode2(55); // 0045D84D, damage
-	sp.Encode2(64); // 0045D865 knockback
+	sp.Encode2(64); // 0045D865 64: knockback, 32: no knockback, 30: miss 
 	sp.Encode1(0); // 0045D872
 	sp.Encode1(0); // 0045D87F
 	sp.Encode2(0); // 0045D88C
@@ -778,6 +778,14 @@ void EnterItemShopErrorPacket() {
 	SendPacket(sp);
 }
 
+// 0x63
+void InitKeySet() {
+	ServerPacket sp(SP_KEY_SET);
+	sp.Encode1(0);
+	sp.Encode1(0);
+	SendPacket(sp);
+}
+
 // 0x66
 void UpdateSkillPacket(TenviCharacter &chr, WORD skill_id) {
 	ServerPacket sp(SP_UPDATE_SKILL);
@@ -798,6 +806,12 @@ void InitSkillPacket(TenviCharacter &chr) {
 		sp.Encode1(v.level); // 004997AA, skill point
 	}
 
+	SendPacket(sp);
+}
+
+// 0xCC
+void UseTelescope() {
+	ServerPacket sp(SP_TELESCOPE);
 	SendPacket(sp);
 }
 
@@ -842,13 +856,7 @@ void BoardPacket(BoardAction action, std::wstring owner = L"", std::wstring msg 
 	SendPacket(sp);
 }
 
-// 0x63
-void InitKeySet() {
-	ServerPacket sp(SP_KEY_SET);
-	sp.Encode1(0);
-	sp.Encode1(0);
-	SendPacket(sp);
-}
+
 
 // ========== Functions ==================
 
@@ -886,7 +894,8 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 
 // enter map by login or something
 void SetMap(TenviCharacter &chr, WORD map_id) {
-	TenviSpawnPoint spawn_point = tenvi_data.get_map(map_id)->FindSpawnPoint(0);
+	TenviMap* map = tenvi_data.get_map(map_id);
+	TenviSpawnPoint spawn_point = map->FindSpawnPoint(0);
 	ChangeMap(chr, map_id, spawn_point.x, spawn_point.y);
 }
 
@@ -1202,6 +1211,10 @@ bool FakeServer(ClientPacket &cp) {
 		DWORD hit_to = cp.Decode4();
 		WORD skill_id = cp.Decode2();
 
+		if (hit_from > 0xFF && hit_to == chr.id) {
+			return true;
+		}
+
 		if (chr.id != hit_to) {
 			HitPacket(hit_from, hit_to, skill_id);
 //			RemoveObjectPacket(hit_to);
@@ -1209,7 +1222,7 @@ bool FakeServer(ClientPacket &cp) {
 		}
 
 		if (hit_to == chr.id) {
-			PlayerHitPacket(chr, skill_id);
+			PlayerHitPacket(chr, hit_from);
 			return true;
 		}
 
@@ -1227,6 +1240,26 @@ bool FakeServer(ClientPacket &cp) {
 		TenviCharacter &chr = TA.GetOnline();
 		DWORD portal_id = cp.Decode4();
 		UsePortal(chr, portal_id);
+		return true;
+	}
+	case CP_END_CAST: {
+		cp.Decode4(); // chr.id
+		DWORD type = cp.Decode2();
+		switch (type) {
+		case 0xF638: {
+			// 천리경
+			UseTelescope();
+			return true;
+		}
+		case 0xEA5F: {
+			// 마을 이동 주문서
+			TenviCharacter& chr = TA.GetOnline();
+			DWORD return_town = tenvi_data.get_map(chr.map)->FindReturnTown();
+			// don't know why it makes error...
+			// SetMap(chr, return_town);
+			return true;
+		}
+		}
 		return true;
 	}
 	case CP_PLAYER_REVIVE: {
@@ -1283,6 +1316,7 @@ bool FakeServer(ClientPacket &cp) {
 		cp.Decode1(); // 0
 		cp.Decode4(); // time
 		return true;
+
 	}
 	default:
 	{

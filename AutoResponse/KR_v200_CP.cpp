@@ -23,8 +23,10 @@ void SetClientPacketHeader_KR_v200() {
 	header[CP_UPDATE_PROFILE] = 0x20;
 	header[CP_WORLD_MAP_OPEN] = 0x23;
 	header[CP_ITEM_SHOP] = 0x38;
-	header[CP_HIT] = 0x44,
+	header[CP_HIT] = 0x44;
+	header[CP_END_CAST] = 0x45;
 	header[CP_USE_SP] = 0x46;
+	header[CP_START_CAST] = 0x47;
 	header[CP_USE_PORTAL] = 0x4F;
 	header[CP_PLAYER_REVIVE] = 0x50;
 	header[CP_CHANGE_CHANNEL] = 0x51;
@@ -33,4 +35,5 @@ void SetClientPacketHeader_KR_v200() {
 	header[CP_PARK_BATTLE_FIELD] = 0xC1;
 	header[CP_EVENT] = 0xC4;
 	header[CP_TIME_GET_TIME] = 0xC8;
+	header[CP_CE] = 0xCE;
 }

@@ -42,7 +42,7 @@ rapidxml::xml_node<>* getNode(WORD itemID, std::string name) {
 
 BYTE FindType(DWORD itemID) {
 	static std::map<std::string, BYTE> type_map = { {"0", 0}, {"1", 0}, {"2", 1}, {"3", 2},
-		{"4", 1}, {"5", 3}, {"6", 3}, {"11", 1}, {"12", 3}, {"13", 1}, {"14", 3}, {"16", 3}};
+		{"4", 1}, {"5", 1}, {"6", 1}, {"11", 1}, {"12", 1}, {"13", 1}, {"14", 1}, {"16", 1}};
 
 	if (FindIsCash(itemID)) {
 		return 3;

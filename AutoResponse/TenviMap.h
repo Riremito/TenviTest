@@ -48,6 +48,7 @@ private:
 	std::vector<TenviPortal> data_portal;
 	std::vector<TenviRegen> data_regen;
 	DWORD return_id = 0;
+	DWORD return_town_id = 0;
 
 	bool LoadXML();
 	bool LoadSubXML();
@@ -63,6 +64,7 @@ public:
 	TenviPortal FindPortal(DWORD id);
 	TenviPortal FindTomb();
 	DWORD FindReturn();
+	DWORD FindReturnTown();
 };
 
 #endif

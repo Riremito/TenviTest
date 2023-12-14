@@ -64,11 +64,15 @@ bool TenviMap::LoadXML() {
 			AddPortal(portal);
 		}
 	}
-
-	LoadSubXML();
-
 	rapidxml::xml_node<>* map_attr = xml_find_dir(root, "attr");
-	return_id = atoi(map_attr->first_attribute("return")->value());
+	if (map_attr) {
+		// tomb location id
+		return_id = atoi(map_attr->first_attribute("return")->value());
+		// return town id
+		return_town_id = atoi(map_attr->first_attribute("returntown")->value());
+	}
+	
+	LoadSubXML();
 
 	return true;
 }
@@ -194,9 +198,15 @@ TenviPortal TenviMap::FindTomb() {
 }
 
 DWORD TenviMap::FindReturn() {
-	writeDebugLog(std::to_string(return_id));
 	if (return_id) {
 		return return_id;
+	}
+	return id;
+}
+
+DWORD TenviMap::FindReturnTown() {
+	if (return_town_id) {
+		return return_town_id;
 	}
 	return id;
 }
