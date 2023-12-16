@@ -30,6 +30,7 @@ void SetClientPacketHeader_KR_v200() {
 	header[CP_USE_PORTAL] = 0x4F;
 	header[CP_PLAYER_REVIVE] = 0x50;
 	header[CP_CHANGE_CHANNEL] = 0x51;
+	header[CP_NPC_TALK] = 0x54;
 	header[CP_PLAYER_CHAT] = 0x56;
 	header[CP_PARK] = 0xC0;
 	header[CP_PARK_BATTLE_FIELD] = 0xC1;

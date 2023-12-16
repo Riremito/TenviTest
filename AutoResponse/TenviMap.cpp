@@ -18,6 +18,7 @@ rapidxml::xml_node<>* xml_find_dir(rapidxml::xml_node<>* parent, std::string nam
 	return NULL;
 }
 
+
 bool TenviMap::LoadXML() {
 
 	std::string mapid_str = (id < 10000) ? ("0" + std::to_string(id)) : std::to_string(id);
@@ -137,12 +138,44 @@ bool TenviMap::LoadSubXML() {
 				continue;
 			}
 		}
-
 		AddRegen(regen);
 	}
-
+	LoadNPCDialog(region_str);
 	return true;
 }
+
+bool TenviMap::LoadNPCDialog(std::string region_str) {
+	for (auto& regen : data_regen) {
+		if (regen.object.id) {
+			rapidxml::xml_document<> doc;
+			std::string npc_id = (regen.object.id < 10000) ? ("0" + std::to_string(regen.object.id)) : std::to_string(regen.object.id);
+			std::string npc_xml = tenvi_data.get_xml_path() + +"\\" + region_str + "\\npc\\" + npc_id + ".xml";
+			regen.dialog = 0;
+			try {
+				rapidxml::file<> xmlFile(npc_xml.c_str());
+				doc.parse<0>(xmlFile.data());
+			}
+			catch (...) {
+				continue;
+			}
+
+			rapidxml::xml_node<>* root = doc.first_node();
+			if (!root) {
+				continue;
+			}
+			for (rapidxml::xml_node<>* child = root->first_node()->first_node(); child; child = child->next_sibling()) {
+				if (strcmp("interactive", child->name()) == 0) {
+					regen.dialog = atoi(child->first_attribute("dialog")->value());
+					continue;
+				}
+			}
+			continue;
+
+		}
+	}
+	return true;
+}
+
 
 DWORD TenviMap::GetID() {
 	return id;
@@ -162,6 +195,15 @@ void TenviMap::AddRegen(TenviRegen &regen) {
 
 std::vector<TenviRegen>& TenviMap::GetRegen() {
 	return data_regen;
+}
+
+DWORD TenviMap::FindDialog(DWORD npc_id) {
+	for (auto& regen : data_regen) {
+		if (regen.id == npc_id) {
+			return regen.dialog;
+		}
+	}
+	return 0;
 }
 
 TenviSpawnPoint TenviMap::FindSpawnPoint(DWORD id) {

@@ -25,6 +25,7 @@ void SetServerPacketHeader_KR_v200() {
 	header[SP_ACTIVATE_OBJECT] = 0x20;
 	header[SP_HIT] = 0x21;
 	header[SP_SHOW_OBJECT] = 0x23;
+	header[SP_NPC_TALK] = 0x25;
 	header[SP_EQUIP_ITEM] = 0x2F;
 	header[SP_UNEQUIP_ITEM] = 0x30;
 	header[SP_EDIT_INVENTORY] = 0x32;

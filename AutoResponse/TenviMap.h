@@ -37,6 +37,7 @@ typedef struct {
 	DWORD flip;
 	DWORD once;
 	DWORD population;
+	DWORD dialog;
 	TenviArea area;
 	TenviObject object;
 } TenviRegen;
@@ -52,6 +53,7 @@ private:
 
 	bool LoadXML();
 	bool LoadSubXML();
+	bool LoadNPCDialog(std::string region_str);
 
 public:
 	TenviMap(DWORD mapid);
@@ -65,6 +67,7 @@ public:
 	TenviPortal FindTomb();
 	DWORD FindReturn();
 	DWORD FindReturnTown();
+	DWORD FindDialog(DWORD npc_id);
 };
 
 #endif

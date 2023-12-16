@@ -255,7 +255,7 @@ void CharacterSpawnPacket(TenviCharacter &chr, float x = 0, float y = 0) {
 	sp.Encode2(chr.face); // 0048DCD3
 	sp.Encode2(chr.cloth); // 0048DCE1
 	sp.Encode2(chr.gcolor); // 0048DCEF
-	sp.Encode1(0); // 0048DCFD
+	sp.Encode1(0); // 0048DCFD, awakening
 
 	// guardian equip
 	for (int i = 0; i < 15; i++) {
@@ -419,6 +419,16 @@ void ShowObjectPacket(TenviRegen &regen) {
 	sp.Encode2(0);
 	sp.EncodeFloat(regen.area.left);
 	sp.EncodeFloat(regen.area.bottom);
+	SendPacket(sp);
+}
+
+// 0x25
+void NPC_TalkPacket(DWORD npc_id, DWORD dialog) {
+	ServerPacket sp(SP_NPC_TALK);
+	sp.Encode4(npc_id);
+	sp.Encode4(dialog);
+	sp.Encode2(0);
+	sp.EncodeWStr1(L"");
 	SendPacket(sp);
 }
 
@@ -1276,10 +1286,15 @@ bool FakeServer(ClientPacket &cp) {
 		return true;
 	}
 	case CP_NPC_TALK: {
-		DWORD object_id = cp.Decode4();
+		TenviCharacter& chr = TA.GetOnline();
+		DWORD npc_id = cp.Decode4();
 		DWORD unk2 = cp.Decode4();
 		DWORD npc_type = cp.Decode4();
 		DWORD unk3 = cp.Decode4();
+
+		DWORD dialog = tenvi_data.get_map(chr.map)->FindDialog(npc_id);
+		NPC_TalkPacket(npc_id, dialog);
+
 		return true;
 	}
 	case CP_PLAYER_CHAT: {
