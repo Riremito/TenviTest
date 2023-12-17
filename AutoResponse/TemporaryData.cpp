@@ -34,6 +34,7 @@ TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WO
 	profile = L"TenviTest";
 	titles = { 8, 9, 10, 11, 12, 13, 14 };
 	awakening = nAwakening;
+	guardian_aboard = 18;
 	InitItem();
 }
 

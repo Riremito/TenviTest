@@ -70,6 +70,7 @@ public:
 	WORD stat_hp;
 	WORD stat_int;
 	WORD stat_mp;
+	BYTE guardian_aboard;
 	// data
 	float x;
 	float y;
