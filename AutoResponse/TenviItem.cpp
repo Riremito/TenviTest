@@ -18,7 +18,7 @@ std::string string_format(const std::string& format, Args ... args) {
 
 rapidxml::xml_node<>* getNode(WORD itemID, std::string name) {
 	std::string itemID_str = string_format("%05d", itemID);
-	std::string item_xml = std::string("./") + tenvi_data.get_region_str() + "/item/" + itemID_str + ".xml";
+	std::string item_xml = tenvi_data.get_xml_path() + "\\" + tenvi_data.get_region_str() + "\\item\\" + itemID_str + ".xml";
 
 	rapidxml::xml_document<> doc;
 	try {

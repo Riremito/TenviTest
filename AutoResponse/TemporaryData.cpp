@@ -19,7 +19,7 @@ TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WO
 	gequipped = nGEquipped;
 	map = 2002;
 	map_return = 0;
-	level = 150;
+	level = 120;
 	sp = 500;
 	ap = 300;
 	// test stat
@@ -47,7 +47,7 @@ void TenviCharacter::InitItem() {
 		// quest
 		42107, 0xA6B4, 0xA4DB,
 		// cash
-		0xF6BB, 0xA928, 0x0013, 0x000F, 0x002D, 0x0A13, 0xF64B, 0x0031, 0x06AB, 0x0099, 0x064F, 0x0036, 0x0041, 0x00A5, 0xF669, 20357, 63321,
+		0xF6BB, 0xA928, 0x0013, 0x000F, 0x002D, 0x0A13, 0xF64B, 0x0031, 0x06AB, 0x0099, 0x064F, 0x0036, 0x0041, 0x00A5, 0xF669, 20357, 63321, 25864, 0x6517
 //		2493, 63163, 40, 19
 	};
 	BYTE equipLoc = 0, extraLoc = 0, questLoc = 0, cashLoc = 0;
@@ -149,7 +149,7 @@ TenviAccount::TenviAccount() {
 void TenviAccount::LateInit() {
 	// default characters
 	std::map<BYTE, Item> silva_gequip = easyEquip({ 270, 20502, 20002, 22319, 22848 });
-	std::map<BYTE, Item> silva_equip = easyEquip({});
+	std::map<BYTE, Item> silva_equip = easyEquip({0x6501});
 //	        BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor
 	TenviCharacter silva(L"Silva", 0x24, 6, 3, 15, 24, 479, 157, 124, silva_equip, silva_gequip);
 	std::vector<TenviSkill> silva_basic = { {1, 1}, {50003, 1}, {40019, 1}, {50000, 1},
@@ -163,7 +163,7 @@ void TenviAccount::LateInit() {
 	silva.TestSilva(); // test
 
 	std::map<BYTE, Item> talli_gequip = easyEquip({ 20811, 20001, 22411, 23968 });
-	std::map<BYTE, Item> talli_equip = easyEquip({});
+	std::map<BYTE, Item> talli_equip = easyEquip({0x6517, 0xF64B});
 	TenviCharacter talli(L"Talli", 0x22, 5, 2, 18, 25, 476, 155, 114, talli_equip, talli_gequip);
 	std::vector<TenviSkill> talli_basic = { { 1, 1 }, {30004, 1}, {20000, 1 }, {30001, 1},
 		{20035, 10}, {20036, 10},
@@ -175,7 +175,7 @@ void TenviAccount::LateInit() {
 	talli.skill.insert(std::end(talli.skill), std::begin(talli_basic), std::end(talli_basic));
 
 	std::map<BYTE, Item> andras_gequip = easyEquip({ 20500, 20310, 22350, 22500 });
-	std::map<BYTE, Item> andras_equip = easyEquip({});
+	std::map<BYTE, Item> andras_equip = easyEquip({0x5E29, 0x6026, 0x63B4});
 	TenviCharacter andras(L"Andras", 0x11, 4, 1, 17, 23, 473, 8, 214, andras_equip, andras_gequip);
 	std::vector<TenviSkill> andras_basic = {{ 1, 1 }, {10004, 1}, { 2, 1 }, {10001, 1},
 		{33, 10}, {34, 10},

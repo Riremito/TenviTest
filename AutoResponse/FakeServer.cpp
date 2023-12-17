@@ -237,7 +237,7 @@ void CharacterSpawnPacket(TenviCharacter &chr, float x = 0, float y = 0) {
 	sp.Encode1(chr.guardian_flag); // 0048DBC6, guardian, 0 = guardian off, 1 = guardian on
 	sp.Encode1(1); // 0048DBD3, death, 0 = death, 1 = alive
 	sp.Encode1(0); // 0048DBE0, battle, 0 = change channel OK, 1 = change channel NG
-	sp.Encode4(4444); // 0048DBFB, ???
+	sp.Encode4(0); // 0048DBFB, ???
 	sp.Encode1(chr.job_mask); // 0048DC08
 	sp.Encode1((BYTE)chr.level); // 0048DC2B
 
@@ -626,7 +626,7 @@ void PlayerStatPacket(TenviCharacter &chr) {
 	ServerPacket sp(SP_PLAYER_STAT_ALL);
 	sp.Encode2(3000); // 004956F5, HP
 	sp.Encode2(4000); // 00495713, MAXHP
-	sp.Encode2(2000); // 0049572F, MP
+	sp.Encode2(1000); // 0049572F, MP
 	sp.Encode2(2000); // 0049574B, MAXMP
 	sp.Encode2(chr.stat_str); // 00495767, STR
 	sp.Encode2(chr.stat_dex); // 00495783, DEX
@@ -995,7 +995,11 @@ void InitEquip(TenviCharacter& chr) {
 	for (int i = 0; i < chr.gequipped.size(); i++) {
 		EditInventory(0, chr.gequipped[i].inventoryID, chr.gequipped[i].itemID, chr.gequipped[i].type);
 	}
-	EditInventory(0, 0xFFFF, 0, 0);
+	for (int i = 0; i < chr.equipped.size(); i++) {
+		EditInventory(0, chr.equipped[i].inventoryID, chr.equipped[i].itemID, chr.equipped[i].type);
+	}
+	EditInventory(0, 0xFFFE, 0, 0);
+	EditInventory(0, 0xFFFF, 0, 3);
 }
 
 void InitInventory(TenviCharacter& chr) {
