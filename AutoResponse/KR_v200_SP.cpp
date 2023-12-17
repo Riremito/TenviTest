@@ -48,4 +48,6 @@ void SetServerPacketHeader_KR_v200() {
 	header[SP_PLAYER_SKILL_ALL] = 0x6C;
 	header[SP_TELESCOPE] = 0xCC;
 	header[SP_BOARD] = 0xE1;
+	header[SP_TITLE] = 0xE3;
+	header[SP_EVENT] = 0xE9;
 }

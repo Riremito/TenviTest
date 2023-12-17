@@ -34,7 +34,8 @@ void SetClientPacketHeader_KR_v200() {
 	header[CP_PLAYER_CHAT] = 0x56;
 	header[CP_PARK] = 0xC0;
 	header[CP_PARK_BATTLE_FIELD] = 0xC1;
-	header[CP_EVENT] = 0xC4;
+	header[CP_CHANGE_TITLE] = 0xC4;
+	header[CP_EVENT] = 0xC6;
 	header[CP_TIME_GET_TIME] = 0xC8;
 	header[CP_CE] = 0xCE;
 }

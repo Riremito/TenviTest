@@ -5,7 +5,7 @@ DWORD TenviCharacter::id_counter = 1337;
 DWORD TenviAccount::inventoryCount = 1;
 
 // new character
-TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, std::map<BYTE, Item> &nEquipped, std::map<BYTE, Item> &nGEquipped) {
+TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, BYTE nAwakening, std::map<BYTE, Item> &nEquipped, std::map<BYTE, Item> &nGEquipped) {
 	id = id_counter++;
 	name = nName;
 	job_mask = nJob_Mask; // gender and job
@@ -32,7 +32,8 @@ TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WO
 	y = 0.0;
 	guardian_flag = 1;
 	profile = L"TenviTest";
-
+	titles = { 8, 9, 10, 11, 12, 13, 14 };
+	awakening = nAwakening;
 	InitItem();
 }
 
@@ -150,21 +151,39 @@ void TenviAccount::LateInit() {
 	std::map<BYTE, Item> silva_gequip = easyEquip({ 270, 20502, 20002, 22319, 22848 });
 	std::map<BYTE, Item> silva_equip = easyEquip({});
 //	        BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor
-	TenviCharacter silva(L"Silva", 0x24, 6, 3, 15, 24, 479, 157, silva_equip, silva_gequip);
-	std::vector<TenviSkill> silva_basic = { {1, 1}, {50003, 1}, {40019, 1}, {50000, 1} };
+	TenviCharacter silva(L"Silva", 0x24, 6, 3, 15, 24, 479, 157, 124, silva_equip, silva_gequip);
+	std::vector<TenviSkill> silva_basic = { {1, 1}, {50003, 1}, {40019, 1}, {50000, 1},
+		{40035, 10}, {40036, 10},
+		{40041, 10}, {40042, 10},
+		{40053, 3}, {40054, 10},
+		{40029, 10}, {40031, 10},
+		{40073, 10}, {40074, 10}
+	};
 	silva.skill.insert(std::end(silva.skill), std::begin(silva_basic), std::end(silva_basic));
 	silva.TestSilva(); // test
 
 	std::map<BYTE, Item> talli_gequip = easyEquip({ 20811, 20001, 22411, 23968 });
 	std::map<BYTE, Item> talli_equip = easyEquip({});
-	TenviCharacter talli(L"Talli", 0x22, 5, 2, 18, 25, 476, 155, talli_equip, talli_gequip);
-	std::vector<TenviSkill> talli_basic = { { 1, 1 }, {30004, 1}, {20000, 1 }, {30001, 1} };
+	TenviCharacter talli(L"Talli", 0x22, 5, 2, 18, 25, 476, 155, 114, talli_equip, talli_gequip);
+	std::vector<TenviSkill> talli_basic = { { 1, 1 }, {30004, 1}, {20000, 1 }, {30001, 1},
+		{20035, 10}, {20036, 10},
+		{20039, 10}, {20040, 10},
+		{20047, 3}, {20048, 10},
+		{20024, 10}, {20029, 10},
+		{20066, 10}, {20067, 10}
+	};
 	talli.skill.insert(std::end(talli.skill), std::begin(talli_basic), std::end(talli_basic));
 
 	std::map<BYTE, Item> andras_gequip = easyEquip({ 20500, 20310, 22350, 22500 });
 	std::map<BYTE, Item> andras_equip = easyEquip({});
-	TenviCharacter andras(L"Andras", 0x11, 4, 1, 17, 23, 473, 8, andras_equip, andras_gequip);
-	std::vector<TenviSkill> andras_basic = {{ 1, 1 }, {10004, 1}, { 2, 1 }, {10001, 1} };
+	TenviCharacter andras(L"Andras", 0x11, 4, 1, 17, 23, 473, 8, 214, andras_equip, andras_gequip);
+	std::vector<TenviSkill> andras_basic = {{ 1, 1 }, {10004, 1}, { 2, 1 }, {10001, 1},
+		{33, 10}, {34, 10},
+		{39, 10}, {40, 10},
+		{46, 3}, {47, 10},
+		{60, 10}, {61, 10},
+		{68, 10}, {69, 10}
+	};
 	andras.skill.insert(std::end(andras.skill), std::begin(andras_basic), std::end(andras_basic));
 
 	characters.push_back(silva);
@@ -173,12 +192,12 @@ void TenviAccount::LateInit() {
 }
 
 
-bool TenviAccount::AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, std::map<BYTE, Item> &nEquipped, std::map<BYTE, Item> &nGEquipped) {
+bool TenviAccount::AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, BYTE nAwakening, std::map<BYTE, Item> &nEquipped, std::map<BYTE, Item> &nGEquipped) {
 	if (slot <= GetCharacters().size()) {
 		return false;
 	}
 
-	TenviCharacter character(nName, nJob_Mask, nJob, nSkin, nHair, nFace, nCloth, nGColor, nEquipped, nGEquipped);
+	TenviCharacter character(nName, nJob_Mask, nJob, nSkin, nHair, nFace, nCloth, nGColor, nAwakening, nEquipped, nGEquipped);
 	characters.push_back(character);
 	return true;
 }

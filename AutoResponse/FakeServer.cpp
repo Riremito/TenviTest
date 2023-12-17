@@ -255,7 +255,7 @@ void CharacterSpawnPacket(TenviCharacter &chr, float x = 0, float y = 0) {
 	sp.Encode2(chr.face); // 0048DCD3
 	sp.Encode2(chr.cloth); // 0048DCE1
 	sp.Encode2(chr.gcolor); // 0048DCEF
-	sp.Encode1(0); // 0048DCFD, awakening
+	sp.Encode1(chr.awakening); // 0048DCFD, awakening
 
 	// guardian equip
 	for (int i = 0; i < 15; i++) {
@@ -469,7 +469,7 @@ void EditInventory(BYTE loc, DWORD inventoryID, WORD itemID, BYTE type, BYTE isD
 	sp.Encode1(0); // 업그레이드 수
 	sp.Encode1(1); // should be 1
 	sp.Encode1(0); // 교환가능횟수
-	sp.Encode2(20); // 내구도
+	sp.Encode2(80); // 내구도
 	sp.Encode1(0);
 	sp.Encode1(0);
 	sp.Encode4(0);
@@ -866,7 +866,37 @@ void BoardPacket(BoardAction action, std::wstring owner = L"", std::wstring msg 
 	SendPacket(sp);
 }
 
+// 0xE3
+void InitTitle(TenviCharacter& chr, std::vector<BYTE> titles) {
+	ServerPacket sp(SP_TITLE);
+	sp.Encode1(3); //
+	sp.Encode4(chr.id); // player id
+	sp.Encode1(titles.size()); // quantity
+	for (auto& title : titles) {
+		sp.Encode1(title);
+		sp.Encode1(1);
+	}
+	sp.Encode1(1); // 선구자
+	SendPacket(sp);
+}
+void EquipTitle(TenviCharacter& chr, BYTE code) {
+	ServerPacket sp(SP_TITLE);
+	sp.Encode1(0);
+	sp.Encode4(chr.id); // player id
+	sp.Encode1(code); // title code
+	SendPacket(sp);
+}
 
+
+// 0xE9
+void EventAlarm(BYTE type) {
+	ServerPacket sp(SP_EVENT);
+	sp.Encode1(0); // 
+	sp.Encode1(type); // type: 2, 3, 4, 5
+	sp.Encode1(2); // 1 time 2 now 3 delete
+	sp.Encode2(11); // Used in time
+	SendPacket2(sp);
+}
 
 // ========== Functions ==================
 
@@ -884,12 +914,23 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 	
 	switch (map_id) {
 	case MAPID_ITEM_SHOP:
-	case MAPID_EVENT:
 	case MAPID_PARK:
 	{
 		// do not change last map id
 		chr.SetMapReturn(chr.map);
 		break;
+	}
+	case MAPID_EVENT + 2:
+	case MAPID_EVENT + 3:
+	case MAPID_EVENT + 4:
+	case MAPID_EVENT + 5:
+	{
+		// do not change last map id
+		chr.SetMapReturn(chr.map);
+		chr.guardian_flag = 0;
+		writeDebugLog("how");
+		break;
+
 	}
 	default:
 	{
@@ -941,9 +982,9 @@ void Park(TenviCharacter &chr, bool bEnter) {
 	}
 }
 
-void Event(TenviCharacter &chr, bool bEnter) {
-	if (bEnter) {
-		SetMap(chr, MAPID_EVENT);
+void Event(TenviCharacter &chr, BYTE type) {
+	if (type) {
+		SetMap(chr, MAPID_EVENT + type);
 	}
 	else {
 		SetMap(chr, chr.map_return);
@@ -1000,6 +1041,7 @@ bool FakeServer(ClientPacket &cp) {
 				InitInventory(chr);
 				InitKeySet();
 				SetMap(chr, chr.map);
+				InitTitle(chr, chr.titles);
 				BoardPacket(Board_Spawn, L"Suhan", L"Read me");
 				BoardPacket(Board_AddInfo, L"Suhan", L"KR Tenvi v200. Non-commercial use only! If you're good at analysing code and wanna help, contact discord=suhan01");
 				return true;
@@ -1027,7 +1069,7 @@ bool FakeServer(ClientPacket &cp) {
 		guardian_equip[am] = TA.MakeItem(guardian_body);
 		guardian_equip[rh] = TA.MakeItem(guardian_weapon);
 
-		TA.AddCharacter(character_name, job_mask, job_id, character_skin, character_hair, character_face, character_cloth, guardian_color, character_equip, guardian_equip);
+		TA.AddCharacter(character_name, job_mask, job_id, character_skin, character_hair, character_face, character_cloth, guardian_color, 0, character_equip, guardian_equip);
 		CharacterListPacket_Test();
 		return true;
 	}
@@ -1052,6 +1094,12 @@ bool FakeServer(ClientPacket &cp) {
 	}
 	case CP_GUARDIAN_RIDE: {
 		cp.Decode1(); // on off
+		return true;
+	}
+	case CP_GUARDIAN_MOVEMENT: {
+		TenviCharacter& chr = TA.GetOnline();
+		chr.x = cp.DecodeFloat();
+		chr.y = cp.DecodeFloat();
 		return true;
 	}
 	case CP_USE_AP: {
@@ -1311,9 +1359,29 @@ bool FakeServer(ClientPacket &cp) {
 				int map_id = _wtoi(&message.c_str()[5]);
 				SetMap(TA.GetOnline(), map_id);
 			}
+			else if (_wcsnicmp(message.c_str(), L"@mob ", 5) == 0) {
+				int npc_id = _wtoi(&message.c_str()[5]);
+				TenviCharacter& chr = TA.GetOnline();
+				TenviRegen regen = { 0, 0, 0, 0, 1, 0, {chr.x, 0, 0, chr.y},  {npc_id} };
+				CreateObjectPacket(regen);
+				ShowObjectPacket(regen);
+				ActivateObjectPacket(regen);
+			}
+			else if (_wcsicmp(message.c_str(), L"@event") == 0) {
+				EventAlarm(2);
+				EventAlarm(3);
+//				EventAlarm(4);
+				EventAlarm(5);
+			}
 			return true;
 		}
 
+		return true;
+	}
+	case CP_CHANGE_TITLE: {
+		TenviCharacter& chr = TA.GetOnline();
+		BYTE code = cp.Decode1();
+		EquipTitle(chr, code);
 		return true;
 	}
 	case CP_PARK: {
@@ -1323,8 +1391,8 @@ bool FakeServer(ClientPacket &cp) {
 	}
 	case CP_PARK_BATTLE_FIELD: // ???
 	case CP_EVENT: {
-		BYTE flag = cp.Decode1();
-		Event(TA.GetOnline(), flag ? true : false);
+		BYTE type = cp.Decode1(); // 02: 낚시(62501), 03: 헬쉬(62502), 04: 아놀드(62503), 05: 나무(62504)
+		Event(TA.GetOnline(), type);
 		return true;
 	}
 	case CP_TIME_GET_TIME: {

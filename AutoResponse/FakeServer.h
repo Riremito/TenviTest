@@ -7,7 +7,7 @@
 
 #define MAPID_ITEM_SHOP 65535
 #define MAPID_PARK 65534
-#define MAPID_EVENT 62501
+#define MAPID_EVENT 62499
 
 bool FakeServer(ClientPacket &cp);
 // test
