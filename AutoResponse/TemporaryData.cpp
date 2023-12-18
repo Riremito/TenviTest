@@ -34,7 +34,8 @@ TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WO
 	profile = L"TenviTest";
 	titles = { 8, 9, 10, 11, 12, 13, 14 };
 	awakening = nAwakening;
-	guardian_aboard = 18;
+	fly = 0;
+	aboard = 18;
 	InitItem();
 }
 
@@ -153,7 +154,7 @@ void TenviAccount::LateInit() {
 	std::map<BYTE, Item> silva_equip = easyEquip({0x6501});
 //	        BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor
 	TenviCharacter silva(L"Silva", 0x24, 6, 3, 15, 24, 479, 157, 124, silva_equip, silva_gequip);
-	std::vector<TenviSkill> silva_basic = { {1, 1}, {50003, 1}, {40019, 1}, {50000, 1},
+	std::vector<TenviSkill> silva_basic = { {1, 1}, {50003, 1}, {40019, 1}, {50000, 1}, {50006, 1}, {50008, 5},
 		{40035, 10}, {40036, 10},
 		{40041, 10}, {40042, 10},
 		{40053, 3}, {40054, 10},
@@ -166,7 +167,7 @@ void TenviAccount::LateInit() {
 	std::map<BYTE, Item> talli_gequip = easyEquip({ 20811, 20001, 22411, 23968 });
 	std::map<BYTE, Item> talli_equip = easyEquip({0x6517, 0xF64B});
 	TenviCharacter talli(L"Talli", 0x22, 5, 2, 18, 25, 476, 155, 114, talli_equip, talli_gequip);
-	std::vector<TenviSkill> talli_basic = { { 1, 1 }, {30004, 1}, {20000, 1 }, {30001, 1},
+	std::vector<TenviSkill> talli_basic = { { 1, 1 }, {30004, 1}, {20000, 1 }, {30001, 1}, {30007, 1}, {30010, 5},
 		{20035, 10}, {20036, 10},
 		{20039, 10}, {20040, 10},
 		{20047, 3}, {20048, 10},
@@ -178,7 +179,7 @@ void TenviAccount::LateInit() {
 	std::map<BYTE, Item> andras_gequip = easyEquip({ 20500, 20310, 22350, 22500 });
 	std::map<BYTE, Item> andras_equip = easyEquip({0x5E29, 0x6026, 0x63B4});
 	TenviCharacter andras(L"Andras", 0x11, 4, 1, 17, 23, 473, 8, 214, andras_equip, andras_gequip);
-	std::vector<TenviSkill> andras_basic = {{ 1, 1 }, {10004, 1}, { 2, 1 }, {10001, 1},
+	std::vector<TenviSkill> andras_basic = { { 1, 1 }, {10004, 1}, { 2, 1 }, {10001, 1}, {10007, 1}, {10010, 5},
 		{33, 10}, {34, 10},
 		{39, 10}, {40, 10},
 		{46, 3}, {47, 10},

@@ -247,8 +247,8 @@ void CharacterSpawnPacket(TenviCharacter &chr, float x = 0, float y = 0) {
 
 	sp.EncodeWStr1(chr.name); // name
 	sp.EncodeWStr1(L""); // guardian name
-	sp.Encode1(0); // 0048DC8F
-	sp.Encode1(chr.guardian_aboard); // 0048DC9C
+	sp.Encode1(chr.fly); // 0048DC8F fly
+	sp.Encode1(chr.aboard); // 0048DC9C
 	sp.Encode2(chr.job); // 0048DCA9
 	sp.Encode2(chr.skin); // 0048DCB7
 	sp.Encode2(chr.hair); // 0048DCC5
@@ -1099,13 +1099,15 @@ bool FakeServer(ClientPacket &cp) {
 	case CP_GUARDIAN_RIDE: {
 		TenviCharacter& chr = TA.GetOnline();
 		BYTE flag = cp.Decode1(); // on off
-		chr.guardian_aboard = (flag ? 18 : 0);
+		chr.aboard = (flag ? 18 : 0);
 		return true;
 	}
 	case CP_GUARDIAN_MOVEMENT: {
 		TenviCharacter& chr = TA.GetOnline();
 		chr.x = cp.DecodeFloat();
 		chr.y = cp.DecodeFloat();
+		cp.Decode1();
+		chr.fly = (cp.Decode1() ? 10 : 0);
 		return true;
 	}
 	case CP_USE_AP: {
