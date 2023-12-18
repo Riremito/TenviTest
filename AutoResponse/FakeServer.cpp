@@ -3,6 +3,8 @@
 #include"TemporaryData.h"
 #include"TenviItem.h"
 #include<map>
+#include<set>
+
 
 TenviAccount TA;
 // ========== TENVI Packet Response ==========
@@ -312,7 +314,7 @@ void CharacterSpawnPacket(TenviCharacter &chr, float x = 0, float y = 0) {
 	sp.Encode4(0); // 0048E6E5
 	sp.Encode4(0); // 0048E6EF
 	sp.Encode1(0); // 0048E6F9
-	sp.Encode1(0); // 0048E706
+	sp.Encode1(chr.titleEquipped); // 0048E706
 	sp.Encode4(0); // 0048E713
 	sp.Encode4(0); // 0048E71D
 	sp.Encode4(0); // 0048E727
@@ -819,6 +821,49 @@ void InitSkillPacket(TenviCharacter &chr) {
 	SendPacket(sp);
 }
 
+// 0xA6
+void ShopPacket(DWORD npc_id) {
+	ServerPacket sp(SP_SHOP);
+	sp.Encode4(npc_id); // 00403097 npc id
+	sp.Encode1(1); // 00403151
+	sp.Encode1(0); // 00403165
+	sp.Encode1(1); // 00403179
+	sp.Encode2(1); // 00403189
+	sp.Encode1(1); // 004031A8
+	sp.Encode2(0); // 004031BD
+	sp.Encode2(0); // 004031C8
+	sp.Encode2(0); // 004031D3
+	sp.Encode8(0); // 004031DE
+	sp.Encode4(0); // 004031EB
+	sp.Encode2(0); // 004031F5
+	sp.Encode4(0); // 00403200
+	sp.Encode2(0); // 0040320A
+	sp.Encode2(0); // 00403217
+	sp.EncodeFloat(0); // 0040322B
+	SendPacket(sp);
+}
+
+// 0xB0
+void BankPacket(DWORD npc_id) {
+	ServerPacket sp(SP_BANK);
+	sp.Encode4(npc_id);
+	SendPacket(sp);
+}
+
+// 0xB4
+void MailPacket(DWORD npc_id) {
+	ServerPacket sp(SP_MAIL);
+	sp.Encode4(npc_id);
+	SendPacket(sp);
+}
+
+// 0xBC
+void AuctionPacket(DWORD npc_id) {
+	ServerPacket sp(SP_AUCTION);
+	sp.Encode4(npc_id);
+	SendPacket(sp);
+}
+
 // 0xCC
 void UseTelescope() {
 	ServerPacket sp(SP_TELESCOPE);
@@ -867,7 +912,7 @@ void BoardPacket(BoardAction action, std::wstring owner = L"", std::wstring msg 
 }
 
 // 0xE3
-void InitTitle(TenviCharacter& chr, std::vector<BYTE> titles) {
+void HaveTitle(TenviCharacter& chr, std::vector<BYTE> titles) {
 	ServerPacket sp(SP_TITLE);
 	sp.Encode1(3); //
 	sp.Encode4(chr.id); // player id
@@ -941,6 +986,7 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 	}
 	SpawnObjects(chr, map_id);
 	CharacterSpawnPacket(chr, x, y);
+	HaveTitle(chr, chr.titles);
 }
 
 // enter map by login or something
@@ -984,6 +1030,9 @@ void Park(TenviCharacter &chr, bool bEnter) {
 
 void Event(TenviCharacter &chr, BYTE type) {
 	if (type) {
+		chr.aboard = 0;
+		chr.fly = 0;
+		chr.guardian_flag = 0;
 		SetMap(chr, MAPID_EVENT + type);
 	}
 	else {
@@ -1045,7 +1094,6 @@ bool FakeServer(ClientPacket &cp) {
 				InitInventory(chr);
 				InitKeySet();
 				SetMap(chr, chr.map);
-				InitTitle(chr, chr.titles);
 				BoardPacket(Board_Spawn, L"Suhan", L"Read me");
 				BoardPacket(Board_AddInfo, L"Suhan", L"KR Tenvi v200. Non-commercial use only! If you're good at analysing code and wanna help, contact discord=suhan01");
 				return true;
@@ -1348,9 +1396,28 @@ bool FakeServer(ClientPacket &cp) {
 		DWORD npc_type = cp.Decode4();
 		DWORD unk3 = cp.Decode4();
 
-		DWORD dialog = tenvi_data.get_map(chr.map)->FindDialog(npc_id);
-		NPC_TalkPacket(npc_id, dialog);
+		DWORD dialog = tenvi_data.get_map(chr.map)->FindNPCRegen(npc_id).dialog;
+		WORD group = tenvi_data.get_map(chr.map)->FindNPCRegen(npc_id).group;
 
+		std::set<WORD> shop { 6, 7, 8, 9, 11, 16, 17, 18, 30, 31, 61, 76, 80, 82, 84, 92, 94, 101, 103, 105, 118, 119, 120, 125, 126, 127, 128, 130 };
+		if (dialog) {
+			NPC_TalkPacket(npc_id, dialog);
+		}
+		if (shop.count(group)) {
+			ShopPacket(npc_id);
+		}
+		switch (group) {
+		case 20:
+			MailPacket(npc_id);
+			break;
+		case 24:
+			BankPacket(npc_id);
+			break;
+		case 26:
+			AuctionPacket(npc_id);
+			break;
+		}		
+//		ChatPacket(std::to_wstring(tenvi_data.get_map(chr.map)->FindNPCRegen(npc_id).group));
 		return true;
 	}
 	case CP_PLAYER_CHAT: {
@@ -1370,7 +1437,7 @@ bool FakeServer(ClientPacket &cp) {
 			else if (_wcsnicmp(message.c_str(), L"@mob ", 5) == 0) {
 				int npc_id = _wtoi(&message.c_str()[5]);
 				TenviCharacter& chr = TA.GetOnline();
-				TenviRegen regen = { 0, 0, 0, 0, 1, 0, {chr.x, 0, 0, chr.y},  {npc_id} };
+				TenviRegen regen = { 0, 0, 0, 0, 1, 0, 0, {chr.x, 0, 0, chr.y},  {npc_id} };
 				CreateObjectPacket(regen);
 				ShowObjectPacket(regen);
 				ActivateObjectPacket(regen);

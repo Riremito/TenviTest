@@ -72,6 +72,7 @@ public:
 	WORD stat_mp;
 	BYTE fly;
 	BYTE aboard;
+	BYTE titleEquipped;
 	// data
 	float x;
 	float y;

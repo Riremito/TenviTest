@@ -38,6 +38,7 @@ typedef struct {
 	DWORD once;
 	DWORD population;
 	DWORD dialog;
+	DWORD group;
 	TenviArea area;
 	TenviObject object;
 } TenviRegen;
@@ -67,7 +68,7 @@ public:
 	TenviPortal FindTomb();
 	DWORD FindReturn();
 	DWORD FindReturnTown();
-	DWORD FindDialog(DWORD npc_id);
+	TenviRegen& FindNPCRegen(DWORD npc_id);
 };
 
 #endif

@@ -150,7 +150,7 @@ bool TenviMap::LoadNPCDialog(std::string region_str) {
 			rapidxml::xml_document<> doc;
 			std::string npc_id = (regen.object.id < 10000) ? ("0" + std::to_string(regen.object.id)) : std::to_string(regen.object.id);
 			std::string npc_xml = tenvi_data.get_xml_path() + +"\\" + region_str + "\\npc\\" + npc_id + ".xml";
-			regen.dialog = 0;
+			regen.dialog, regen.group = 0, 0;
 			try {
 				rapidxml::file<> xmlFile(npc_xml.c_str());
 				doc.parse<0>(xmlFile.data());
@@ -163,10 +163,16 @@ bool TenviMap::LoadNPCDialog(std::string region_str) {
 			if (!root) {
 				continue;
 			}
+			for (rapidxml::xml_node<>* child = root->first_node(); child; child = child->next_sibling()) {
+				if (strcmp("npc", child->name()) == 0) {
+					regen.group = atoi(child->first_attribute("group")->value());
+					break;
+				}
+			}
 			for (rapidxml::xml_node<>* child = root->first_node()->first_node(); child; child = child->next_sibling()) {
 				if (strcmp("interactive", child->name()) == 0) {
 					regen.dialog = atoi(child->first_attribute("dialog")->value());
-					continue;
+					break;
 				}
 			}
 			continue;
@@ -197,13 +203,14 @@ std::vector<TenviRegen>& TenviMap::GetRegen() {
 	return data_regen;
 }
 
-DWORD TenviMap::FindDialog(DWORD npc_id) {
+TenviRegen& TenviMap::FindNPCRegen(DWORD npc_id) {
 	for (auto& regen : data_regen) {
 		if (regen.id == npc_id) {
-			return regen.dialog;
+			return regen;
 		}
 	}
-	return 0;
+	TenviRegen nullRegen = { 0, 0, 0, 0, 1, 0, 0, {0, 0, 0, 0},  {0} };
+	return nullRegen;
 }
 
 TenviSpawnPoint TenviMap::FindSpawnPoint(DWORD id) {

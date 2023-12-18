@@ -36,6 +36,7 @@ TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WO
 	awakening = nAwakening;
 	fly = 0;
 	aboard = 18;
+	titleEquipped = 9;
 	InitItem();
 }
 
