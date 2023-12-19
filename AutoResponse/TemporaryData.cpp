@@ -50,7 +50,7 @@ void TenviCharacter::InitItem() {
 		// quest
 		42107, 0xA6B4, 0xA4DB,
 		// cash
-		0xF6BB, 0xA928, 0x0013, 0x000F, 0x002D, 0x0A13, 0xF64B, 0x0031, 0x06AB, 0x0099, 0x064F, 0x0036, 0x0041, 0x00A5, 0xF669, 20357, 63321, 25864, 0x6517,
+		0xF6BB, 0xA928, 0x0013, 0x000F, 0x002D, 0x0A13, 0xF64B, 0x0031, 0x06AB, 0x0099, 0x064F, 0x0036, 0x0041, 0x00A5, 0xF669, 20357, 63321, 25862, 0x6517, 26497, 26498,
 //		2493, 63163, 40, 19
 		// card
 		30000, 30001
@@ -169,7 +169,7 @@ void TenviAccount::LateInit() {
 	silva.skill.insert(std::end(silva.skill), std::begin(silva_basic), std::end(silva_basic));
 	silva.TestSilva(); // test
 
-	std::map<BYTE, Item> talli_gequip = easyEquip({ 20811, 20001, 22411, 23968 });
+	std::map<BYTE, Item> talli_gequip = easyEquip({ 20811, 20001, 22411, 23968});
 	std::map<BYTE, Item> talli_equip = easyEquip({0x6517, 0xF64B});
 	TenviCharacter talli(L"Talli", 0x22, 5, 2, 18, 25, 476, 155, 114, talli_equip, talli_gequip);
 	std::vector<TenviSkill> talli_basic = { { 1, 1 }, {30004, 1}, {20000, 1 }, {30001, 1}, {30007, 1}, {30010, 5},

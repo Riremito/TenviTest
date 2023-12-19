@@ -1476,6 +1476,7 @@ bool FakeServer(ClientPacket &cp) {
 		TenviCharacter& chr = TA.GetOnline();
 		BYTE code = cp.Decode1();
 		EquipTitle(chr, code);
+		chr.titleEquipped = code;
 		return true;
 	}
 	case CP_PARK: {
