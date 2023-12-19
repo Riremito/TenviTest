@@ -85,6 +85,7 @@ public:
 	std::map<BYTE, Item> inventory_extra;
 	std::map<BYTE, Item> inventory_quest;
 	std::map<BYTE, Item> inventory_cash;
+	std::map<BYTE, Item> inventory_card;
 	std::vector<TenviSkill> skill;
 	std::vector<BYTE> titles;
 

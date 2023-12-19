@@ -50,10 +50,12 @@ void TenviCharacter::InitItem() {
 		// quest
 		42107, 0xA6B4, 0xA4DB,
 		// cash
-		0xF6BB, 0xA928, 0x0013, 0x000F, 0x002D, 0x0A13, 0xF64B, 0x0031, 0x06AB, 0x0099, 0x064F, 0x0036, 0x0041, 0x00A5, 0xF669, 20357, 63321, 25864, 0x6517
+		0xF6BB, 0xA928, 0x0013, 0x000F, 0x002D, 0x0A13, 0xF64B, 0x0031, 0x06AB, 0x0099, 0x064F, 0x0036, 0x0041, 0x00A5, 0xF669, 20357, 63321, 25864, 0x6517,
 //		2493, 63163, 40, 19
+		// card
+		30000, 30001
 	};
-	BYTE equipLoc = 0, extraLoc = 0, questLoc = 0, cashLoc = 0;
+	BYTE equipLoc = 0, extraLoc = 0, questLoc = 0, cashLoc = 0, cardLoc = 0;
 	for (auto& itemID : inventory) {
 		switch (FindType(itemID)) {
 		case 0:
@@ -68,6 +70,8 @@ void TenviCharacter::InitItem() {
 		case 3:
 			inventory_cash[cashLoc++] = TenviAccount::MakeItem(itemID);
 			break;
+		case 4:
+			inventory_card[cardLoc++] = TenviAccount::MakeItem(itemID);
 		}
 	}
 }

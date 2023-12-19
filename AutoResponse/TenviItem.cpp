@@ -47,6 +47,9 @@ BYTE FindType(DWORD itemID) {
 	if (FindIsCash(itemID)) {
 		return 3;
 	}
+	if (FindSlot(itemID) == 11) {
+		return 4;
+	}
 
 	rapidxml::xml_node<>* item = getNode(itemID, "type");
 	if (item) {

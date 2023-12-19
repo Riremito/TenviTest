@@ -462,7 +462,7 @@ void UnequipItem(BYTE slot, DWORD itemID, BYTE isCash) {
 // 0x32
 void EditInventory(BYTE loc, DWORD inventoryID, WORD itemID, BYTE type, BYTE isDelay=0) {
 	ServerPacket sp(SP_EDIT_INVENTORY);
-	sp.Encode1(type); // 장비(0), 기타(1), 퀘스트(2), 캐시(3)
+	sp.Encode1(type); // 장비(0), 기타(1), 퀘스트(2), 캐시(3), 카드(4)
 	sp.Encode1(loc); // 몇 번째 슬롯
 	sp.Encode1(1); // 004992BD 0이면 사라짐??
 	sp.Encode8(inventoryID); // inventory ID
@@ -1052,7 +1052,7 @@ void InitEquip(TenviCharacter& chr) {
 }
 
 void InitInventory(TenviCharacter& chr) {
-	for (auto& inventory : { chr.inventory_equip, chr.inventory_extra, chr.inventory_quest, chr.inventory_cash }) {
+	for (auto& inventory : { chr.inventory_equip, chr.inventory_extra, chr.inventory_quest, chr.inventory_cash, chr.inventory_card }) {
 		for (const auto& pair : inventory) {
 			EditInventory(pair.first, pair.second.inventoryID, pair.second.itemID, pair.second.type);
 		}
@@ -1182,6 +1182,10 @@ bool FakeServer(ClientPacket &cp) {
 			inventory = &chr.inventory_equip;
 			equip = &chr.gequipped;
 		}
+		else if (type == 4) {
+			inventory = &chr.inventory_card;
+			equip = &chr.gequipped;
+		}
 		else {
 			inventory = &chr.inventory_cash;
 			equip = &chr.equipped;
@@ -1208,7 +1212,7 @@ bool FakeServer(ClientPacket &cp) {
 			slot = 4;
 		}
 
-		EquipItem(slot, (*inventory)[loc].inventoryID, (*inventory)[loc].itemID, type);
+		EquipItem(slot, (*inventory)[loc].inventoryID, (*inventory)[loc].itemID, type == 3);
 		if ((*equip)[slot].inventoryID) {
 			EditInventory(loc, (*equip)[slot].inventoryID, (*equip)[slot].itemID, (*equip)[slot].type, 1);
 		}
@@ -1240,7 +1244,16 @@ bool FakeServer(ClientPacket &cp) {
 			chr.inventory_equip[loc] = chr.gequipped[slot];
 
 			// 장비창에서 장비 삭제
-			UnequipItem(slot, chr.gequipped[slot].itemID, type);
+			UnequipItem(slot, chr.gequipped[slot].itemID, type == 3);
+			chr.gequipped[slot] = TenviAccount::MakeItem(0);
+		}
+		else if (type == 4) {
+			// 카드북에 카드 넣기
+			EditInventory(loc, chr.gequipped[slot].inventoryID, chr.gequipped[slot].itemID, chr.gequipped[slot].type);
+			chr.inventory_card[loc] = chr.gequipped[slot];
+
+			// 장비창에서 카드 삭제
+			UnequipItem(slot, chr.gequipped[slot].itemID, type == 3);
 			chr.gequipped[slot] = TenviAccount::MakeItem(0);
 		}
 		else {
@@ -1249,7 +1262,7 @@ bool FakeServer(ClientPacket &cp) {
 			chr.inventory_cash[loc] = chr.equipped[slot];
 
 			// 장비창에서 장비 삭제
-			UnequipItem(slot, chr.equipped[slot].itemID, type);
+			UnequipItem(slot, chr.equipped[slot].itemID, type == 3);
 			chr.equipped[slot] = TenviAccount::MakeItem(0);
 		}
 
@@ -1285,7 +1298,7 @@ bool FakeServer(ClientPacket &cp) {
 		BYTE priorLoc = 0;
 
 		TenviCharacter& chr = TA.GetOnline();
-		for (std::map<BYTE, Item>* inventory : { &chr.inventory_equip, &chr.inventory_cash, &chr.inventory_extra, &chr.inventory_quest }) {
+		for (std::map<BYTE, Item>* inventory : { &chr.inventory_equip, &chr.inventory_cash, &chr.inventory_extra, &chr.inventory_quest, &chr.inventory_card }) {
 			for (auto& pair : *inventory) {
 				if (pair.second.inventoryID == inventoryID) {
 					priorLoc = pair.first;
@@ -1374,6 +1387,12 @@ bool FakeServer(ClientPacket &cp) {
 			return true;
 		}
 		}
+		return true;
+	}
+	case CP_TELLESCOPE_SELECT: {
+		cp.Decode1();
+		WORD itemID = cp.Decode2();
+		ChatPacket(std::to_wstring(itemID));
 		return true;
 	}
 	case CP_PLAYER_REVIVE: {
