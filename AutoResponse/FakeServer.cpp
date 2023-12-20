@@ -1119,7 +1119,7 @@ bool FakeServer(ClientPacket &cp) {
 				InitKeySet();
 				SetMap(chr, chr.map);
 				BoardPacket(Board_Spawn, L"Suhan", L"Read me");
-				BoardPacket(Board_AddInfo, L"Suhan", L"KR Tenvi v200. Non-commercial use only! If you're good at analysing code and wanna help, contact discord=suhan01");
+				BoardPacket(Board_AddInfo, L"Suhan", L"Non-commercial works");
 				return true;
 			}
 		}
