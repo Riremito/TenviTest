@@ -181,7 +181,7 @@ void TenviAccount::LateInit() {
 	};
 	talli.skill.insert(std::end(talli.skill), std::begin(talli_basic), std::end(talli_basic));
 
-	std::map<BYTE, Item> andras_gequip = easyEquip({ 20500, 20310, 22350, 22500 });
+	std::map<BYTE, Item> andras_gequip = easyEquip({ 20500, 20310, 22350, 22500, 25576});
 	std::map<BYTE, Item> andras_equip = easyEquip({0x5E29, 0x6026, 0x63B4});
 	TenviCharacter andras(L"Andras", 0x11, 4, 1, 17, 23, 473, 8, 214, andras_equip, andras_gequip);
 	std::vector<TenviSkill> andras_basic = { { 1, 1 }, {10004, 1}, { 2, 1 }, {10001, 1}, {10007, 1}, {10010, 5},
