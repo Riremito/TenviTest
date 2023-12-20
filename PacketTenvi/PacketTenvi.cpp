@@ -71,10 +71,10 @@ DWORD packet_id_in = 0;
 
 typedef struct {
 	ULONG_PTR id; // パケット識別子
-	ULONG_PTR addr; // リターンアドレス
-	MessageHeader fmt; // フォーマットの種類
+	ULONG_PTR addr; // リ??ンアドレス
+	MessageHeader fmt; // フォ??ットの種類
 	ULONG_PTR pos; // 場所
-	ULONG_PTR size; // データの長さ (DecodeBuffer以外不要)
+	ULONG_PTR size; // デ??の長さ (DecodeBuffer以外不要)
 
 } PacketExtraInformation;
 
@@ -180,7 +180,7 @@ void AddRecvPacket(InPacket *p, ULONG_PTR addr, bool &bBlock) {
 	LeaveCriticalSection(&cs);
 }
 
-// 先にフォーマット情報は送信される
+// 先にフォ??ット情報は送信される
 void __fastcall SendPacket_Hook(void *ecx, void *edx, OutPacket *p) {
 	if (uEnterSendPacket_ret != (ULONG_PTR)_ReturnAddress()) {
 		bool bBlock = false;

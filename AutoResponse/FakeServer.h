@@ -7,10 +7,12 @@
 
 #define MAPID_ITEM_SHOP 65535
 #define MAPID_PARK 65534
-#define MAPID_EVENT 62501
+#define MAPID_EVENT 62499
 
 bool FakeServer(ClientPacket &cp);
 // test
+bool getIsFlag();
+void LateInit_TA();
 void WorldListPacket();
 void CharacterSelectPacket();
 void CharacterListPacket();

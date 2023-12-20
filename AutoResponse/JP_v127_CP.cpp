@@ -12,7 +12,10 @@ void SetClientPacketHeader_JP_v127() {
 	header[CP_BACK_TO_LOGIN_SERVER] = 0x0A;
 	header[CP_LOGOUT] = 0x09;
 	header[CP_PLAYER_MOVEMENT] = 0x0C;
+	header[CP_EQUIP] = 0x0D;
+	header[CP_UNEQUIP] = 0x0E;
 	header[CP_DROP_COIN] = 0x11;
+	header[CP_MOVE_ITEM] = 0x13;
 	header[CP_GUARDIAN_RIDE] = 0x18;
 	header[CP_GUARDIAN_MOVEMENT] = 0x19;
 	header[CP_USE_AP] = 0x1A;

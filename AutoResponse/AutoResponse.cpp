@@ -1,3 +1,4 @@
+#include"TenviData.h"
 #include"AutoResponse.h"
 
 DWORD Addr_OnPacketClass = 0;
@@ -83,6 +84,11 @@ DWORD __fastcall LoginButton_KR_Hook(void *ecx, void *, void *, void *) {
 	return 0;
 }
 
+void(__thiscall* _LoginNaive)(void* ecx) = NULL;
+void __fastcall LoginNaive_Hook(void* ecx) {
+	_LoginNaive(ecx);
+	WorldListPacket();
+}
 
 void (__thiscall *_WorldSelectButton)(void *) = NULL;
 void __fastcall WorldSelectButton_Hook(void *ecx) {
@@ -116,8 +122,10 @@ void __fastcall ProcessPacketCaller_Hook(void *ecx) {
 	DelayExecution();
 }
 
+
 bool AutoResponseHook() {
 	Rosemary r;
+	LateInit_TA();
 
 	switch (GetRegion()) {
 	case TENVI_JP: {
@@ -205,19 +213,19 @@ bool AutoResponseHook() {
 		SetClientPacketHeader_KR_v200();
 
 		Addr_OnPacketClass = 0x00731764;
-		//SHookFunction(LoginButton_KR, 0x004013C8);
+		SHookFunction(LoginNaive, 0x0051CAA1);
 		SHookFunction(WorldSelectButton, 0x0051CD40);
 		SHookFunction(EnterSendPacket, 0x00593F4B);
 		SHookFunction(ConnectCaller, 0x00566AB8);
 		SHookFunction(ProcessPacketCaller, 0x00566EF8);
-
 		Addr_OnPacketClass2 = 0x0073178C;
 		Addr_OnPacket2 = 0x004B202F;
+
 
 		// portal id to map id
 		//r.Patch(0x00410513 + 0x02, L"18");
 		return true;
-	}
+	}	
 	default: {
 		break;
 	}
