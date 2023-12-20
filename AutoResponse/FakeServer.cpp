@@ -1083,8 +1083,8 @@ void InitInventory(TenviCharacter& chr) {
 
 void RemoveFromInventory(BYTE loc, BYTE type) {
 	ServerPacket sp(SP_EDIT_INVENTORY);
-	sp.Encode1(type); // 장비, 기타, 캐시
-	sp.Encode1(loc); // 몇 번째 슬롯
+	sp.Encode1(type); // equip, other, cash, card
+	sp.Encode1(loc);
 	sp.Encode1(0);
 	DelaySendPacket(sp);
 }
@@ -1118,7 +1118,7 @@ bool FakeServer(ClientPacket &cp) {
 				InitInventory(chr);
 				InitKeySet();
 				SetMap(chr, chr.map);
-				BoardPacket(Board_Spawn, L"Suhan", L"Read me");
+				BoardPacket(Board_Spawn, L"Suhan", L"Picket");
 				BoardPacket(Board_AddInfo, L"Suhan", L"Non-commercial works");
 				return true;
 			}
