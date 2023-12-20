@@ -20,7 +20,6 @@ rapidxml::xml_node<>* xml_find_dir(rapidxml::xml_node<>* parent, std::string nam
 
 
 bool TenviMap::LoadXML() {
-
 	std::string mapid_str = (id < 10000) ? ("0" + std::to_string(id)) : std::to_string(id);
 	std::string map_xml = tenvi_data.get_xml_path() + +"\\" + tenvi_data.get_region_str() + "\\map\\" + mapid_str + "_0.xml";
 	OutputDebugStringA(("[Maple] xml = " + map_xml).c_str());
@@ -237,7 +236,7 @@ TenviPortal TenviMap::FindPortal(DWORD id) {
 
 TenviPortal TenviMap::FindTomb() {
 	for (auto& portal : data_portal) {
-		if (portal.next_mapid == 1) {
+		if (portal.id == 254) {
 			return portal;
 		}
 	}

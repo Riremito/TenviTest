@@ -10,6 +10,8 @@
 TenviAccount TA;
 // ========== TENVI Packet Response ==========
 #define TENVI_VERSION 0x1023
+DWORD previous_npc;
+DWORD previous_dialog;
 
 void LateInit_TA() {
 	TA.LateInit();
@@ -342,6 +344,14 @@ void RemoveObjectPacket(DWORD object_id) {
 	SendPacket(sp);
 }
 
+// 0x13
+void DeathPacket(TenviCharacter& chr) {
+	ServerPacket sp(SP_DEATH);
+	sp.Encode4(chr.id);
+	sp.Encode1(1); // 0 or 1, different ui
+	SendPacket(sp);
+}
+
 // 0x14
 void CreateObjectPacket(TenviRegen &regen) {
 	ServerPacket sp(SP_CREATE_OBJECT);
@@ -444,7 +454,7 @@ void NPC_TalkPacket(DWORD npc_id, DWORD dialog) {
 	sp.Encode4(dialog);
 	sp.Encode2(0);
 	sp.EncodeWStr1(L"");
-	SendPacket(sp);
+	DelaySendPacket(sp);
 }
 
 // 0x2F
@@ -599,14 +609,14 @@ void AccountDataPacket(TenviCharacter &chr) {
 }
 
 // 0x41
-void PlayerHitPacket(TenviCharacter& chr, DWORD hit_from) {
+void PlayerHitPacket(TenviCharacter& chr, DWORD hit_from, WORD damage) {
 	ServerPacket sp(SP_PLAYER_HIT);
 	sp.Encode4(1); // 0048693A
 	sp.Encode4(chr.id); // 00486941
 	sp.Encode4(hit_from); // 0045D825,
 	sp.Encode2(0); // 0045D82F, skill id, 0: body attack
 	sp.Encode1(1); // 0045D83C, hit count
-	sp.Encode2(55); // 0045D84D, damage
+	sp.Encode2(damage); // 0045D84D, damage
 	sp.Encode2(64); // 0045D865 64: knockback, 32: no knockback, 30: miss 
 	sp.Encode1(0); // 0045D872
 	sp.Encode1(0); // 0045D87F
@@ -1089,6 +1099,7 @@ void RemoveFromInventory(BYTE loc, BYTE type) {
 	DelaySendPacket(sp);
 }
 
+
 // ========== TENVI Server Main ==========
 bool FakeServer(ClientPacket &cp) {
 	CLIENT_PACKET header = cp.DecodeHeader();
@@ -1373,7 +1384,9 @@ bool FakeServer(ClientPacket &cp) {
 		}
 
 		if (hit_to == chr.id) {
-			PlayerHitPacket(chr, hit_from);
+			WORD damage = 100;
+			PlayerHitPacket(chr, hit_from, damage);
+
 			return true;
 		}
 
@@ -1444,6 +1457,8 @@ bool FakeServer(ClientPacket &cp) {
 
 		std::set<WORD> shop { 6, 7, 8, 9, 11, 16, 17, 18, 30, 31, 61, 76, 80, 82, 84, 92, 94, 101, 103, 105, 118, 119, 120, 125, 126, 127, 128, 130 };
 		if (dialog) {
+			previous_npc = npc_id;
+			previous_dialog = dialog;
 			NPC_TalkPacket(npc_id, dialog);
 		}
 		if (shop.count(group)) {
@@ -1463,7 +1478,19 @@ bool FakeServer(ClientPacket &cp) {
 //		ChatPacket(std::to_wstring(tenvi_data.get_map(chr.map)->FindNPCRegen(npc_id).group));
 		return true;
 	}
+	case CP_NPC_ACTION: {
+		DWORD action_id = cp.Decode4();
+		DWORD dialog = parse_dialog(previous_dialog, action_id);
+		if (dialog) {
+			previous_dialog = dialog;
+			NPC_TalkPacket(previous_npc, dialog);
+		}
+
+
+		return true;
+	}
 	case CP_PLAYER_CHAT: {
+		TenviCharacter& chr = TA.GetOnline();
 		BYTE type = cp.Decode1(); // 0 = map chat
 		cp.Decode1(); // 1
 		cp.Decode1(); // 0
@@ -1479,7 +1506,6 @@ bool FakeServer(ClientPacket &cp) {
 			}
 			else if (_wcsnicmp(message.c_str(), L"@mob ", 5) == 0) {
 				int npc_id = _wtoi(&message.c_str()[5]);
-				TenviCharacter& chr = TA.GetOnline();
 				TenviRegen regen = { 0, 0, 0, 0, 1, 0, 0, {chr.x, 0, 0, chr.y},  {npc_id} };
 				CreateObjectPacket(regen);
 				ShowObjectPacket(regen);
@@ -1490,6 +1516,12 @@ bool FakeServer(ClientPacket &cp) {
 				EventAlarm(3);
 //				EventAlarm(4);
 				EventAlarm(5);
+			}
+			else if (_wcsicmp(message.c_str(), L"@death") == 0) {
+				chr.aboard = 0;
+				chr.fly = 0;
+				chr.guardian_flag = 0;
+				DeathPacket(chr);
 			}
 			return true;
 		}

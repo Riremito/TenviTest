@@ -79,8 +79,43 @@ bool TenviData::parse_weather() {
 			data_weather[mapID] = weatherVec;
 		}
 	}
-
 }
+
+DWORD parse_dialog(DWORD dialog, DWORD action_id) {
+	std::string dialog_str = (dialog < 10000) ? ("0" + std::to_string(dialog)) : std::to_string(dialog);
+	std::string map_xml = tenvi_data.get_xml_path() + +"\\" + tenvi_data.get_region_str() + "\\dialog\\" + dialog_str + ".xml";
+	rapidxml::xml_document<> doc;
+
+	try {
+		rapidxml::file<> xmlFile(map_xml.c_str());
+		doc.parse<0>(xmlFile.data());
+	}
+	catch (...) {
+		return 0;
+	}
+
+	rapidxml::xml_node<>* root = doc.first_node();
+
+	if (!root) {
+		return 0;
+	}
+
+	for (rapidxml::xml_node<>* child = root->first_node()->first_node(); child; child = child->next_sibling()) {
+		if (strcmp("actions", child->name()) == 0) {
+			for (rapidxml::xml_node<>* action = child->first_node(); action; action = action->next_sibling()) {
+				int id = atoi(action->first_attribute("id")->value());
+				if (id == action_id) {
+					if (strcmp(action->first_attribute("type")->value(), "dialog") == 0) {
+						return atoi(action->first_attribute("value")->value());
+					}
+					return 0;
+				}
+			}
+		}
+	}
+	return 0;
+}
+
 
 std::string TenviData::get_xml_path() {
 	return xml_path;

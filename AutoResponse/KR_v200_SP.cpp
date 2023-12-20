@@ -11,6 +11,7 @@ void SetServerPacketHeader_KR_v200() {
 	header[SP_DELETE_CHARACTER_MSG] = 0x07;
 	header[SP_WORLD_SELECT] = 0x08;
 	header[SP_WORLD_LIST] = 0x09;
+	header[SP_DEATH] = 0x13;
 	header[SP_WEATHER] = 0x18;
 	header[SP_CS_INVITED] = 0x0A;
 	header[SP_CS_KOREAN_MSG] = 0x0B;
