@@ -4,6 +4,7 @@
 #include"TenviItem.h"
 #include<map>
 #include<set>
+#include<ctime>
 
 
 TenviAccount TA;
@@ -371,6 +372,18 @@ void CreateObjectPacket(TenviRegen &regen) {
 	if (GetRegion() != TENVI_JP) {
 		sp.Encode1(0);
 	}
+	SendPacket(sp);
+}
+
+void WeatherPacket(BYTE type, float factor, BYTE red, BYTE green, BYTE blue) {
+	ServerPacket sp(SP_WEATHER);
+	sp.Encode1(type); // weather type
+	sp.EncodeFloat(factor); // weather power
+	sp.Encode1(red); // b
+	sp.Encode1(green); // g
+	sp.Encode1(blue); // r
+	sp.Encode1(0xFF); // ??
+	sp.Encode4(0); // brightness
 	SendPacket(sp);
 }
 
@@ -953,6 +966,14 @@ void SpawnObjects(TenviCharacter &chr, WORD map_id) {
 	}
 }
 
+void SetWeather(WORD map_id) {
+	if (tenvi_data.data_weather.count(map_id)) {
+		std::vector<Weather> weather = tenvi_data.data_weather[map_id];
+		Weather w = weather[rand() % weather.size()];
+		WeatherPacket(w.type, w.factor, w.red, w.green, w.blue);
+	}
+}
+
 // go to map
 void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 	ChangeMapPacket(map_id, x, y);
@@ -984,6 +1005,7 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 		break;
 	}
 	}
+	SetWeather(map_id);
 	SpawnObjects(chr, map_id);
 	CharacterSpawnPacket(chr, x, y);
 	HaveTitle(chr, chr.titles);
@@ -1070,6 +1092,7 @@ void RemoveFromInventory(BYTE loc, BYTE type) {
 // ========== TENVI Server Main ==========
 bool FakeServer(ClientPacket &cp) {
 	CLIENT_PACKET header = cp.DecodeHeader();
+	srand((unsigned int)time(NULL));
 
 	switch (header) {
 	// Select Character
@@ -1078,6 +1101,7 @@ bool FakeServer(ClientPacket &cp) {
 		BYTE channel = cp.Decode1();
 
 		TA.Login(character_id);
+		tenvi_data.parse_weather();
 
 		for (auto &chr : TA.GetCharacters()) {
 			if (chr.id == character_id) {

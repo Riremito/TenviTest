@@ -2,6 +2,16 @@
 #define __TENVI_DATA_H__
 
 #include"TenviMap.h"
+#include<map>
+#include<vector>
+
+typedef struct {
+	BYTE type;
+	float factor;
+	BYTE red;
+	BYTE green;
+	BYTE blue;
+} Weather;
 
 // loaded xml data list
 class TenviData {
@@ -11,8 +21,10 @@ private:
 	std::string region_str;
 
 public:
+	std::map<WORD, std::vector<Weather>> data_weather;
 	TenviMap* get_map(DWORD id);
 	void set_xml_path(std::wstring path);
+	bool parse_weather();
 	std::string get_xml_path();
 	std::string get_region_str();
 };
