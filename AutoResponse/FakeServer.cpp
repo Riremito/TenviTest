@@ -10,8 +10,7 @@
 TenviAccount TA;
 // ========== TENVI Packet Response ==========
 #define TENVI_VERSION 0x1023
-DWORD previous_npc;
-DWORD previous_dialog;
+unsigned long int start_time = 0, delay_time = 0;
 
 void LateInit_TA() {
 	TA.LateInit();
@@ -512,12 +511,12 @@ void EditInventory(BYTE loc, DWORD inventoryID, WORD itemID, BYTE type, BYTE isD
 }
 
 // 0x3C
-void InMapTeleportPacket(TenviCharacter &chr) {
+void InMapTeleportPacket(TenviCharacter &chr, float x=0, float y=0) {
 	ServerPacket sp(SP_IN_MAP_TELEPORT);
 	sp.Encode4(chr.id); // 00489222, character id
 	sp.Encode1(1); // 0048923E, 0 = fall down, 1 = teleport to platform
-	sp.Encode4(0); // 0048924B, x?
-	sp.Encode4(0); // 00489255, y?
+	sp.EncodeFloat(x); // 0048924B, x
+	sp.EncodeFloat(y); // 00489255, y
 	sp.Encode1(0); // 0048925F, 0 = face left, 1 = face right
 	sp.Encode1(0); // 00489269
 	sp.Encode1(0); // 00489276
@@ -955,6 +954,15 @@ void EquipTitle(TenviCharacter& chr, BYTE code) {
 	SendPacket(sp);
 }
 
+// 0xE4
+void ShipPacket() {
+	ServerPacket sp(SP_SHIP);
+	sp.Encode1(2);
+	sp.Encode4(4660096);
+	sp.Encode4(0);
+	SendPacket(sp);
+}
+
 
 // 0xE9
 void EventAlarm(BYTE type) {
@@ -963,6 +971,14 @@ void EventAlarm(BYTE type) {
 	sp.Encode1(type); // type: 2, 3, 4, 5
 	sp.Encode1(2); // 1 time 2 now 3 delete
 	sp.Encode2(11); // Used in time
+	SendPacket2(sp);
+}
+void EventCounter(DWORD time) {
+	ServerPacket sp(SP_EVENT);
+	sp.Encode1(4);
+	sp.Encode1(0); // 1 start 2 finish
+	sp.Encode1(0); // time 0 stop 1 start
+	sp.Encode4(time * 1000); // time 1000 = 1sec
 	SendPacket2(sp);
 }
 
@@ -987,6 +1003,19 @@ void SetWeather(WORD map_id) {
 // go to map
 void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 	ChangeMapPacket(map_id, x, y);
+
+	if (map_id == MAPID_SHIP_PUCCHI) {
+		tenvi_data.get_map(MAPID_SHIP_PUCCHI)->SetTimer(57);
+		start_time = clock();
+		EventCounter(57);
+		ShipPacket();
+	}
+	else if (map_id == MAPID_SHIP0) {
+		tenvi_data.get_map(MAPID_SHIP0)->SetTimer(10);
+		start_time = clock();
+		EventCounter(10);
+		ShipPacket();
+	}
 	
 	switch (map_id) {
 	case MAPID_ITEM_SHOP:
@@ -1004,7 +1033,6 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 		// do not change last map id
 		chr.SetMapReturn(chr.map);
 		chr.guardian_flag = 0;
-		writeDebugLog("how");
 		break;
 
 	}
@@ -1099,11 +1127,39 @@ void RemoveFromInventory(BYTE loc, BYTE type) {
 	DelaySendPacket(sp);
 }
 
+void CheckShip() {
+	TenviCharacter& chr = TA.GetOnline();
+	if (chr.map != MAPID_SHIP_PUCCHI && chr.map != MAPID_SHIP0) {
+		return;
+	}
+	if (clock() - start_time > 1000) {
+		start_time = clock();
+		DWORD time = tenvi_data.get_map(chr.map)->Clock();
+		EventCounter(time);
+		if (time == 1) {
+			delay_time = clock();
+		}
+		else if (time == 0 && chr.map == MAPID_SHIP0) {
+			SetMap(chr, 6085);
+			InMapTeleportPacket(chr, 1000, 380);
+			return;
+		}
+	}
+	if (delay_time != 0 && clock() - delay_time > 17000) {
+		delay_time = 0;
+		if (chr.y < -1000) {
+			SetMap(chr, 4054);
+			ShipPacket();
+			InMapTeleportPacket(chr, -35, 224);
+		}
+	}
+}
 
 // ========== TENVI Server Main ==========
 bool FakeServer(ClientPacket &cp) {
 	CLIENT_PACKET header = cp.DecodeHeader();
 	srand((unsigned int)time(NULL));
+	CheckShip();
 
 	switch (header) {
 	// Select Character
@@ -1457,8 +1513,8 @@ bool FakeServer(ClientPacket &cp) {
 
 		std::set<WORD> shop { 6, 7, 8, 9, 11, 16, 17, 18, 30, 31, 61, 76, 80, 82, 84, 92, 94, 101, 103, 105, 118, 119, 120, 125, 126, 127, 128, 130 };
 		if (dialog) {
-			previous_npc = npc_id;
-			previous_dialog = dialog;
+			tenvi_data.get_map(chr.map)->pre_npc = npc_id;
+			tenvi_data.get_map(chr.map)->pre_dialog = dialog;
 			NPC_TalkPacket(npc_id, dialog);
 		}
 		if (shop.count(group)) {
@@ -1479,11 +1535,13 @@ bool FakeServer(ClientPacket &cp) {
 		return true;
 	}
 	case CP_NPC_ACTION: {
+		TenviCharacter& chr = TA.GetOnline();
 		DWORD action_id = cp.Decode4();
-		DWORD dialog = parse_dialog(previous_dialog, action_id);
+		DWORD pre_npc = tenvi_data.get_map(chr.map)->pre_npc, pre_dialog = tenvi_data.get_map(chr.map)->pre_dialog;
+		DWORD dialog = parse_dialog(pre_dialog, action_id);
 		if (dialog) {
-			previous_dialog = dialog;
-			NPC_TalkPacket(previous_npc, dialog);
+			pre_dialog = dialog;
+			NPC_TalkPacket(pre_npc, dialog);
 		}
 
 
@@ -1523,6 +1581,10 @@ bool FakeServer(ClientPacket &cp) {
 				chr.guardian_flag = 0;
 				DeathPacket(chr);
 			}
+			else if (_wcsicmp(message.c_str(), L"@pos") == 0) {
+				ChatPacket(L"x: " + std::to_wstring(chr.x) + L", y: " + std::to_wstring(chr.y));
+			}
+
 			return true;
 		}
 
@@ -1547,6 +1609,7 @@ bool FakeServer(ClientPacket &cp) {
 		return true;
 	}
 	case CP_TIME_GET_TIME: {
+		TenviCharacter& chr = TA.GetOnline();
 		cp.Decode1(); // 0
 		cp.Decode4(); // time
 		return true;

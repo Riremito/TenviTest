@@ -32,4 +32,5 @@ public:
 DWORD parse_dialog(DWORD dialog, DWORD action_id);
 void writeDebugLog(std::string str);
 extern TenviData tenvi_data;
+
 #endif

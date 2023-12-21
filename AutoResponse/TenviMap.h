@@ -51,12 +51,15 @@ private:
 	std::vector<TenviRegen> data_regen;
 	DWORD return_id = 0;
 	DWORD return_town_id = 0;
+	DWORD time_now = 0;
 
 	bool LoadXML();
 	bool LoadSubXML();
 	bool LoadNPCDialog(std::string region_str);
 
 public:
+	DWORD pre_npc;
+	DWORD pre_dialog;
 	TenviMap(DWORD mapid);
 	DWORD GetID();
 	void AddSpawnPoint(TenviSpawnPoint &spawn_point);
@@ -68,6 +71,8 @@ public:
 	TenviPortal FindTomb();
 	DWORD FindReturn();
 	DWORD FindReturnTown();
+	void SetTimer(DWORD t);
+	DWORD Clock();
 	TenviRegen& FindNPCRegen(DWORD npc_id);
 };
 

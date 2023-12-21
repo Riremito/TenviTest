@@ -258,3 +258,15 @@ DWORD TenviMap::FindReturnTown() {
 	}
 	return id;
 }
+
+void TenviMap::SetTimer(DWORD t) {
+	time_now = t;
+}
+
+DWORD TenviMap::Clock() {
+	if (time_now > 0) {
+		time_now--;
+	}
+	return time_now;
+}
+
