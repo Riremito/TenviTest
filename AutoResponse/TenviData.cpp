@@ -38,7 +38,6 @@ void TenviData::set_xml_path(std::wstring path) {
 
 bool TenviData::parse_weather() {
 	std::string weather_xml = tenvi_data.get_xml_path() + +"\\" + tenvi_data.get_region_str() + "\\table\\weather.xml";
-	writeDebugLog(weather_xml);
 	OutputDebugStringA(("[Maple] xml = " + weather_xml).c_str());
 	rapidxml::xml_document<> doc;
 
@@ -75,7 +74,6 @@ bool TenviData::parse_weather() {
 
 		for (map = weather; map && strcmp("map", map->name()) == 0; map = map->next_sibling()) {
 			WORD mapID = (int)atoi(map->first_attribute("id")->value());
-			writeDebugLog(std::to_string(mapID));
 			data_weather[mapID] = weatherVec;
 		}
 	}
