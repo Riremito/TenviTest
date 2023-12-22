@@ -955,12 +955,13 @@ void EquipTitle(TenviCharacter& chr, BYTE code) {
 }
 
 // 0xE4
-void ShipPacket() {
+void ShipPacket(DWORD process=-1) {
 	ServerPacket sp(SP_SHIP);
 	sp.Encode1(2);
-	sp.Encode4(4660096);
-//	sp.Encode4(80000);
-	sp.Encode4(0);
+//	sp.Encode4(4660096);
+//	pucchi: #75000, minos: #70000
+	sp.Encode4(process);
+	sp.Encode4(20000);
 	SendPacket(sp);
 }
 
@@ -1001,24 +1002,36 @@ void SetWeather(WORD map_id) {
 	}
 }
 
+void SetTimer(DWORD map_id, DWORD time) {
+	tenvi_data.get_map(map_id)->SetTimer(time);
+	start_time = clock();
+	EventCounter(time);
+}
+
 // go to map
 void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 	ChangeMapPacket(map_id, x, y);
-
-	if (map_id == MAPID_SHIP_PUCCHI || map_id == MAPID_SHIP_MINOS) {
-		tenvi_data.get_map(map_id)->SetTimer(57);
-		start_time = clock();
-		EventCounter(57);
-		ShipPacket();
-	}
-	else if (map_id == MAPID_SHIP0 || map_id == MAPID_SHIP1) {
-		tenvi_data.get_map(map_id)->SetTimer(10);
-		start_time = clock();
-		EventCounter(10);
-		ShipPacket();
-	}
 	
 	switch (map_id) {
+	case MAPID_SHIP_PUCCHI:
+	case MAPID_SHIP_MINOS:
+	{
+		SetTimer(map_id, 57);
+//		ShipPacket(map_id == MAPID_SHIP_PUCCHI ? 75000 : 70000);
+		ShipPacket();
+		chr.SetMapReturn(chr.map);
+		chr.map = map_id;
+		break;
+	}
+	case MAPID_SHIP0:
+	case MAPID_SHIP1:
+	{
+		SetTimer(map_id, 10);
+		ShipPacket();
+		chr.SetMapReturn(chr.map);
+		chr.map = map_id;
+		break;
+	}
 	case MAPID_ITEM_SHOP:
 	case MAPID_PARK:
 	{
@@ -1130,39 +1143,37 @@ void RemoveFromInventory(BYTE loc, BYTE type) {
 
 void CheckShip() {
 	TenviCharacter& chr = TA.GetOnline();
-	if (chr.map != MAPID_SHIP_PUCCHI && chr.map != MAPID_SHIP_MINOS && chr.map != MAPID_SHIP0 && chr.map != MAPID_SHIP1) {
+	std::set<DWORD> ships{ MAPID_SHIP_PUCCHI, MAPID_SHIP_MINOS, MAPID_SHIP0, MAPID_SHIP1 };
+	if (ships.find(chr.map) == ships.end()) {
 		return;
 	}
 	if (clock() - start_time > 1000) {
 		start_time = clock();
 		DWORD time = tenvi_data.get_map(chr.map)->Clock();
-//		ChatPacket(std::to_wstring(time));
 		EventCounter(time);
 		if (time == 0) {
-			if (chr.map == MAPID_SHIP0) {
+			switch (chr.map) {
+			case MAPID_SHIP0: {
 				SetMap(chr, 6085);
-				ShipPacket();
 				InMapTeleportPacket(chr, 1000, 380);
 				return;
 			}
-			else if (chr.map == MAPID_SHIP1) {
+			case MAPID_SHIP1: {
 				SetMap(chr, 4001);
-				ShipPacket();
 				InMapTeleportPacket(chr, 212, -114);
 				return;
 			}
+			}
 		}
 	}
-	if (chr.map == MAPID_SHIP_PUCCHI && chr.y < -1400) {
+	if (chr.map == MAPID_SHIP_PUCCHI && chr.y < -1400 && chr.x < 400) {
 		chr.map = MAPID_SHIP0;
 		SetMap(chr, MAPID_SHIP0);
-		ShipPacket();
 		InMapTeleportPacket(chr, -35, 224);
 	}
-	if (chr.map == MAPID_SHIP_MINOS && chr.y < -1400) {
+	if (chr.map == MAPID_SHIP_MINOS && chr.y < -1400 && chr.x < 400) {
 		chr.map = MAPID_SHIP1;
 		SetMap(chr, MAPID_SHIP1);
-		ShipPacket();
 		InMapTeleportPacket(chr, -35, 224);
 	}
 }
