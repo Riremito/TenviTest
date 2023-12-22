@@ -83,7 +83,7 @@ void TenviCharacter::SetMapReturn(WORD map_return_id) {
 void TenviCharacter::TestSilva() {
 	gcolor = 187;
 	//hair = 137;
-	map = 8003;
+	map = 4001;
 }
 
 // game related

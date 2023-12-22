@@ -251,8 +251,8 @@ void CharacterSpawnPacket(TenviCharacter &chr, float x = 0, float y = 0) {
 
 	sp.EncodeWStr1(chr.name); // name
 	sp.EncodeWStr1(L""); // guardian name
-	sp.Encode1(chr.fly); // 0048DC8F fly
-	sp.Encode1(chr.aboard); // 0048DC9C
+	sp.Encode1(chr.fly); // 0048DC8F fly, guardian move
+	sp.Encode1(chr.aboard); // 0048DC9C, pilot move
 	sp.Encode2(chr.job); // 0048DCA9
 	sp.Encode2(chr.skin); // 0048DCB7
 	sp.Encode2(chr.hair); // 0048DCC5
