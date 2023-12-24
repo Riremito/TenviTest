@@ -11,6 +11,7 @@ TenviAccount TA;
 // ========== TENVI Packet Response ==========
 #define TENVI_VERSION 0x1023
 unsigned long int start_time = 0;
+bool justArrived = false;
 
 void LateInit_TA() {
 	TA.LateInit();
@@ -1016,9 +1017,11 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 	case MAPID_SHIP_PUCCHI:
 	case MAPID_SHIP_MINOS:
 	{
-		SetTimer(map_id, 57);
+//		SetTimer(map_id, 60);
 //		ShipPacket(map_id == MAPID_SHIP_PUCCHI ? 75000 : 70000);
-		ShipPacket();
+		if (!justArrived) {
+//			ShipPacket();
+		}
 		chr.SetMapReturn(chr.map);
 		chr.map = map_id;
 		break;
@@ -1026,8 +1029,8 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 	case MAPID_SHIP0:
 	case MAPID_SHIP1:
 	{
-		SetTimer(map_id, 10);
-		ShipPacket();
+		SetTimer(map_id, 1);
+//		ShipPacket();
 		chr.SetMapReturn(chr.map);
 		chr.map = map_id;
 		break;
@@ -1144,28 +1147,37 @@ void RemoveFromInventory(BYTE loc, BYTE type) {
 void CheckShip() {
 	TenviCharacter& chr = TA.GetOnline();
 	std::set<DWORD> ships{ MAPID_SHIP_PUCCHI, MAPID_SHIP_MINOS, MAPID_SHIP0, MAPID_SHIP1 };
+
 	if (ships.find(chr.map) == ships.end()) {
 		return;
 	}
-	if (clock() - start_time > 1000) {
+	if ((chr.map == MAPID_SHIP0 || chr.map == MAPID_SHIP1) && start_time != 0 && clock() - start_time > 1000) {
 		start_time = clock();
 		DWORD time = tenvi_data.get_map(chr.map)->Clock();
 		EventCounter(time);
 		if (time == 0) {
+			start_time = 0;
 			switch (chr.map) {
 			case MAPID_SHIP0: {
 				SetMap(chr, 6085);
-				InMapTeleportPacket(chr, 1000, 380);
+				chr.map = 6085;
+//				ShipPacket(36000);
+				justArrived = true;
+				InMapTeleportPacket(chr, 1200, 520);
 				return;
 			}
 			case MAPID_SHIP1: {
 				SetMap(chr, 4001);
-				InMapTeleportPacket(chr, 212, -114);
+				chr.map = 4001;
+//				ShipPacket(36000);
+				justArrived = true;
+				InMapTeleportPacket(chr, 260, 30);
 				return;
 			}
 			}
 		}
 	}
+
 	if (chr.map == MAPID_SHIP_PUCCHI && chr.y < -1400 && chr.x < 400) {
 		chr.map = MAPID_SHIP0;
 		SetMap(chr, MAPID_SHIP0);
@@ -1176,6 +1188,7 @@ void CheckShip() {
 		SetMap(chr, MAPID_SHIP1);
 		InMapTeleportPacket(chr, -35, 224);
 	}
+
 }
 
 // ========== TENVI Server Main ==========
@@ -1208,6 +1221,7 @@ bool FakeServer(ClientPacket &cp) {
 				InitInventory(chr);
 				InitKeySet();
 				SetMap(chr, chr.map);
+				InMapTeleportPacket(chr, 1567, -1477);
 				BoardPacket(Board_Spawn, L"Suhan", L"Picket");
 				BoardPacket(Board_AddInfo, L"Suhan", L"Non-commercial works");
 				return true;
