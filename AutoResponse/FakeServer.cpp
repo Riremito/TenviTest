@@ -1411,7 +1411,6 @@ bool FakeServer(ClientPacket &cp) {
 		GuardianSummonPacket(TA.GetOnline(), chr.guardian_flag ? true : false);
 		return true;
 	}
-
 	case CP_UNEQUIP: {
 		// 장비 해제
 		TenviCharacter& chr = TA.GetOnline();
@@ -1483,6 +1482,13 @@ bool FakeServer(ClientPacket &cp) {
 			for (auto& pair : *inventory) {
 				if (pair.second.inventoryID == inventoryID) {
 					priorLoc = pair.first;
+					if (((*inventory)[priorLoc].type == 1 || (*inventory)[priorLoc].type == 2) && (*inventory)[priorLoc].itemID == (*inventory)[loc].itemID) {
+						(*inventory)[loc].number += (*inventory)[priorLoc].number;
+						EditInventory(loc, (*inventory)[loc].inventoryID, (*inventory)[loc].itemID, (*inventory)[loc].type, (*inventory)[loc].number, 1);
+						RemoveFromInventory(priorLoc, (*inventory)[priorLoc].type);
+						(*inventory)[priorLoc] = {};
+						return true;
+					}
 					EditInventory(loc, inventoryID, (*inventory)[priorLoc].itemID, (*inventory)[priorLoc].type, (*inventory)[priorLoc].number, 1);
 					EditInventory(priorLoc, (*inventory)[loc].inventoryID, (*inventory)[loc].itemID, (*inventory)[priorLoc].type, (*inventory)[loc].number, 1);
 					std::swap((*inventory)[priorLoc], (*inventory)[loc]);
@@ -1650,6 +1656,30 @@ bool FakeServer(ClientPacket &cp) {
 		if (dialog) {
 			pre_dialog = dialog;
 			NPC_TalkPacket(pre_npc, dialog);
+		}
+		return true;
+	}
+	case CP_DIVIDE_ITEM: {
+		TenviCharacter& chr = TA.GetOnline();
+		DWORD inventoryID = cp.Decode8();
+		WORD number = cp.Decode2();
+		for (std::map<BYTE, Item>* inventory : { &chr.inventory_equip, &chr.inventory_cash, &chr.inventory_extra, &chr.inventory_quest, &chr.inventory_card }) {
+			for (auto& pair : *inventory) {
+				if (pair.second.inventoryID == inventoryID) {
+					// 위치 찾음
+					(*inventory)[pair.first].number -= number;
+					EditInventory(pair.first, inventoryID, pair.second.itemID, pair.second.type, pair.second.number);
+					for (int loc = 0; loc < 40; loc++) {
+						if ((*inventory)[loc].itemID == 0) {
+							// 빈자리 찾음
+							Item item = TA.MakeItem(pair.second.itemID, number);
+							(*inventory)[loc] = item;
+							EditInventory(loc, item.inventoryID, item.itemID, item.type, item.number);
+							return true;
+						}
+					}
+				}
+			}
 		}
 		return true;
 	}

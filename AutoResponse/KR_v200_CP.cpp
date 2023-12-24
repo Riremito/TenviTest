@@ -15,6 +15,7 @@ void SetClientPacketHeader_KR_v200() {
 	header[CP_SWITCH_RING] = 0x0F;
 	header[CP_LOGOUT] = 0x09;
 	header[CP_MOVE_ITEM] = 0x13;
+	header[CP_DIVIDE_ITEM] = 0x14;
 	header[CP_GUARDIAN_RIDE] = 0x18;
 	header[CP_GUARDIAN_MOVEMENT] = 0x19;
 	header[CP_USE_AP] = 0x1A;
