@@ -148,7 +148,47 @@ std::pair<int, std::vector<ShopItem>> parse_shop(WORD obj_id) {
 	return { currency, res };
 }
 
+std::vector<BoardInfo> parse_board(WORD map_id) {
+	std::string filename = tenvi_data.get_xml_path() + +"\\" + tenvi_data.get_region_str() + "\\table\\" + "systemsign.xml";
+	rapidxml::xml_document<> doc;
+	std::vector<BoardInfo> boards;
+	try {
+		rapidxml::file<> xmlFile(filename.c_str());
+		doc.parse<0>(xmlFile.data());
+	}
+	catch (...) {
+		return boards;
+	}
 
+	rapidxml::xml_node<>* root = doc.first_node();
+	if (!root) {
+		return boards;
+	}
+	for (rapidxml::xml_node<>* sign = root->first_node(); sign; sign = sign->next_sibling()) {
+		if (atoi(sign->first_node()->first_attribute("value")->value()) == map_id) {
+			BoardInfo board;
+			board.field = map_id;
+			for (rapidxml::xml_node<>* sign_data = sign->first_node(); sign_data; sign_data = sign_data->next_sibling()) {
+				const char* name = sign_data->name();
+				if (strcmp(name, "title") == 0) {
+					board.title = std::string(sign_data->first_attribute("value")->value());
+				}
+				else if (strcmp(name, "message") == 0) {
+					board.message = std::string(sign_data->first_attribute("value")->value());
+				}
+				else if (strcmp(name, "centerx") == 0) {
+					board.x = atof(sign_data->first_attribute("value")->value());
+
+				}
+				else if (strcmp(name, "centery") == 0) {
+					board.y = atof(sign_data->first_attribute("value")->value());
+				}
+			}
+			boards.push_back(board);
+		}
+	}
+	return boards;
+}
 
 std::string TenviData::get_xml_path() {
 	return xml_path;

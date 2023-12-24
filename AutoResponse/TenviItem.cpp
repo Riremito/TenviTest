@@ -74,6 +74,15 @@ BYTE FindSlot(DWORD itemID) {
 	return 15;
 }
 
+DWORD FindPrice(DWORD itemID) {
+	rapidxml::xml_node<>* item = getNode(itemID, "price");
+	if (item) {
+		DWORD price = atoi(item->first_attribute("value")->value());
+		return price;
+	}
+	return 0;
+}
+
 bool FindIsTh(DWORD itemID) {
 	rapidxml::xml_node<>* item = getNode(itemID, "slot");
 	if (item) {

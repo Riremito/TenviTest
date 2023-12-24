@@ -42,6 +42,8 @@ TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WO
 	aboard = 18;
 	titleEquipped = 9;
 	direction = 0;
+	money = 12345678;
+	equipLoc = 0, extraLoc = 0, questLoc = 0, cashLoc = 0, cardLoc = 0;
 	InitItem();
 }
 
@@ -60,7 +62,6 @@ void TenviCharacter::InitItem() {
 		// card
 		30000, 30001
 	};
-	BYTE equipLoc = 0, extraLoc = 0, questLoc = 0, cashLoc = 0, cardLoc = 0;
 	for (auto& itemID : inventory) {
 		switch (FindType(itemID)) {
 		case 0:
@@ -88,7 +89,7 @@ void TenviCharacter::SetMapReturn(WORD map_return_id) {
 void TenviCharacter::TestSilva() {
 	gcolor = 187;
 	//hair = 137;
-	map = 4002;
+	map = 3001;
 }
 
 // game related
@@ -235,11 +236,11 @@ bool TenviAccount::Login(DWORD id) {
 	return true;
 }
 
-Item TenviAccount::MakeItem(WORD itemID) {
+Item TenviAccount::MakeItem(WORD itemID, WORD number) {
 	if (itemID == 0) {
-		return Item{ 0, 0, 0, 0, 0};
+		return Item{ 0, 0, 0, 0, 0, 0, 0};
 	}
-	return Item{ itemID, FindSlot(itemID), FindIsCash(itemID), FindType(itemID), inventoryCount++ };
+	return Item{ itemID, FindSlot(itemID), FindIsCash(itemID), FindType(itemID), FindPrice(itemID), number, inventoryCount++ };
 }
 
 TenviCharacter& TenviAccount::GetOnline() {

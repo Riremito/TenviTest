@@ -16,6 +16,8 @@ typedef struct {
 	BYTE slot;
 	BYTE isCash;
 	BYTE type;
+	DWORD price;
+	WORD number;
 	DWORD inventoryID;
 } Item;
 
@@ -78,6 +80,13 @@ public:
 	BYTE aboard;
 	BYTE titleEquipped;
 	BYTE direction;
+	DWORD money;
+	BYTE equipLoc;
+	BYTE extraLoc;
+	BYTE questLoc;
+	BYTE cashLoc;
+	BYTE cardLoc;
+
 	// data
 	float x;
 	float y;
@@ -116,7 +125,7 @@ public:
 	bool FindCharacter(DWORD id, TenviCharacter *found);
 	std::vector<TenviCharacter>& GetCharacters();
 	bool AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, BYTE nAwakening, std::map<BYTE, Item> &nEquipped, std::map<BYTE, Item> &nGEquipped);
-	static Item MakeItem(WORD itemID);
+	static Item MakeItem(WORD itemID, WORD number=1);
 	bool Login(DWORD id);
 	TenviCharacter& GetOnline();
 };

@@ -1,10 +1,12 @@
-#include"FakeServer.h"
+ï»¿#include"FakeServer.h"
 #include"AutoResponse.h"
 #include"TemporaryData.h"
 #include"TenviItem.h"
 #include<map>
 #include<set>
 #include<ctime>
+#include <clocale>
+#include <locale>
 
 
 TenviAccount TA;
@@ -481,18 +483,18 @@ void UnequipItem(BYTE slot, DWORD itemID, BYTE isCash) {
 }
 
 // 0x32
-void EditInventory(BYTE loc, DWORD inventoryID, WORD itemID, BYTE type, BYTE isDelay=0) {
+void EditInventory(BYTE loc, DWORD inventoryID, WORD itemID, BYTE type, int num=1, BYTE isDelay=0) {
 	ServerPacket sp(SP_EDIT_INVENTORY);
-	sp.Encode1(type); // Àåºñ(0), ±âÅ¸(1), Äù½ºÆ®(2), Ä³½Ã(3), Ä«µå(4)
-	sp.Encode1(loc); // ¸î ¹øÂ° ½½·Ô
-	sp.Encode1(1); // 004992BD 0ÀÌ¸é »ç¶óÁü??
+	sp.Encode1(type); // ì¥ë¹„(0), ê¸°íƒ€(1), í€˜ìŠ¤íŠ¸(2), ìºì‹œ(3), ì¹´ë“œ(4)
+	sp.Encode1(loc); // ëª‡ ë²ˆì§¸ ìŠ¬ë¡¯
+	sp.Encode1(1); // 004992BD 0ì´ë©´ ì‚¬ë¼ì§??
 	sp.Encode8(inventoryID); // inventory ID
-	sp.Encode2(itemID); // ¾ÆÀÌÅÛ id
-	sp.Encode4(1); // ¼ÒÁö¼ö
-	sp.Encode1(0); // ¾÷±×·¹ÀÌµå ¼ö
+	sp.Encode2(itemID); // ì•„ì´í…œ id
+	sp.Encode4(num); // ì†Œì§€ìˆ˜
+	sp.Encode1(0); // ì—…ê·¸ë ˆì´ë“œ ìˆ˜
 	sp.Encode1(1); // should be 1
-	sp.Encode1(0); // ±³È¯°¡´ÉÈ½¼ö
-	sp.Encode2(80); // ³»±¸µµ
+	sp.Encode1(0); // êµí™˜ê°€ëŠ¥íšŸìˆ˜
+	sp.Encode2(80); // ë‚´êµ¬ë„
 	sp.Encode1(0);
 	sp.Encode1(0);
 	sp.Encode4(0);
@@ -538,7 +540,7 @@ void AccountDataPacket(TenviCharacter &chr) {
 
 	sp.Encode1((BYTE)chr.level); // 00498EF0
 	sp.Encode8(1234); // 00498F0C, EXP
-	sp.Encode8(77770503); // 00498F28, Coin (Gold, Silver, Bronze)
+	sp.Encode8(chr.money); // 00498F28, Coin (Gold, Silver, Bronze)
 	sp.Encode8(0); // 00498F44, ???
 	sp.Encode1(0); // 00498F60
 	sp.Encode1(0); // 00498F70
@@ -603,6 +605,14 @@ void AccountDataPacket(TenviCharacter &chr) {
 		sp.Encode1(0);
 	}
 
+	SendPacket(sp);
+}
+
+// 0x3E
+void MoneyPacket(TenviCharacter&chr) {
+	ServerPacket sp(SP_UPDATE_MONEY);
+	sp.Encode1(0);
+	sp.Encode8(chr.money);
 	SendPacket(sp);
 }
 
@@ -847,7 +857,7 @@ void ShopPacket(DWORD npc_id, int currency, std::vector<ShopItem>& items) {
 	ServerPacket sp(SP_SHOP);
 	sp.Encode4(npc_id); // 00403097 npc id
 	sp.Encode1(1); // 00403151 1: can repair
-	sp.Encode1(0); // 00403165 sell item
+	sp.Encode1(1); // 00403165 sell item
 	sp.Encode1(1); // 00403179
 	sp.Encode2(currency); // 00403189 Currency (item id, -1 = coin)
 
@@ -895,34 +905,35 @@ void UseTelescope() {
 }
 
 // 0xE0
+DWORD boardID = 1;
 enum BoardAction {
 	Board_Spawn = 0,
 	Board_Remove = 1,
 	Board_AddInfo = 2,
 };
-void BoardPacket(BoardAction action, std::wstring owner = L"", std::wstring msg = L"") {
+void BoardPacket(BoardAction action, std::wstring owner = L"", std::wstring msg = L"", float x=0, float y=0) {
 	ServerPacket sp(SP_BOARD);
 
 	sp.Encode1(action); // 0048F653, 0 = spawn object, 1 = remove object, 2 = insert info
 
 	switch (action) {
 	case Board_Spawn: {
-		sp.Encode4(3131); // 0048AEF6 object id
+		sp.Encode4(boardID); // 0048AEF6 object id
 		sp.Encode4(1337); // 0048AF00 ???
 		sp.EncodeWStr1(owner); // 0048AF0E ???
 		sp.EncodeWStr1(msg); // 0048AF1D message
-		sp.EncodeFloat(-50); // 0048AF28
-		sp.EncodeFloat(0); // 0048AF32
+		sp.EncodeFloat(x); // 0048AF28
+		sp.EncodeFloat(y); // 0048AF32
 		sp.Encode1(0); // 0048AF3C
 		sp.Encode1(0); // 0048AF46 board type
 		break;
 	}
 	case Board_Remove: {
-		sp.Encode4(3131); // object id
+		sp.Encode4(boardID); // object id
 		break;
 	}
 	case Board_AddInfo: {
-		sp.Encode4(3131); // object id
+		sp.Encode4(boardID++); // object id
 		sp.EncodeWStr1(msg); // 0048AF1D message
 		break;
 	}
@@ -944,7 +955,7 @@ void HaveTitle(TenviCharacter& chr, std::vector<BYTE> titles) {
 		sp.Encode1(title);
 		sp.Encode1(1);
 	}
-	sp.Encode1(1); // ¼±±¸ÀÚ
+	sp.Encode1(1); // ì„ êµ¬ì
 	SendPacket(sp);
 }
 void EquipTitle(TenviCharacter& chr, BYTE code) {
@@ -998,6 +1009,24 @@ void SetWeather(WORD map_id) {
 		std::vector<Weather> weather = tenvi_data.data_weather[map_id];
 		Weather w = weather[rand() % weather.size()];
 		WeatherPacket(w.type, w.factor, w.red, w.green, w.blue);
+	}
+}
+
+std::wstring StrToWstr(const std::string& var) {
+	static std::locale loc("");
+	auto& facet = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc);
+	return std::wstring_convert<std::remove_reference<decltype(facet)>::type, wchar_t>(&facet).from_bytes(var);
+}
+
+void SetBoard(WORD map_id) {
+	std::set<WORD> fields {1001, 1009, 1030, 1050, 1079, 2002, 2014, 2031, 2051, 3050, 4001,
+		4002, 4003, 5003, 5028, 5042, 6001, 6009, 6031, 6085, 7010, 8003, 8004, 8028, 8048};
+	if (fields.count(map_id) != 0) {
+		std::vector<BoardInfo> infos = parse_board(map_id);
+		for (auto& info : infos) {
+			BoardPacket(Board_Spawn, L"Tenvi", StrToWstr(info.title), info.x, info.y);
+			BoardPacket(Board_AddInfo, L"Tenvi", StrToWstr(info.message));
+		}
 	}
 }
 
@@ -1064,6 +1093,7 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 	}
 	try {
 		SetWeather(map_id);
+		SetBoard(map_id);
 	}
 	catch (...) {
 		writeDebugLog("caught");
@@ -1151,9 +1181,10 @@ void RemoveFromInventory(BYTE loc, BYTE type) {
 	DelaySendPacket(sp);
 }
 
+std::pair<int, std::vector<ShopItem>> shop_items;
 void EnterShop(WORD npc_id, WORD obj_id) {
-	std::pair<int, std::vector<ShopItem>> items = parse_shop(obj_id);
-	ShopPacket(npc_id, items.first, items.second);
+	shop_items = parse_shop(obj_id);
+	ShopPacket(npc_id, shop_items.first, shop_items.second);
 }
 
 void Die(TenviCharacter& chr) {
@@ -1238,8 +1269,8 @@ bool FakeServer(ClientPacket &cp) {
 				InitInventory(chr);
 				InitKeySet();
 				SetMap(chr, chr.map);
-				BoardPacket(Board_Spawn, L"Suhan", L"Picket");
-				BoardPacket(Board_AddInfo, L"Suhan", L"Non-commercial works");
+				//BoardPacket(Board_Spawn, L"Suhan", L"Picket");
+				//BoardPacket(Board_AddInfo, L"Suhan", L"Non-commercial works");
 				return true;
 			}
 		}
@@ -1317,24 +1348,28 @@ bool FakeServer(ClientPacket &cp) {
 		return true;
 	}
 	case CP_EQUIP: {
-		// ÀÎº¥Åä¸®¿¡¼­ Àåºñ ÀåÂø
+		// ì¸ë²¤í† ë¦¬ì—ì„œ ì¥ë¹„ ì¥ì°©
 		TenviCharacter& chr = TA.GetOnline();
 		BYTE type = cp.Decode1(); // 0: normal equip, 3: cash equip
 		BYTE loc = cp.Decode1();
 		BYTE slot = cp.Decode1();
 
 		std::map<BYTE, Item> *inventory, *equip;
-		if (type == 0) {
+		switch (type) {
+		case 0: {
 			inventory = &chr.inventory_equip;
 			equip = &chr.gequipped;
+			break;
 		}
-		else if (type == 4) {
+		case 4: {
 			inventory = &chr.inventory_card;
 			equip = &chr.gequipped;
+			break;
 		}
-		else {
+		default: {
 			inventory = &chr.inventory_cash;
 			equip = &chr.equipped;
+		}
 		}
 
 		if (FindSlot((*inventory)[loc].itemID) == 15) {
@@ -1378,36 +1413,36 @@ bool FakeServer(ClientPacket &cp) {
 	}
 
 	case CP_UNEQUIP: {
-		// Àåºñ ÇØÁ¦
+		// ì¥ë¹„ í•´ì œ
 		TenviCharacter& chr = TA.GetOnline();
 		BYTE type = cp.Decode1(); // 0: normal equip, 3: cash equip
 		BYTE slot = cp.Decode1();
 		BYTE loc = cp.Decode1();
 		
 		if (type == 0) {
-			// ÀÎº¥Åä¸®¿¡ Àåºñ ³Ö±â
+			// ì¸ë²¤í† ë¦¬ì— ì¥ë¹„ ë„£ê¸°
 			EditInventory(loc, chr.gequipped[slot].inventoryID, chr.gequipped[slot].itemID, chr.gequipped[slot].type);
 			chr.inventory_equip[loc] = chr.gequipped[slot];
 
-			// ÀåºñÃ¢¿¡¼­ Àåºñ »èÁ¦
+			// ì¥ë¹„ì°½ì—ì„œ ì¥ë¹„ ì‚­ì œ
 			UnequipItem(slot, chr.gequipped[slot].itemID, type == 3);
 			chr.gequipped[slot] = TenviAccount::MakeItem(0);
 		}
 		else if (type == 4) {
-			// Ä«µåºÏ¿¡ Ä«µå ³Ö±â
+			// ì¹´ë“œë¶ì— ì¹´ë“œ ë„£ê¸°
 			EditInventory(loc, chr.gequipped[slot].inventoryID, chr.gequipped[slot].itemID, chr.gequipped[slot].type);
 			chr.inventory_card[loc] = chr.gequipped[slot];
 
-			// ÀåºñÃ¢¿¡¼­ Ä«µå »èÁ¦
+			// ì¥ë¹„ì°½ì—ì„œ ì¹´ë“œ ì‚­ì œ
 			UnequipItem(slot, chr.gequipped[slot].itemID, type == 3);
 			chr.gequipped[slot] = TenviAccount::MakeItem(0);
 		}
 		else {
-			// ÀÎº¥Åä¸®¿¡ Àåºñ ³Ö±â
+			// ì¸ë²¤í† ë¦¬ì— ì¥ë¹„ ë„£ê¸°
 			EditInventory(loc, chr.equipped[slot].inventoryID, chr.equipped[slot].itemID, chr.equipped[slot].type);
 			chr.inventory_cash[loc] = chr.equipped[slot];
 
-			// ÀåºñÃ¢¿¡¼­ Àåºñ »èÁ¦
+			// ì¥ë¹„ì°½ì—ì„œ ì¥ë¹„ ì‚­ì œ
 			UnequipItem(slot, chr.equipped[slot].itemID, type == 3);
 			chr.equipped[slot] = TenviAccount::MakeItem(0);
 		}
@@ -1448,8 +1483,8 @@ bool FakeServer(ClientPacket &cp) {
 			for (auto& pair : *inventory) {
 				if (pair.second.inventoryID == inventoryID) {
 					priorLoc = pair.first;
-					EditInventory(loc, inventoryID, (*inventory)[priorLoc].itemID, (*inventory)[priorLoc].type, 1);
-					EditInventory(priorLoc, (*inventory)[loc].inventoryID, (*inventory)[loc].itemID, (*inventory)[priorLoc].type, 1);
+					EditInventory(loc, inventoryID, (*inventory)[priorLoc].itemID, (*inventory)[priorLoc].type, (*inventory)[priorLoc].number, 1);
+					EditInventory(priorLoc, (*inventory)[loc].inventoryID, (*inventory)[loc].itemID, (*inventory)[priorLoc].type, (*inventory)[loc].number, 1);
 					std::swap((*inventory)[priorLoc], (*inventory)[loc]);
 					return true;
 				}
@@ -1527,12 +1562,12 @@ bool FakeServer(ClientPacket &cp) {
 		DWORD type = cp.Decode2();
 		switch (type) {
 		case 0xF638: {
-			// Ãµ¸®°æ
+			// ì²œë¦¬ê²½
 			UseTelescope();
 			return true;
 		}
 		case 0xEA5F: {
-			// ¸¶À» ÀÌµ¿ ÁÖ¹®¼­
+			// ë§ˆì„ ì´ë™ ì£¼ë¬¸ì„œ
 			TenviCharacter& chr = TA.GetOnline();
 			DWORD return_town = tenvi_data.get_map(chr.map)->FindReturnTown();
 			// don't know why it makes error...
@@ -1616,8 +1651,113 @@ bool FakeServer(ClientPacket &cp) {
 			pre_dialog = dialog;
 			NPC_TalkPacket(pre_npc, dialog);
 		}
+		return true;
+	}
+	case CP_BUY: {
+		TenviCharacter& chr = TA.GetOnline();
+		DWORD npc_id = cp.Decode4();
+		WORD itemID = cp.Decode2();
+		WORD num = cp.Decode2();
+		Item item = TA.MakeItem(itemID, num);
+		DWORD price = 0;
 
+		std::map<BYTE, Item>* inventory;
+		switch (FindType(itemID)) {
+		case 0: {
+			inventory = &chr.inventory_equip;
+			break;
+		}
+		case 1: {
+			inventory = &chr.inventory_extra;
+			break;
+		}
+		case 2: {
+			inventory = &chr.inventory_quest;
+			break;
+		}
+		case 3: {
+			inventory = &chr.inventory_cash;
+		}
+		default: {
+			inventory = &chr.inventory_card;
+			break;
+		}
+		}
+		bool flag = true;
+		if (FindType(itemID) == 1 || FindType(itemID) == 2) {
+			// ê¸°íƒ€, í€˜ìŠ¤íŠ¸ í…œì¸ ê²½ìš° ì´ë¯¸ ê°€ì§€ê³  ìˆëŠ”ì§€ í™•ì¸í•´ ê°œìˆ˜ë§Œ ëŠ˜ë¦¬ê¸°
+			for (int loc = 0; loc < 40; loc++) {
+				if ((*inventory)[loc].itemID == itemID) {
+					(*inventory)[loc].number += num;
+					EditInventory(loc, (*inventory)[loc].inventoryID, (*inventory)[loc].itemID, (*inventory)[loc].type, (*inventory)[loc].number);
+					flag = false;
+					break;
+				}
+			}
+		}
+		if (flag) {
+			// ë¹ˆ ìë¦¬ ìˆëŠ”ì§€ í™•ì¸
+			for (int loc = 0; loc < 40; loc++) {
+				if ((*inventory)[loc].itemID == 0) {
+					(*inventory)[loc] = item;
+					EditInventory(loc, item.inventoryID, item.itemID, item.type, num);
+					flag = false;
+					break;
+				}
+			}
+		}
+		if (flag) {
+			// ë¹ˆ ìë¦¬ ì—†ëŠ” ê²½ìš°
+			return true;
+		}
 
+		for (auto& item : shop_items.second) {
+			// ê°€ê²© í™•ì¸
+			if (item.itemID == itemID) {
+				price = item.price * num;
+				break;
+			}
+		}
+
+		if (shop_items.first == -1) {
+			// ëˆ ì°¨ê°
+			chr.money -= price;
+			MoneyPacket(chr);
+		}
+		else {
+			// ì¬í™” ì•„ì´í…œ ì°¨ê°
+			WORD currency = shop_items.first;
+			for (auto& pair : chr.inventory_extra) {
+				if (pair.second.itemID == currency) {
+					chr.inventory_extra[pair.first].number -= price;
+					writeDebugLog(std::to_string(price));
+					if (chr.inventory_extra[pair.first].number == 0) {
+						chr.inventory_extra[pair.first] = {};
+						RemoveFromInventory(pair.first, 1);
+					}
+					else {
+						EditInventory(pair.first, pair.second.inventoryID, pair.second.itemID, pair.second.type, pair.second.number);
+					}
+				}
+			}
+		}
+		return true;
+	}
+	case CP_SELL: {
+		TenviCharacter& chr = TA.GetOnline();
+		cp.Decode4();
+		DWORD inventoryID = cp.Decode8();
+		for (std::map<BYTE, Item>* inventory : { &chr.inventory_equip, &chr.inventory_cash, &chr.inventory_extra, &chr.inventory_quest, &chr.inventory_card }) {
+			for (auto& pair : *inventory) {
+				if (pair.second.inventoryID == inventoryID) {
+					chr.money += pair.second.price;
+					RemoveFromInventory(pair.first, pair.second.type);
+					MoneyPacket(chr);
+					(*inventory)[pair.first] = {};
+					return true;
+				}
+			}
+		}
 		return true;
 	}
 	case CP_PLAYER_CHAT: {
@@ -1674,7 +1814,7 @@ bool FakeServer(ClientPacket &cp) {
 	}
 	case CP_PARK_BATTLE_FIELD: // ???
 	case CP_EVENT: {
-		BYTE type = cp.Decode1(); // 02: ³¬½Ã(62501), 03: Çï½¬(62502), 04: ¾Æ³îµå(62503), 05: ³ª¹«(62504)
+		BYTE type = cp.Decode1(); // 02: ë‚šì‹œ(62501), 03: í—¬ì‰¬(62502), 04: ì•„ë†€ë“œ(62503), 05: ë‚˜ë¬´(62504)
 		Event(TA.GetOnline(), type);
 		return true;
 	}

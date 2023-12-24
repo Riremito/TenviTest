@@ -19,6 +19,14 @@ typedef struct {
 	DWORD price;
 } ShopItem;
 
+typedef struct {
+	WORD field;
+	std::string title;
+	std::string message;
+	float x;
+	float y;
+} BoardInfo;
+
 // loaded xml data list
 class TenviData {
 private:
@@ -37,6 +45,7 @@ public:
 
 DWORD parse_dialog(DWORD dialog, DWORD action_id);
 std::pair<int, std::vector<ShopItem>> parse_shop(WORD obj_id);
+std::vector<BoardInfo> parse_board(WORD map_id);
 void writeDebugLog(std::string str);
 extern TenviData tenvi_data;
 

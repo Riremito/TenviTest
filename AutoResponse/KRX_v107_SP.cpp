@@ -25,6 +25,7 @@ void SetServerPacketHeader_KRX_v107() {
 	header[SP_SHOW_OBJECT] = 0x23;
 	header[SP_IN_MAP_TELEPORT] = 0x3C;
 	header[SP_ACCOUNT_DATA] = 0x3D;
+	header[SP_UPDATE_MONEY] = 0x3E;
 	header[SP_PLAYER_LEVEL_UP] = 0x42;
 	header[SP_PLAYER_STAT_EXP] = 0x43;
 	header[SP_PLAYER_STAT_SP] = 0x45;
