@@ -8,10 +8,8 @@
 
 
 TenviAccount TA;
-// ========== TENVI Packet Response ==========
+// ========== TENVI Packet Response ==========s
 #define TENVI_VERSION 0x1023
-unsigned long int start_time = 0;
-bool justArrived = false;
 
 void LateInit_TA() {
 	TA.LateInit();
@@ -238,7 +236,7 @@ void CharacterSpawnPacket(TenviCharacter &chr, float x = 0, float y = 0) {
 	sp.Encode4(chr.id); // 0048DB9B id, where checks id?
 	sp.EncodeFloat(x); // 0048DBA5, coordinate x
 	sp.EncodeFloat(y); // 0048DBAF, corrdinate y
-	sp.Encode1(0); // 0048DBB9, direction 0 = left, 1 = right
+	sp.Encode1(chr.direction); // 0048DBB9, direction 0 = left, 1 = right
 	sp.Encode1(chr.guardian_flag); // 0048DBC6, guardian, 0 = guardian off, 1 = guardian on
 	sp.Encode1(1); // 0048DBD3, death, 0 = death, 1 = alive
 	sp.Encode1(0); // 0048DBE0, battle, 0 = change channel OK, 1 = change channel NG
@@ -649,10 +647,10 @@ void PlayerAPPacket(TenviCharacter &chr) {
 // 0x47
 void PlayerStatPacket(TenviCharacter &chr) {
 	ServerPacket sp(SP_PLAYER_STAT_ALL);
-	sp.Encode2(3000); // 004956F5, HP
-	sp.Encode2(4000); // 00495713, MAXHP
-	sp.Encode2(1000); // 0049572F, MP
-	sp.Encode2(2000); // 0049574B, MAXMP
+	sp.Encode2(chr.HP); // 004956F5, HP
+	sp.Encode2(chr.maxHP); // 00495713, MAXHP
+	sp.Encode2(chr.MP); // 0049572F, MP
+	sp.Encode2(chr.maxMP); // 0049574B, MAXMP
 	sp.Encode2(chr.stat_str); // 00495767, STR
 	sp.Encode2(chr.stat_dex); // 00495783, DEX
 	sp.Encode2(chr.stat_hp); // 0049579F, HP
@@ -845,24 +843,27 @@ void InitSkillPacket(TenviCharacter &chr) {
 }
 
 // 0xA6
-void ShopPacket(DWORD npc_id) {
+void ShopPacket(DWORD npc_id, int currency, std::vector<ShopItem>& items) {
 	ServerPacket sp(SP_SHOP);
 	sp.Encode4(npc_id); // 00403097 npc id
-	sp.Encode1(1); // 00403151
-	sp.Encode1(0); // 00403165
+	sp.Encode1(1); // 00403151 1: can repair
+	sp.Encode1(0); // 00403165 sell item
 	sp.Encode1(1); // 00403179
-	sp.Encode2(1); // 00403189
-	sp.Encode1(1); // 004031A8
-	sp.Encode2(0); // 004031BD
-	sp.Encode2(0); // 004031C8
-	sp.Encode2(0); // 004031D3
-	sp.Encode8(0); // 004031DE
-	sp.Encode4(0); // 004031EB
-	sp.Encode2(0); // 004031F5
-	sp.Encode4(0); // 00403200
-	sp.Encode2(0); // 0040320A
-	sp.Encode2(0); // 00403217
-	sp.EncodeFloat(0); // 0040322B
+	sp.Encode2(currency); // 00403189 Currency (item id, -1 = coin)
+
+	sp.Encode1(items.size()); // 004031A8 "count"
+	for (auto& item : items) {
+		sp.Encode2(item.itemID); // 004031BD "item id"
+		sp.Encode2(item.count); // 004031C8 "item count"
+		sp.Encode2(0); // 004031D3
+		sp.Encode8(item.price); // 004031DE "money"
+		sp.Encode4(0); // 004031EB title limit
+		sp.Encode2(0); // 004031F5
+		sp.Encode4(0); // 00403200
+		sp.Encode2(0); // 0040320A
+		sp.Encode2(0); // 00403217 level limit
+		sp.EncodeFloat(0); // 0040322B quest limit
+	}
 	SendPacket(sp);
 }
 
@@ -930,7 +931,6 @@ void BoardPacket(BoardAction action, std::wstring owner = L"", std::wstring msg 
 		return;
 	}
 	}
-
 	SendPacket(sp);
 }
 
@@ -959,8 +959,6 @@ void EquipTitle(TenviCharacter& chr, BYTE code) {
 void ShipPacket(DWORD process=-1) {
 	ServerPacket sp(SP_SHIP);
 	sp.Encode1(2);
-//	sp.Encode4(4660096);
-//	pucchi: #75000, minos: #70000
 	sp.Encode4(process);
 	sp.Encode4(20000);
 	SendPacket(sp);
@@ -1003,12 +1001,14 @@ void SetWeather(WORD map_id) {
 	}
 }
 
+unsigned long int start_time = 0;
 void SetTimer(DWORD map_id, DWORD time) {
 	tenvi_data.get_map(map_id)->SetTimer(time);
 	start_time = clock();
 	EventCounter(time);
 }
 
+bool isFirst = true;
 // go to map
 void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 	ChangeMapPacket(map_id, x, y);
@@ -1017,10 +1017,12 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 	case MAPID_SHIP_PUCCHI:
 	case MAPID_SHIP_MINOS:
 	{
-//		SetTimer(map_id, 60);
-//		ShipPacket(map_id == MAPID_SHIP_PUCCHI ? 75000 : 70000);
-		if (!justArrived) {
-//			ShipPacket();
+		if (isFirst) {
+			isFirst = false;
+			ShipPacket();
+		}
+		else{
+			ShipPacket(36000);
 		}
 		chr.SetMapReturn(chr.map);
 		chr.map = map_id;
@@ -1029,8 +1031,8 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 	case MAPID_SHIP0:
 	case MAPID_SHIP1:
 	{
-		SetTimer(map_id, 1);
-//		ShipPacket();
+		ShipPacket();
+		SetTimer(map_id, 20);
 		chr.SetMapReturn(chr.map);
 		chr.map = map_id;
 		break;
@@ -1060,7 +1062,12 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 		break;
 	}
 	}
-	SetWeather(map_id);
+	try {
+		SetWeather(map_id);
+	}
+	catch (...) {
+		writeDebugLog("caught");
+	}
 	SpawnObjects(chr, map_id);
 	CharacterSpawnPacket(chr, x, y);
 	HaveTitle(chr, chr.titles);
@@ -1144,6 +1151,18 @@ void RemoveFromInventory(BYTE loc, BYTE type) {
 	DelaySendPacket(sp);
 }
 
+void EnterShop(WORD npc_id, WORD obj_id) {
+	std::pair<int, std::vector<ShopItem>> items = parse_shop(obj_id);
+	ShopPacket(npc_id, items.first, items.second);
+}
+
+void Die(TenviCharacter& chr) {
+	chr.aboard = 0;
+	chr.fly = 0;
+	chr.guardian_flag = 0;
+	DeathPacket(chr);
+}
+
 void CheckShip() {
 	TenviCharacter& chr = TA.GetOnline();
 	std::set<DWORD> ships{ MAPID_SHIP_PUCCHI, MAPID_SHIP_MINOS, MAPID_SHIP0, MAPID_SHIP1 };
@@ -1161,17 +1180,15 @@ void CheckShip() {
 			case MAPID_SHIP0: {
 				SetMap(chr, 6085);
 				chr.map = 6085;
-//				ShipPacket(36000);
-				justArrived = true;
-				InMapTeleportPacket(chr, 1200, 520);
+				ShipPacket(36000);
+				InMapTeleportPacket(chr, 1060, 414);
 				return;
 			}
 			case MAPID_SHIP1: {
 				SetMap(chr, 4001);
 				chr.map = 4001;
-//				ShipPacket(36000);
-				justArrived = true;
-				InMapTeleportPacket(chr, 260, 30);
+				ShipPacket(36000);
+				InMapTeleportPacket(chr, 150, -76);
 				return;
 			}
 			}
@@ -1221,7 +1238,6 @@ bool FakeServer(ClientPacket &cp) {
 				InitInventory(chr);
 				InitKeySet();
 				SetMap(chr, chr.map);
-				InMapTeleportPacket(chr, 1567, -1477);
 				BoardPacket(Board_Spawn, L"Suhan", L"Picket");
 				BoardPacket(Board_AddInfo, L"Suhan", L"Non-commercial works");
 				return true;
@@ -1280,8 +1296,10 @@ bool FakeServer(ClientPacket &cp) {
 	}
 	case CP_GUARDIAN_MOVEMENT: {
 		TenviCharacter& chr = TA.GetOnline();
-		chr.x = cp.DecodeFloat();
+		float x = cp.DecodeFloat();
 		chr.y = cp.DecodeFloat();
+		chr.direction = (chr.x < x) ? 1 : 0;
+		chr.x = x;
 		cp.Decode1();
 		chr.fly = (cp.Decode1() ? 10 : 0);
 		return true;
@@ -1477,8 +1495,13 @@ bool FakeServer(ClientPacket &cp) {
 		}
 
 		if (hit_to == chr.id) {
-			WORD damage = 100;
+			WORD damage = 1500;
 			PlayerHitPacket(chr, hit_from, damage);
+			chr.HP = (chr.HP <= damage) ? 0 : chr.HP - damage;
+			PlayerStatPacket(chr);
+			if (chr.HP == 0) {
+				Die(chr);
+			}
 
 			return true;
 		}
@@ -1529,6 +1552,10 @@ bool FakeServer(ClientPacket &cp) {
 		TenviCharacter& chr = TA.GetOnline();
 		BYTE option = cp.Decode1(); // 1: tomb, 2: same pos, 3: revive potion
 		PlayerRevivePacket(TA.GetOnline());
+		chr.HP = chr.maxHP;
+		chr.MP = chr.maxMP;
+		PlayerStatPacket(chr);
+
 		if (option == 1) {
 			GoTomb(chr);
 		}
@@ -1547,15 +1574,24 @@ bool FakeServer(ClientPacket &cp) {
 
 		DWORD dialog = tenvi_data.get_map(chr.map)->FindNPCRegen(npc_id).dialog;
 		WORD group = tenvi_data.get_map(chr.map)->FindNPCRegen(npc_id).group;
+		WORD obj_id = tenvi_data.get_map(chr.map)->FindNPCRegen(npc_id).object.id;
 
-		std::set<WORD> shop { 6, 7, 8, 9, 11, 16, 17, 18, 30, 31, 61, 76, 80, 82, 84, 92, 94, 101, 103, 105, 118, 119, 120, 125, 126, 127, 128, 130 };
-		if (dialog) {
+		std::set<WORD> shop { 1005, 1006, 1041, 1042, 1108, 2009, 2010, 2011, 2012, 2031, 2033, 2088, 2090, 2095,
+			2096, 2097, 2160, 2253, 2255, 2256, 3005, 3104, 3143, 3144, 3146, 3163, 4019, 4020, 4060, 4061, 4062,
+			4065, 4066, 4068, 4070, 4071, 4072, 4116, 4119, 4134, 4192, 4220, 5010, 5011, 5012, 5013, 5014, 5015,
+			5016, 5034, 5037, 5043, 5046, 5134, 5149, 5176, 5177, 5191, 5219, 5221, 5223, 5250, 6009, 6010, 6011,
+			6012, 6013, 6017, 6018, 6019, 6023, 6024, 6025, 6026, 6027, 6028, 6037, 6041, 6044, 6045, 6046, 6047,
+			6051, 6054, 6165, 6190, 6191, 6192, 7013, 8010, 8011, 8012, 8013, 8014, 8015, 8016, 8030, 8035, 8039,
+			8043, 8214, 8217, 8218, 60033, 60039, 60070, 60071, 60083, 60084, 60094, 60110, 60125, 60126, 60127,
+			60128, 60149, 60179 };
+
+		if (shop.count(obj_id)) {
+			EnterShop(npc_id, obj_id);
+		}
+		else if (dialog) {
 			tenvi_data.get_map(chr.map)->pre_npc = npc_id;
 			tenvi_data.get_map(chr.map)->pre_dialog = dialog;
 			NPC_TalkPacket(npc_id, dialog);
-		}
-		if (shop.count(group)) {
-			ShopPacket(npc_id);
 		}
 		switch (group) {
 		case 20:
@@ -1613,10 +1649,7 @@ bool FakeServer(ClientPacket &cp) {
 				EventAlarm(5);
 			}
 			else if (_wcsicmp(message.c_str(), L"@death") == 0) {
-				chr.aboard = 0;
-				chr.fly = 0;
-				chr.guardian_flag = 0;
-				DeathPacket(chr);
+				Die(chr);
 			}
 			else if (_wcsicmp(message.c_str(), L"@pos") == 0) {
 				ChatPacket(L"x: " + std::to_wstring(chr.x) + L", y: " + std::to_wstring(chr.y));

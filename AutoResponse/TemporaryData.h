@@ -70,9 +70,14 @@ public:
 	WORD stat_hp;
 	WORD stat_int;
 	WORD stat_mp;
+	WORD maxHP;
+	WORD HP;
+	WORD maxMP;
+	WORD MP;
 	BYTE fly;
 	BYTE aboard;
 	BYTE titleEquipped;
+	BYTE direction;
 	// data
 	float x;
 	float y;

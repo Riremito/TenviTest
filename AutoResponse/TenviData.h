@@ -13,6 +13,12 @@ typedef struct {
 	BYTE blue;
 } Weather;
 
+typedef struct {
+	WORD itemID;
+	int count;
+	DWORD price;
+} ShopItem;
+
 // loaded xml data list
 class TenviData {
 private:
@@ -30,6 +36,7 @@ public:
 };
 
 DWORD parse_dialog(DWORD dialog, DWORD action_id);
+std::pair<int, std::vector<ShopItem>> parse_shop(WORD obj_id);
 void writeDebugLog(std::string str);
 extern TenviData tenvi_data;
 

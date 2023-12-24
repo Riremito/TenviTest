@@ -114,6 +114,41 @@ DWORD parse_dialog(DWORD dialog, DWORD action_id) {
 	return 0;
 }
 
+std::pair<int, std::vector<ShopItem>> parse_shop(WORD obj_id) {
+	std::string shop_str = (obj_id < 10000) ? ("0" + std::to_string(obj_id)) : std::to_string(obj_id);
+	std::string filename = tenvi_data.get_xml_path() + +"\\" + tenvi_data.get_region_str() + "\\shop\\" + shop_str + ".xml";
+	rapidxml::xml_document<> doc;
+	int currency = -1;
+	std::vector<ShopItem> res = {};
+	try {
+		rapidxml::file<> xmlFile(filename.c_str());
+		doc.parse<0>(xmlFile.data());
+	}
+	catch (...) {
+		return {currency, res};
+	}
+
+	rapidxml::xml_node<>* root = doc.first_node();
+	if (!root) {
+		return {currency, res};
+	}
+	for (rapidxml::xml_node<>* child = root->first_node(); child; child = child->next_sibling()) {
+		if (strcmp("sell", child->name()) == 0) {
+			if (child->first_attribute("currency")) {
+				currency = atoi(child->first_attribute("currency")->value());
+			}
+			for (rapidxml::xml_node<>* sell_item = child->first_node(); sell_item; sell_item = sell_item->next_sibling()) {
+				WORD itemID = atoi(sell_item->first_attribute("item")->value());
+				int count = atoi(sell_item->first_attribute("count")->value());
+				DWORD price = atoi(sell_item->first_attribute("price")->value());
+				res.push_back({ itemID, count, price });
+			}
+		}
+	}
+	return { currency, res };
+}
+
+
 
 std::string TenviData::get_xml_path() {
 	return xml_path;

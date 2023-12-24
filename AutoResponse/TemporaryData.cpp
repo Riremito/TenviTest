@@ -28,6 +28,10 @@ TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WO
 	stat_hp = 199;
 	stat_int = 712;
 	stat_mp = 158;
+	maxHP = 4000;
+	HP = 3000;
+	maxMP = 3000;
+	MP = 2000;
 	x = 0.0;
 	y = 0.0;
 	guardian_flag = 1;
@@ -37,6 +41,7 @@ TenviCharacter::TenviCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WO
 	fly = 0;
 	aboard = 18;
 	titleEquipped = 9;
+	direction = 0;
 	InitItem();
 }
 
@@ -46,7 +51,7 @@ void TenviCharacter::InitItem() {
 //		0x667F, 0x0745, 0x0A33, 0x01CA, 0x6837, 0x6C56, 0x7112, 0x7116, 0x6F89, 0x57E1, 0x02D6, 0x5DB0, 0x0A1B,
 		655, 657, 659, 228, 230, 232, 20355, 20361, 20367, 20000, 20001, 20002, 238, 392, 391, 20357, 20363, 20369, 22000, 22001, 22002, 20356, 20362, 20368, 22500, 22505, 22508, 23001, 23000, 23029, 22495, 23432, 23442, 234, 235, 418,
 		// extra
-		0xEE48, 0xF677, 0xEA60, 0xEA65, 0xEA85, 0xA0DC, 0xA0E8, 0xEAF2, 0xA115, 0xA141, 0x9CDB, 0xA18B, 0xF416, 0x9D20, 0xA6C7, 0xA13B, 0xEA94, 0xEA82, 0xEB15, 0x9C40, 0x9CB8, 0x9C95, 0xA8B9,
+		0xEE48, 0xF677, 0xEA60, 0xEA65, 0xEA85, 0xA0DC, 40223, 0xA0E8, 0xEAF2, 0xA115, 0xA141, 0x9CDB, 0xA18B, 0xF416, 0x9D20, 0xA6C7, 0xA13B, 0xEA94, 0xEA82, 0xEB15, 0x9C40, 0x9CB8, 0x9C95, 0xA8B9,
 		// quest
 		42107, 0xA6B4, 0xA4DB,
 		// cash
@@ -83,7 +88,7 @@ void TenviCharacter::SetMapReturn(WORD map_return_id) {
 void TenviCharacter::TestSilva() {
 	gcolor = 187;
 	//hair = 137;
-	map = 4001;
+	map = 4002;
 }
 
 // game related
