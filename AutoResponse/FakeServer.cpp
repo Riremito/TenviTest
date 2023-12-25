@@ -1,6 +1,6 @@
 ﻿#include"FakeServer.h"
 #include"AutoResponse.h"
-#include"TemporaryData.h"
+#include"Database.h"
 #include"TenviItem.h"
 #include<map>
 #include<set>
@@ -1012,12 +1012,6 @@ void SetWeather(WORD map_id) {
 	}
 }
 
-std::wstring StrToWstr(const std::string& var) {
-	static std::locale loc("");
-	auto& facet = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc);
-	return std::wstring_convert<std::remove_reference<decltype(facet)>::type, wchar_t>(&facet).from_bytes(var);
-}
-
 void SetBoard(WORD map_id) {
 	std::set<WORD> fields {1001, 1009, 1030, 1050, 1079, 2002, 2014, 2031, 2051, 3050, 4001,
 		4002, 4003, 5003, 5028, 5042, 6001, 6009, 6031, 6085, 7010, 8003, 8004, 8028, 8048};
@@ -1054,16 +1048,16 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 			ShipPacket(36000);
 		}
 		chr.SetMapReturn(chr.map);
-		chr.map = map_id;
+		chr.SetMap(map_id);
 		break;
 	}
 	case MAPID_SHIP0:
 	case MAPID_SHIP1:
 	{
 		ShipPacket();
-		SetTimer(map_id, 20);
 		chr.SetMapReturn(chr.map);
 		chr.map = map_id;
+		SetTimer(map_id, 20);
 		break;
 	}
 	case MAPID_ITEM_SHOP:
@@ -1087,7 +1081,7 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 	default:
 	{
 		chr.SetMapReturn(chr.map);
-		chr.map = map_id;
+		chr.SetMap(map_id);
 		break;
 	}
 	}
@@ -1207,6 +1201,7 @@ void CheckShip() {
 		EventCounter(time);
 		if (time == 0) {
 			start_time = 0;
+			tenvi_data.get_map(chr.map)->time_now = -1;
 			switch (chr.map) {
 			case MAPID_SHIP0: {
 				SetMap(chr, 6085);

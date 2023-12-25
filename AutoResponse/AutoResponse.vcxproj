@@ -89,9 +89,10 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;AUTORESPONSE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;AUTORESPONSE_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\MariaDB 10.5\include\mysql</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -99,6 +100,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>C:\Program Files (x86)\MariaDB 10.5\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libmariadb.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -164,7 +167,7 @@
     <ClCompile Include="HK_v102_SP.cpp" />
     <ClCompile Include="JP_v127_SP.cpp" />
     <ClCompile Include="KRX_v107_SP.cpp" />
-    <ClCompile Include="TemporaryData.cpp" />
+    <ClCompile Include="Database.cpp" />
     <ClCompile Include="TenviData.cpp" />
     <ClCompile Include="TenviItem.cpp" />
     <ClCompile Include="TenviMap.cpp" />
@@ -179,7 +182,7 @@
     <ClInclude Include="rapidxml\rapidxml_print.hpp" />
     <ClInclude Include="rapidxml\rapidxml_utils.hpp" />
     <ClInclude Include="ServerPacket.h" />
-    <ClInclude Include="TemporaryData.h" />
+    <ClInclude Include="Database.h" />
     <ClInclude Include="TenviData.h" />
     <ClInclude Include="TenviItem.h" />
     <ClInclude Include="TenviMap.h" />

@@ -39,7 +39,7 @@
     <ClCompile Include="FakeServer.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="TemporaryData.cpp">
+    <ClCompile Include="Database.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="..\EmuMainTenvi\ConfigTenvi.cpp">
@@ -101,7 +101,7 @@
     <ClInclude Include="TenviPacket.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="TemporaryData.h">
+    <ClInclude Include="Database.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="..\EmuMainTenvi\ConfigTenvi.h">
