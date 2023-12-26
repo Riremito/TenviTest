@@ -15,8 +15,6 @@
 
 bool FakeServer(ClientPacket &cp);
 // test
-bool getIsFlag();
-void LateInit_TA();
 void WorldListPacket();
 void CharacterSelectPacket();
 void CharacterListPacket();

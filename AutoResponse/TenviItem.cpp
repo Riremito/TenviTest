@@ -58,6 +58,22 @@ BYTE FindType(DWORD itemID) {
 	return NULL;
 }
 
+BYTE FindGroup(DWORD itemID) {
+	rapidxml::xml_node<>* item = getNode(itemID, "type");
+	if (item) {
+		return atoi(item->first_attribute("value")->value());
+	}
+	return NULL;
+}
+
+BYTE FindRank(DWORD itemID) {
+	rapidxml::xml_node<>* item = getNode(itemID, "rank");
+	if (item) {
+		return atoi(item->first_attribute("value")->value());
+	}
+	return NULL;
+}
+
 
 BYTE FindSlot(DWORD itemID) {
 	static std::map<std::string, BYTE> slot_map = { {"cl", 0}, {"cp", 1}, {"nc", 2}, {"ri", 3}, {"fa", 5},

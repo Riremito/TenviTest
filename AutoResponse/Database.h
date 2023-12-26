@@ -13,13 +13,17 @@ typedef struct{
 } TenviSkill;
 
 typedef struct {
+	DWORD inventoryID;
 	WORD itemID;
-	BYTE slot;
-	BYTE isCash;
+	BYTE loc;
 	BYTE type;
+	BYTE group;
+	BYTE slot;
+	BYTE rank;
+	BYTE isCash;
 	DWORD price;
 	WORD number;
-	DWORD inventoryID;
+	BYTE isEquip;
 } Item;
 
 enum TenviStat {
@@ -30,7 +34,7 @@ enum TenviStat {
 	TS_MP,
 };
 
-enum ItemType {
+enum ItemSlot {
 	cl = 0, // cloth
 	cp = 1, // cap
 	nc = 2, // necklace
@@ -82,11 +86,6 @@ public:
 	BYTE titleEquipped;
 	BYTE direction;
 	DWORD money;
-	BYTE equipLoc;
-	BYTE extraLoc;
-	BYTE questLoc;
-	BYTE cashLoc;
-	BYTE cardLoc;
 
 	// data
 	float x;
@@ -94,25 +93,31 @@ public:
 
 	BYTE guardian_flag;
 	std::wstring profile;
-	std::map<BYTE, Item> equipped;
-	std::map<BYTE, Item> gequipped;
-	std::map<BYTE, Item> inventory_equip;
-	std::map<BYTE, Item> inventory_extra;
-	std::map<BYTE, Item> inventory_quest;
-	std::map<BYTE, Item> inventory_cash;
-	std::map<BYTE, Item> inventory_card;
 	std::vector<TenviSkill> skill;
 	std::vector<BYTE> titles;
 
 	TenviCharacter(std::wstring name, std::wstring profile, DWORD id, BYTE job_mask, WORD job, WORD skin,
 		WORD hair, WORD face, WORD cloth, WORD gcolor, BYTE awakening, WORD map, BYTE level, WORD sp, WORD ap,
 		WORD stat_str, WORD stat_dex, WORD stat_hp, WORD stat_int, WORD stat_mp, WORD maxHP, WORD HP, WORD maxMP,
-		WORD MP, BYTE titleEquipped, DWORD money, std::map<BYTE, Item>& nEquipped, std::map<BYTE, Item>& nGEquipped);
+		WORD MP, BYTE titleEquipped, DWORD money);
 
-	void InitItem();
-	void TestSilva();
 	bool UseSP(WORD skill_id);
 	bool UseAP(BYTE stat_id, BYTE amount);
+	std::map<BYTE, Item> GetEquipped(BYTE isCash);
+	std::vector<Item> GetInventory();
+	Item GetItemByLoc(BYTE type, BYTE loc);
+	Item GetItemBySlot(BYTE slot, BYTE isCash);
+	int GetEmptyLoc(BYTE type);
+	Item GetItemByInventoryID(DWORD inventoryID);
+	void ChangeItemLoc(DWORD inventoryID, BYTE loc);
+	void DeleteItem(DWORD inventoryID);
+	void ChangeItemNumber(DWORD inventoryID, WORD number);
+	void RefreshHPMP();
+	void ChangeTitle(BYTE code);
+	void SwitchRing(BYTE isCash);
+	void AddItem(Item item);
+	void EquipItem(Item item, BYTE ring4 = 0);
+	void UnequipItem(Item item, BYTE loc, BYTE ring4 = 0);
 	void SetMapReturn(WORD map_return_id);
 	void SetMap(WORD map_id);
 };
@@ -127,13 +132,13 @@ public:
 	static DWORD inventoryCount;
 
 	TenviAccount();
-	void LateInit();
 	bool FindCharacter(DWORD id, TenviCharacter *found);
 	std::vector<TenviCharacter>& GetCharacters();
 	bool AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, BYTE nAwakening, std::map<BYTE, Item> &nEquipped, std::map<BYTE, Item> &nGEquipped);
-	static Item MakeItem(WORD itemID, WORD number=1);
+	static Item MakeItem(TenviCharacter& chr, WORD itemID, WORD number=1);
 	bool Login(DWORD id);
 	TenviCharacter& GetOnline();
+	static DWORD GetHighestInventoryID();
 };
 
 #endif
