@@ -26,6 +26,14 @@ void OnPacketDirectExec(InPacket *p, bool context = true) {
 		void (__thiscall *_OnPacket2)(void *, InPacket*) = (decltype(_OnPacket2))Addr_OnPacket2;
 		_OnPacket2(OnPacketClass2, p);
 	}
+
+	// chat log test
+	if (GetRegion() == TENVI_JP) {
+		if (p->packet[4] == ServerPacket::GetOpcode()[SP_PLAYER_CHAT]) {
+			void(__thiscall *_ChatOnPacket)(void *, InPacket *) = (decltype(_ChatOnPacket))0x004BF079;
+			_ChatOnPacket((void *)(*(DWORD *)(0x006DB190) + 0xF5C), p);
+		}
+	}
 }
 
 void ProcessPacketExec(std::vector<BYTE> &packet, bool context = true) {
@@ -92,10 +100,11 @@ void __fastcall WorldSelectButton_Hook(void *ecx) {
 	CharacterListPacket_Test();
 }
 
-bool (__thiscall *_ConnectCaller)(void *) = NULL;
+bool (__thiscall *_ConnectCaller)(void *ecx, void *v1, void *v2, void *v3) = NULL;
 bool __fastcall ConnectCaller_Hook(void *ecx, void *edx, void *v1, void *v2, void *v3) {
 	DEBUG(L"Connect is called!");
 	// ignore connect checks
+	//_ConnectCaller(ecx, v1, v2, v3);
 	return true;
 }
 
