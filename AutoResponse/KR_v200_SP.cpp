@@ -53,6 +53,7 @@ void SetServerPacketHeader_KR_v200() {
 	header[SP_BANK] = 0xB0;
 	header[SP_MAIL] = 0xB4;
 	header[SP_AUCTION] = 0xBC;
+	header[SP_INVENTORY_ERROR] = 0xC4;
 	header[SP_TELESCOPE] = 0xCC;
 	header[SP_BOARD] = 0xE1;
 	header[SP_TITLE] = 0xE3;

@@ -245,6 +245,28 @@ void TenviCharacter::UnequipItem(Item item, BYTE loc, BYTE ring4) {
 	}
 }
 
+Item TenviCharacter::GetItemByItemID(WORD itemID) {
+	char query[1024];
+	MYSQL_RES* result;
+	sprintf_s(query, 1024, "SELECT * FROM tables.inventory WHERE chr_id = %d AND itemID = %d ORDER BY loc ASC", id, itemID);
+	mysql_query(conn, query);
+	result = mysql_store_result(conn);
+
+	std::map<std::string, BYTE> getf;
+	MYSQL_FIELD* field;
+	for (unsigned int i = 0; (field = mysql_fetch_field(result)); i++) {
+		getf[field->name] = i;
+	}
+
+	Item myItem = {};
+	MYSQL_ROW item;
+	if (item = mysql_fetch_row(result)) {
+		myItem = extractItemRow(item, getf);
+	}
+	mysql_free_result(result);
+	return myItem;
+}
+
 int TenviCharacter::GetEmptyLoc(BYTE type) {
 	char query[1024];
 	MYSQL_RES* result;
@@ -273,7 +295,7 @@ int TenviCharacter::GetEmptyLoc(BYTE type) {
 		}
 		return pre + 1;
 	}
-	if (pre + 1 <= 40) {
+	if (pre + 1 < 40) {
 		return pre + 1;
 	}
 	return -1;
@@ -388,12 +410,24 @@ void TenviCharacter::ChangeTitle(BYTE code) {
 	mysql_query(conn, query);
 }
 
+void TenviCharacter::ChangeMoney(DWORD money) {
+	char query[1024];
+	this->money = money;
+	sprintf_s(query, 1024, "UPDATE tables.character set money = %d WHERE id = %d", money, id);
+	mysql_query(conn, query);
+}
+
 // init
 TenviAccount::TenviAccount() {
 	unsigned int timeout_sec = 1;
 	conn = mysql_init(NULL);
 	mysql_options(conn, MYSQL_OPT_CONNECT_TIMEOUT, &timeout_sec);
-	mysql_real_connect(conn, "127.0.0.1", "root", "1234", "tables", 3306, NULL, 0);
+	try {
+		mysql_real_connect(conn, "127.0.0.1", "root", "1234", "tables", 3306, NULL, 0);
+	}
+	catch (...) {
+		writeDebugLog(mysql_error(conn));
+	}
 
 	char query[1024];
 	MYSQL_RES* result;
@@ -458,7 +492,6 @@ TenviAccount::TenviAccount() {
 		}
 		mysql_free_result(skill_list);
 		characters.push_back(player);
-		writeDebugLog("here");
 	}
 	mysql_free_result(result);
 

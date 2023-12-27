@@ -5,8 +5,25 @@
 #include"../EmuMainTenvi/ConfigTenvi.h"
 
 TenviMap::TenviMap(DWORD mapid) {
+	std::string region_str;
+	switch (GetRegion()) {
+	case TENVI_JP:
+	case TENVI_CN:
+	case TENVI_HK: {
+		region_str = "KR";
+		break;
+	}
+	default:
+	{
+		region_str = tenvi_data.get_region_str();
+		break;
+	}
+	}
+
 	id = mapid;
 	LoadXML();
+	LoadSubXML();
+	LoadNPCDialog();
 }
 
 rapidxml::xml_node<>* xml_find_dir(rapidxml::xml_node<>* parent, std::string name) {
@@ -22,7 +39,6 @@ rapidxml::xml_node<>* xml_find_dir(rapidxml::xml_node<>* parent, std::string nam
 bool TenviMap::LoadXML() {
 	std::string mapid_str = (id < 10000) ? ("0" + std::to_string(id)) : std::to_string(id);
 	std::string map_xml = tenvi_data.get_xml_path() + +"\\" + tenvi_data.get_region_str() + "\\map\\" + mapid_str + "_0.xml";
-	OutputDebugStringA(("[Maple] xml = " + map_xml).c_str());
 	rapidxml::xml_document<> doc;
 
 	try {
@@ -64,6 +80,7 @@ bool TenviMap::LoadXML() {
 			AddPortal(portal);
 		}
 	}
+
 	rapidxml::xml_node<>* map_attr = xml_find_dir(root, "attr");
 	if (map_attr) {
 		// tomb location id
@@ -71,32 +88,13 @@ bool TenviMap::LoadXML() {
 		// return town id
 		return_town_id = atoi(map_attr->first_attribute("returntown")->value());
 	}
-	
-	LoadSubXML();
 
 	return true;
 }
 
 bool TenviMap::LoadSubXML() {
 	std::string mapid_str = (id < 10000) ? ("0" + std::to_string(id)) : std::to_string(id);
-	std::string region_str;
-
-	switch (GetRegion()) {
-	case TENVI_JP:
-	case TENVI_CN:
-	case TENVI_HK: {
-		region_str = "KR";
-		break;
-	}
-	default:
-	{
-		region_str = tenvi_data.get_region_str();
-		break;
-	}
-	}
-
-	std::string map_xml = tenvi_data.get_xml_path() + +"\\" + region_str + "\\npc\\regen\\" + mapid_str + "_0.xml";
-	OutputDebugStringA(("[Maple] subxml = " + map_xml).c_str());
+	std::string map_xml = tenvi_data.get_xml_path() + +"\\" + tenvi_data.get_region_str() + "\\npc\\regen\\" + mapid_str + "_0.xml";
 	rapidxml::xml_document<> doc;
 
 	try {
@@ -120,35 +118,33 @@ bool TenviMap::LoadSubXML() {
 		regen.flip = atoi(node->first_attribute("flip")->value());
 		regen.population = atoi(node->first_attribute("population")->value());
 
+
 		for (rapidxml::xml_node<>* child = node->first_node(); child; child = child->next_sibling()) {
 			if (strcmp("area", child->name()) == 0) {
-				regen.area.left = (float)atoi(child->first_attribute("left")->value());
-				regen.area.top = (float)atoi(child->first_attribute("top")->value());
-				regen.area.right = (float)atoi(child->first_attribute("right")->value());
-				regen.area.bottom = (float)atoi(child->first_attribute("bottom")->value());
+				regen.area.left = atoi(child->first_attribute("left")->value());
+				regen.area.top = atoi(child->first_attribute("top")->value());
+				regen.area.right = atoi(child->first_attribute("right")->value());
+				regen.area.bottom = atoi(child->first_attribute("bottom")->value());
 				continue;
 			}
 			if (strcmp("id", child->name()) == 0) {
 				regen.object.id = atoi(child->first_attribute("value")->value());
 				//area.id = atoi(child->first_attribute("min")->value());
 				//area.id = atoi(child->first_attribute("max")->value());
-
-				OutputDebugStringA(("[Maple] npc = " + std::string(child->first_attribute("value")->value())).c_str());
 				continue;
 			}
 		}
 		AddRegen(regen);
 	}
-	LoadNPCDialog(region_str);
 	return true;
 }
 
-bool TenviMap::LoadNPCDialog(std::string region_str) {
+bool TenviMap::LoadNPCDialog() {
 	for (auto& regen : data_regen) {
 		if (regen.object.id) {
 			rapidxml::xml_document<> doc;
 			std::string npc_id = (regen.object.id < 10000) ? ("0" + std::to_string(regen.object.id)) : std::to_string(regen.object.id);
-			std::string npc_xml = tenvi_data.get_xml_path() + +"\\" + region_str + "\\npc\\" + npc_id + ".xml";
+			std::string npc_xml = tenvi_data.get_xml_path() + +"\\" + tenvi_data.get_region_str() + "\\npc\\" + npc_id + ".xml";
 			regen.dialog, regen.group = 0, 0;
 			try {
 				rapidxml::file<> xmlFile(npc_xml.c_str());

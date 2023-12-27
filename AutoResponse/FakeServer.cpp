@@ -894,6 +894,14 @@ void AuctionPacket(DWORD npc_id) {
 	SendPacket(sp);
 }
 
+// 0xC4
+void ErrorInventoryFull() {
+	ServerPacket sp(SP_INVENTORY_ERROR);
+	sp.Encode2(0);
+	sp.Encode1(1);
+	SendPacket(sp);
+}
+
 // 0xCC
 void UseTelescope() {
 	ServerPacket sp(SP_TELESCOPE);
@@ -1360,7 +1368,7 @@ bool FakeServer(ClientPacket &cp) {
 		// type에 해당하는 inventory의 loc 자리에 있는 item을 slot에 넣는다.
 		// slot이 0xFF이면 알아서 판단해야한다.
 		Item item2equip = chr.GetItemByLoc(type, loc);
-		writeDebugLog(std::to_string(item2equip.type));
+
 
 		if (slot == 0xFF) {
 			slot = item2equip.slot;
@@ -1662,114 +1670,73 @@ bool FakeServer(ClientPacket &cp) {
 		return true;
 	}
 	case CP_BUY: {
-		// TODO
-		// 
-		//TenviCharacter& chr = TA.GetOnline();
-		//DWORD npc_id = cp.Decode4();
-		//WORD itemID = cp.Decode2();
-		//WORD num = cp.Decode2();
-		//Item item = TA.MakeItem(itemID, num);
-		//DWORD price = 0;
+		TenviCharacter& chr = TA.GetOnline();
+		DWORD npc_id = cp.Decode4();
+		WORD itemID = cp.Decode2();
+		WORD num = cp.Decode2();
+		Item item2buy = TA.MakeItem(chr, itemID, num);
+		DWORD price = 0;
 
-		//std::map<BYTE, Item>* inventory;
-		//switch (FindType(itemID)) {
-		//case 0: {
-		//	inventory = &chr.inventory_equip;
-		//	break;
-		//}
-		//case 1: {
-		//	inventory = &chr.inventory_extra;
-		//	break;
-		//}
-		//case 2: {
-		//	inventory = &chr.inventory_quest;
-		//	break;
-		//}
-		//case 3: {
-		//	inventory = &chr.inventory_cash;
-		//}
-		//default: {
-		//	inventory = &chr.inventory_card;
-		//	break;
-		//}
-		//}
-		//bool flag = true;
-		//if (FindType(itemID) == 1 || FindType(itemID) == 2) {
-		//	// 기타, 퀘스트 템인 경우 이미 가지고 있는지 확인해 개수만 늘리기
-		//	for (int loc = 0; loc < 40; loc++) {
-		//		if ((*inventory)[loc].itemID == itemID) {
-		//			(*inventory)[loc].number += num;
-		//			EditInventory(loc, (*inventory)[loc].inventoryID, (*inventory)[loc].itemID, (*inventory)[loc].type, (*inventory)[loc].number);
-		//			flag = false;
-		//			break;
-		//		}
-		//	}
-		//}
-		//if (flag) {
-		//	// 빈 자리 있는지 확인
-		//	for (int loc = 0; loc < 40; loc++) {
-		//		if ((*inventory)[loc].itemID == 0) {
-		//			(*inventory)[loc] = item;
-		//			EditInventory(loc, item.inventoryID, item.itemID, item.type, num);
-		//			flag = false;
-		//			break;
-		//		}
-		//	}
-		//}
-		//if (flag) {
-		//	// 빈 자리 없는 경우
-		//	return true;
-		//}
+		// 가격 확인
+		for (auto& item : shop_items.second) {
+			if (item.itemID == itemID) {
+				price = item.price * num;
+				break;
+			}
+		}
+		Item existingItem = chr.GetItemByItemID(itemID);
+		if ((FindType(itemID) == 1 || FindType(itemID) == 2) && existingItem.itemID) {
+			// 기타, 퀘스트 템인 경우 이미 가지고 있으면 개수만 늘리기
+			existingItem.number += num;
+			chr.ChangeItemNumber(existingItem.inventoryID, existingItem.number);
+			EditInventory(existingItem, 1);
+		}
+		else {
+			// 인벤토리 공간이 부족한 경우
+			if (!item2buy.itemID) {
+				ErrorInventoryFull();
+				return true;
+			}
+			EditInventory(item2buy, 1);
+			chr.AddItem(item2buy);
+		}
 
-		//for (auto& item : shop_items.second) {
-		//	// 가격 확인
-		//	if (item.itemID == itemID) {
-		//		price = item.price * num;
-		//		break;
-		//	}
-		//}
-
-		//if (shop_items.first == -1) {
-		//	// 돈 차감
-		//	chr.money -= price;
-		//	MoneyPacket(chr);
-		//}
-		//else {
-		//	// 재화 아이템 차감
-		//	WORD currency = shop_items.first;
-		//	for (auto& pair : chr.inventory_extra) {
-		//		if (pair.second.itemID == currency) {
-		//			chr.inventory_extra[pair.first].number -= price;
-		//			writeDebugLog(std::to_string(price));
-		//			if (chr.inventory_extra[pair.first].number == 0) {
-		//				chr.inventory_extra[pair.first] = {};
-		//				RemoveFromInventory(pair.first, 1);
-		//			}
-		//			else {
-		//				EditInventory(pair.first, pair.second.inventoryID, pair.second.itemID, pair.second.type, pair.second.number);
-		//			}
-		//		}
-		//	}
-		//}
+		if (shop_items.first == -1) {
+			// 돈 차감
+			chr.ChangeMoney(chr.money - price);
+			MoneyPacket(chr);
+		}
+		else {
+			// 재화 아이템 차감
+			WORD currency = shop_items.first;
+			while (price > 0) {
+				Item currency_item = chr.GetItemByItemID(currency);
+				if (currency_item.number <= price) {
+					RemoveFromInventory(currency_item.loc, currency_item.type);
+					chr.DeleteItem(currency_item.inventoryID);
+					price -= currency_item.number;
+				}
+				else {
+					currency_item.number -= price;
+					EditInventory(currency_item, 1);
+					chr.ChangeItemNumber(currency_item.inventoryID, currency_item.number);
+					price = 0;
+				}
+			}
+		}
 		return true;
 	}
 	case CP_SELL: {
-		// TODO
-		// 
-		//TenviCharacter& chr = TA.GetOnline();
-		//cp.Decode4();
-		//DWORD inventoryID = cp.Decode8();
-		//for (std::map<BYTE, Item>* inventory : { &chr.inventory_equip, &chr.inventory_cash, &chr.inventory_extra, &chr.inventory_quest, &chr.inventory_card }) {
-		//	for (auto& pair : *inventory) {
-		//		if (pair.second.inventoryID == inventoryID) {
-		//			chr.money += pair.second.price;
-		//			RemoveFromInventory(pair.first, pair.second.type);
-		//			MoneyPacket(chr);
-		//			(*inventory)[pair.first] = {};
-		//			return true;
-		//		}
-		//	}
-		//}
+		TenviCharacter& chr = TA.GetOnline();
+		cp.Decode4();
+		DWORD inventoryID = cp.Decode8();
+		
+		Item item2sell = chr.GetItemByInventoryID(inventoryID);
+		chr.ChangeMoney(chr.money + item2sell.price * item2sell.number);
+		MoneyPacket(chr);
+		chr.DeleteItem(inventoryID);
+		RemoveFromInventory(item2sell.loc, item2sell.type);
+
 		return true;
 	}
 	case CP_PLAYER_CHAT: {

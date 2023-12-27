@@ -109,11 +109,13 @@ public:
 	Item GetItemBySlot(BYTE slot, BYTE isCash);
 	int GetEmptyLoc(BYTE type);
 	Item GetItemByInventoryID(DWORD inventoryID);
+	Item GetItemByItemID(WORD itemID);
 	void ChangeItemLoc(DWORD inventoryID, BYTE loc);
 	void DeleteItem(DWORD inventoryID);
 	void ChangeItemNumber(DWORD inventoryID, WORD number);
 	void RefreshHPMP();
 	void ChangeTitle(BYTE code);
+	void ChangeMoney(DWORD money);
 	void SwitchRing(BYTE isCash);
 	void AddItem(Item item);
 	void EquipItem(Item item, BYTE ring4 = 0);

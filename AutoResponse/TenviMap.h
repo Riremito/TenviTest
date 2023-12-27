@@ -54,7 +54,7 @@ private:
 
 	bool LoadXML();
 	bool LoadSubXML();
-	bool LoadNPCDialog(std::string region_str);
+	bool LoadNPCDialog();
 
 public:
 	DWORD time_now = -1;

@@ -27,6 +27,10 @@ void OnPacketDirectExec(InPacket *p, bool context = true) {
 		void (__thiscall *_OnPacket2)(void *, InPacket*) = (decltype(_OnPacket2))Addr_OnPacket2;
 		_OnPacket2(OnPacketClass2, p);
 	}
+	//if (p->packet[4] == 0x1B) { // chat header code
+	//	void(__thiscall * _ChatOnPacket)(wchar_t*) = (decltype(_ChatOnPacket))0x004A44B1; // chat log function
+	//	_ChatOnPacket((wchar_t*)p);
+	//}
 }
 
 void ProcessPacketExec(std::vector<BYTE> &packet, bool context = true) {
@@ -77,6 +81,17 @@ DWORD __fastcall LoginButton_Hook(void *ecx) {
 	WorldListPacket();
 	return 0;
 }
+#include <string>
+#include <sstream>
+DWORD(__thiscall* _sample)(void* ecx) = NULL;
+DWORD __fastcall sample_Hook(void* ecx, void* edx) {
+	std::stringstream ss;
+	ss << ecx;
+	std::string name = ss.str();
+	writeDebugLog(name);
+	return _sample(ecx);
+}
+
 
 DWORD (__thiscall *_LoginButton_KR)(void *ecx, void *, void *, void *) = NULL;
 DWORD __fastcall LoginButton_KR_Hook(void *ecx, void *, void *, void *) {

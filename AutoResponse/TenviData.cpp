@@ -44,7 +44,6 @@ void TenviData::set_xml_path(std::wstring path) {
 
 bool TenviData::parse_weather() {
 	std::string weather_xml = tenvi_data.get_xml_path() + +"\\" + tenvi_data.get_region_str() + "\\table\\weather.xml";
-	OutputDebugStringA(("[Maple] xml = " + weather_xml).c_str());
 	rapidxml::xml_document<> doc;
 
 	try {
