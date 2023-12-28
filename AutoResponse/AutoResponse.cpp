@@ -113,11 +113,7 @@ void __fastcall WorldSelectButton_Hook(void *ecx) {
 	CharacterListPacket_Test();
 }
 
-<<<<<<< HEAD
-bool(__thiscall* _ConnectCaller)(void* ecx, void* v1, void* v2, void* v3) = NULL;
-=======
 bool(__thiscall* _ConnectCaller)(void* ecx, void* v1, void* v2, void* v3) = NULL; 
->>>>>>> works
 bool __fastcall ConnectCaller_Hook(void *ecx, void *edx, void *v1, void *v2, void *v3) {
 	DEBUG(L"Connect is called!");
 	// ignore connect checks

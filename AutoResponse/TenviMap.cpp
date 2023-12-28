@@ -23,12 +23,7 @@ TenviMap::TenviMap(DWORD mapid) {
 	LoadXML();
 	LoadSubXML();
 	LoadNPCDialog();
-<<<<<<< HEAD
-	ExperimentalNPC_MOB();
-
-=======
 	Experimental();
->>>>>>> works
 }
 
 rapidxml::xml_node<>* xml_find_dir(rapidxml::xml_node<>* parent, std::string name) {
@@ -196,17 +191,6 @@ bool TenviMap::LoadNPCDialog() {
 	return true;
 }
 
-<<<<<<< HEAD
-void TenviMap::ExperimentalNPC_MOB() {
-	for (auto& regen : data_regen) {
-		// npc
-		if (regen.friendship != 1 && regen.friendship != 2) {
-			regen.area.left = regen.area.right;
-		}
-	}
-}
-
-=======
 void TenviMap::Experimental() {
 	std::vector<TenviRegen> new_regen;
 	int regenCounter = 0;
@@ -223,7 +207,6 @@ void TenviMap::Experimental() {
 	}
 	data_regen = new_regen;
 }
->>>>>>> works
 
 DWORD TenviMap::GetID() {
 	return id;
