@@ -429,7 +429,7 @@ void HitPacket(DWORD hit_from, DWORD hit_to, DWORD skill_id) {
 	sp.Encode1(0); // 004709DB
 	sp.Encode2(0); // 004709E8 skill id?
 	sp.Encode1(0); // 004709F5
-	SendPacket(sp);
+	DelaySendPacket(sp);
 }
 
 // 0x23
@@ -909,7 +909,7 @@ void UseTelescope() {
 }
 
 // 0xE0
-DWORD boardID = 1;
+DWORD boardID = 500;
 enum BoardAction {
 	Board_Spawn = 0,
 	Board_Remove = 1,
@@ -1002,6 +1002,7 @@ void EventCounter(DWORD time) {
 
 void SpawnObjects(TenviCharacter &chr, WORD map_id) {
 	for (auto &regen : tenvi_data.get_map(map_id)->GetRegen()) {
+		regen.area = { regen.area.left, 0, 0, regen.area.bottom };
 		CreateObjectPacket(regen);
 		ShowObjectPacket(regen);
 		ActivateObjectPacket(regen);
@@ -1756,7 +1757,11 @@ bool FakeServer(ClientPacket &cp) {
 			}
 			else if (_wcsnicmp(message.c_str(), L"@mob ", 5) == 0) {
 				int npc_id = _wtoi(&message.c_str()[5]);
-				TenviRegen regen = { 0, 0, 0, 0, 1, 0, 0, {chr.x, 0, 0, chr.y},  {npc_id} };
+				TenviRegen regen = {};
+				regen.area.left = chr.x;
+				regen.area.bottom = chr.y;
+				regen.id = 0xFFF0;
+				regen.object.id = npc_id;
 				CreateObjectPacket(regen);
 				ShowObjectPacket(regen);
 				ActivateObjectPacket(regen);

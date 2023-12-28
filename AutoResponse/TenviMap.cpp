@@ -24,6 +24,7 @@ TenviMap::TenviMap(DWORD mapid) {
 	LoadXML();
 	LoadSubXML();
 	LoadNPCDialog();
+	Experimental();
 }
 
 rapidxml::xml_node<>* xml_find_dir(rapidxml::xml_node<>* parent, std::string name) {
@@ -112,6 +113,7 @@ bool TenviMap::LoadSubXML() {
 	}
 
 	// regen
+	int regenCounter = 0;
 	for (rapidxml::xml_node<>* node = root->first_node(); node; node = node->next_sibling()) {
 		TenviRegen regen = {};
 		regen.id = atoi(node->first_attribute("id")->value());
@@ -134,7 +136,17 @@ bool TenviMap::LoadSubXML() {
 				continue;
 			}
 		}
-		AddRegen(regen);
+		for (int i = 0; i < regen.population; i++) {
+			TenviRegen sub = regen;
+			sub.id = regenCounter++;
+			if (regen.population > 1) {
+//				sub.area.left = (regen.area.right - regen.area.left) * (i / (regen.population - 1)) + regen.area.left;
+				sub.area.left = sub.area.left;
+			}
+			AddRegen(sub);
+			break;
+		}
+		// AddRegen(regen);
 	}
 	return true;
 }
@@ -170,6 +182,12 @@ bool TenviMap::LoadNPCDialog() {
 					break;
 				}
 			}
+			for (rapidxml::xml_node<>* child = root->first_node()->first_node()->first_node(); child; child = child->next_sibling()) {
+				if (strcmp("friendship", child->name()) == 0) {
+					regen.friendship = atoi(child->first_attribute("value")->value());
+					break;
+				}
+			}
 			continue;
 
 		}
@@ -177,6 +195,18 @@ bool TenviMap::LoadNPCDialog() {
 	return true;
 }
 
+void TenviMap::Experimental() {
+	for (int i = 0; i < data_regen.size(); i++) {
+		TenviRegen regen = data_regen[i];
+		if (regen.friendship != 1 && regen.friendship != 2) {
+			data_regen[i].area.left = regen.area.right;
+		}
+		else {
+			data_regen[i].area.top = 0;
+			data_regen[i].area.right = 0;
+		}
+	}
+}
 
 DWORD TenviMap::GetID() {
 	return id;
@@ -204,7 +234,7 @@ TenviRegen& TenviMap::FindNPCRegen(DWORD npc_id) {
 			return regen;
 		}
 	}
-	TenviRegen nullRegen = { 0, 0, 0, 0, 1, 0, 0, {0, 0, 0, 0},  {0} };
+	TenviRegen nullRegen = {};
 	return nullRegen;
 }
 

@@ -41,6 +41,7 @@ typedef struct {
 	DWORD group;
 	TenviArea area;
 	TenviObject object;
+	BYTE friendship;
 } TenviRegen;
 
 class TenviMap {
@@ -74,6 +75,7 @@ public:
 	void SetTimer(DWORD t);
 	DWORD Clock();
 	TenviRegen& FindNPCRegen(DWORD npc_id);
+	void Experimental();
 };
 
 #endif
