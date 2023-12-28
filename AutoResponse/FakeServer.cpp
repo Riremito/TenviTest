@@ -7,7 +7,7 @@
 #include<ctime>
 #include <clocale>
 #include <locale>
-
+int regenCount = 100;
 
 TenviAccount TA;
 // ========== TENVI Packet Response ==========s
@@ -429,7 +429,7 @@ void HitPacket(DWORD hit_from, DWORD hit_to, DWORD skill_id) {
 	sp.Encode1(0); // 004709DB
 	sp.Encode2(0); // 004709E8 skill id?
 	sp.Encode1(0); // 004709F5
-	SendPacket(sp);
+	DelaySendPacket(sp);
 }
 
 // 0x23
@@ -1002,6 +1002,8 @@ void EventCounter(DWORD time) {
 
 void SpawnObjects(TenviCharacter &chr, WORD map_id) {
 	for (auto &regen : tenvi_data.get_map(map_id)->GetRegen()) {
+		//regen.area.top = 0;
+		//regen.area.right = 0;
 		CreateObjectPacket(regen);
 		ShowObjectPacket(regen);
 		ActivateObjectPacket(regen);
@@ -1756,7 +1758,11 @@ bool FakeServer(ClientPacket &cp) {
 			}
 			else if (_wcsnicmp(message.c_str(), L"@mob ", 5) == 0) {
 				int npc_id = _wtoi(&message.c_str()[5]);
-				TenviRegen regen = { 0, 0, 0, 0, 1, 0, 0, {chr.x, 0, 0, chr.y},  {npc_id} };
+				TenviRegen regen = {};
+				regen.area.left = chr.x;
+				regen.area.bottom = chr.y;
+				regen.id = regenCount++;
+				regen.object.id = npc_id;
 				CreateObjectPacket(regen);
 				ShowObjectPacket(regen);
 				ActivateObjectPacket(regen);
