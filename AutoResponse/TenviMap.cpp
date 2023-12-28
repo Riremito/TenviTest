@@ -134,14 +134,6 @@ bool TenviMap::LoadSubXML() {
 				continue;
 			}
 		}
-		//for (int i = 0; i < regen.population; i++) {
-		//	TenviRegen sub = regen;
-		//	sub.id = regenCounter++;
-		//	if (regen.population > 1) {
-		//		sub.area.left = (regen.area.right - regen.area.left) * (i / (regen.population - 1)) + regen.area.left;
-		//	}
-		//	AddRegen(sub);
-		//}
 		AddRegen(regen);
 	}
 	return true;
@@ -256,6 +248,16 @@ TenviPortal TenviMap::FindPortal(DWORD id) {
 		}
 	}
 
+	TenviPortal fake_portal = {};
+	return fake_portal;
+}
+
+TenviPortal TenviMap::FindPortalByTID(WORD id) {
+	for (auto& portal : data_portal) {
+		if (portal.next_mapid == id) {
+			return portal;
+		}
+	}
 	TenviPortal fake_portal = {};
 	return fake_portal;
 }

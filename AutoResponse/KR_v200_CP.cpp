@@ -42,5 +42,6 @@ void SetClientPacketHeader_KR_v200() {
 	header[CP_CHANGE_TITLE] = 0xC4;
 	header[CP_EVENT] = 0xC6;
 	header[CP_TIME_GET_TIME] = 0xC8;
+	header[CP_WARP] = 0xCD;
 	header[CP_CE] = 0xCE;
 }

@@ -69,6 +69,7 @@ public:
 	std::vector<TenviRegen>& GetRegen();
 	TenviSpawnPoint FindSpawnPoint(DWORD id = 0);
 	TenviPortal FindPortal(DWORD id);
+	TenviPortal FindPortalByTID(WORD id);
 	TenviPortal FindTomb();
 	DWORD FindReturn();
 	DWORD FindReturnTown();

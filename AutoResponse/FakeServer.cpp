@@ -445,13 +445,18 @@ void ShowObjectPacket(TenviRegen &regen) {
 }
 
 // 0x25
-void NPC_TalkPacket(DWORD npc_id, DWORD dialog) {
+void NPC_TalkPacket(DWORD npc_id, DWORD dialog, BYTE isDelay=1) {
 	ServerPacket sp(SP_NPC_TALK);
 	sp.Encode4(npc_id);
 	sp.Encode4(dialog);
 	sp.Encode2(0);
 	sp.EncodeWStr1(L"");
-	DelaySendPacket(sp);
+	if (isDelay) {
+		DelaySendPacket(sp);
+	}
+	else {
+		SendPacket(sp);
+	}
 }
 
 // 0x2F
@@ -1118,6 +1123,38 @@ void UsePortal(TenviCharacter &chr, DWORD portal_id) {
 	ChangeMap(chr, portal.next_mapid, next_portal.x, next_portal.y);
 }
 
+void UseWarp(TenviCharacter& chr, WORD toMapID) {
+	// toMapID 에서 tid = chr.map인 포털을 찾아야함
+	WORD no = 0;
+	switch (toMapID) {
+	case 1001: // bikiwinee
+		no = 3;
+		break;
+	case 2051: // libra
+		no = 3;
+		break;
+	case 3001: // phantom
+		no = 7;
+		break;
+	case 4001: // puchipochi
+		break;
+	case 5003: // talliB1
+		no = 3;
+		break;
+	case 6001: // minos
+		no = 1;
+		break;
+	case 7005: // gaia farm
+		no = 3;
+		break;
+	case 8003: // silva
+		no = 5;
+		break;
+	}
+	TenviPortal next_portal = tenvi_data.get_map(toMapID)->FindPortal(no);
+	ChangeMap(chr, toMapID, next_portal.x, next_portal.y);
+}
+
 void GoTomb(TenviCharacter& chr) {
 	DWORD return_id = tenvi_data.get_map(chr.map)->FindReturn();
 	TenviPortal tomb_portal = tenvi_data.get_map(return_id)->FindTomb();
@@ -1629,7 +1666,12 @@ bool FakeServer(ClientPacket &cp) {
 		else if (dialog) {
 			tenvi_data.get_map(chr.map)->pre_npc = npc_id;
 			tenvi_data.get_map(chr.map)->pre_dialog = dialog;
-			NPC_TalkPacket(npc_id, dialog);
+			if (obj_id == 60183) {
+				NPC_TalkPacket(npc_id, dialog, 0);
+			}
+			else {
+				NPC_TalkPacket(npc_id, dialog);
+			}
 		}
 		switch (group) {
 		case 20:
@@ -1782,6 +1824,12 @@ bool FakeServer(ClientPacket &cp) {
 			return true;
 		}
 
+		return true;
+	}
+	case CP_WARP: {
+		TenviCharacter& chr = TA.GetOnline();
+		WORD mapID = cp.Decode2();
+		UseWarp(chr, mapID);
 		return true;
 	}
 	case CP_CHANGE_TITLE: {
