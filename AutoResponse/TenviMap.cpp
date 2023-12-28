@@ -19,7 +19,6 @@ TenviMap::TenviMap(DWORD mapid) {
 		break;
 	}
 	}
-
 	id = mapid;
 	LoadXML();
 	LoadSubXML();
@@ -135,18 +134,6 @@ bool TenviMap::LoadSubXML() {
 				continue;
 			}
 		}
-		//for (int i = 0; i < regen.population; i++) {
-		//	TenviRegen sub = {};
-		//	sub.id = regenCounter++;
-		//	sub.flip = regen.flip;
-		//	sub.population = 1;
-		//	sub.area.left = (regen.population > 1) ? (regen.area.right - regen.area.left) * (i / (regen.population - 1)) + regen.area.left : sub.area.left;
-		//	sub.area.top = regen.area.top;
-		//	sub.area.right = regen.area.right;
-		//	sub.area.bottom = regen.area.bottom;
-		//	sub.object.id = regen.object.id;
-		//	AddRegen(sub);
-		//}
 		AddRegen(regen);
 	}
 	return true;
@@ -207,19 +194,8 @@ void TenviMap::Experimental() {
 			if (cnt > 1) {
 				r.area.left = (r.area.right - r.area.left) * ((float)i / (cnt - 1)) + r.area.left;
 			}
-			//if (r.friendship == 1 || r.friendship == 2) {
-			//	data_regen[i].area.top = 0;
-			//	data_regen[i].area.right = 0;
-			//}
 			new_regen.push_back(r);
 		}
-		//if (regen.friendship != 1 && regen.friendship != 2) {
-		//	data_regen[i].area.left = regen.area.right;
-		//}
-		//else {
-		//	data_regen[i].area.top = 0;
-		//	data_regen[i].area.right = 0;
-		//}
 	}
 	data_regen = new_regen;
 }
