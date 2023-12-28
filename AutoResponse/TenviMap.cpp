@@ -19,13 +19,16 @@ TenviMap::TenviMap(DWORD mapid) {
 		break;
 	}
 	}
-
 	id = mapid;
 	LoadXML();
 	LoadSubXML();
 	LoadNPCDialog();
+<<<<<<< HEAD
 	ExperimentalNPC_MOB();
 
+=======
+	Experimental();
+>>>>>>> works
 }
 
 rapidxml::xml_node<>* xml_find_dir(rapidxml::xml_node<>* parent, std::string name) {
@@ -193,6 +196,7 @@ bool TenviMap::LoadNPCDialog() {
 	return true;
 }
 
+<<<<<<< HEAD
 void TenviMap::ExperimentalNPC_MOB() {
 	for (auto& regen : data_regen) {
 		// npc
@@ -202,6 +206,24 @@ void TenviMap::ExperimentalNPC_MOB() {
 	}
 }
 
+=======
+void TenviMap::Experimental() {
+	std::vector<TenviRegen> new_regen;
+	int regenCounter = 0;
+	for (auto iter = data_regen.begin(); iter != data_regen.end(); iter++) {
+		int cnt = (*iter).population;
+		for (int i = 0; i < cnt; i++) {
+			TenviRegen r = (*iter);
+			r.id = regenCounter++;
+			if (cnt > 1) {
+				r.area.left = (r.area.right - r.area.left) * ((float)i / (cnt - 1)) + r.area.left;
+			}
+			new_regen.push_back(r);
+		}
+	}
+	data_regen = new_regen;
+}
+>>>>>>> works
 
 DWORD TenviMap::GetID() {
 	return id;

@@ -909,7 +909,7 @@ void UseTelescope() {
 }
 
 // 0xE0
-DWORD boardID = 1;
+DWORD boardID = 500;
 enum BoardAction {
 	Board_Spawn = 0,
 	Board_Remove = 1,
@@ -1002,8 +1002,7 @@ void EventCounter(DWORD time) {
 
 void SpawnObjects(TenviCharacter &chr, WORD map_id) {
 	for (auto &regen : tenvi_data.get_map(map_id)->GetRegen()) {
-		//regen.area.top = 0;
-		//regen.area.right = 0;
+		regen.area = { regen.area.left, 0, 0, regen.area.bottom };
 		CreateObjectPacket(regen);
 		ShowObjectPacket(regen);
 		ActivateObjectPacket(regen);
@@ -1761,7 +1760,7 @@ bool FakeServer(ClientPacket &cp) {
 				TenviRegen regen = {};
 				regen.area.left = chr.x;
 				regen.area.bottom = chr.y;
-				regen.id = regenCount++;
+				regen.id = 0xFFF0;
 				regen.object.id = npc_id;
 				CreateObjectPacket(regen);
 				ShowObjectPacket(regen);

@@ -75,7 +75,11 @@ public:
 	void SetTimer(DWORD t);
 	DWORD Clock();
 	TenviRegen& FindNPCRegen(DWORD npc_id);
+<<<<<<< HEAD
 	void ExperimentalNPC_MOB();
+=======
+	void Experimental();
+>>>>>>> works
 };
 
 #endif
