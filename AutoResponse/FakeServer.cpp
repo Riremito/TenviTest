@@ -1005,7 +1005,7 @@ void SpawnObjects(TenviCharacter &chr, WORD map_id) {
 		regen.area = { regen.area.left, 0, 0, regen.area.bottom };
 		CreateObjectPacket(regen);
 		ShowObjectPacket(regen);
-		ActivateObjectPacket(regen);
+//		ActivateObjectPacket(regen);
 	}
 }
 

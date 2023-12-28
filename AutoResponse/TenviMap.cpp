@@ -203,12 +203,14 @@ void TenviMap::Experimental() {
 		int cnt = (*iter).population;
 		for (int i = 0; i < cnt; i++) {
 			TenviRegen r = (*iter);
-			r.area.left = r.area.left;
 			r.id = regenCounter++;
-			if (r.friendship == 1 || r.friendship == 2) {
-				data_regen[i].area.top = 0;
-				data_regen[i].area.right = 0;
+			if (cnt > 1) {
+				r.area.left = (r.area.right - r.area.left) * ((float)i / (cnt - 1)) + r.area.left;
 			}
+			//if (r.friendship == 1 || r.friendship == 2) {
+			//	data_regen[i].area.top = 0;
+			//	data_regen[i].area.right = 0;
+			//}
 			new_regen.push_back(r);
 		}
 		//if (regen.friendship != 1 && regen.friendship != 2) {
