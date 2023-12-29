@@ -46,6 +46,7 @@ enum CLIENT_PACKET {
 	CP_BUY,
 	CP_SELL,
 	CP_PLAYER_CHAT,
+	CP_KEY_SET,
 	CP_FRIEND_REQUEST,
 	CP_ITEM_SHOP_OPERATION,
 	CP_TELLESCOPE_SELECT,
@@ -82,6 +83,7 @@ public:
 	std::wstring DecodeWStr2();
 	ULONGLONG Decode8();
 	float DecodeFloat();
+	std::string GetPacketStr();
 };
 
 void SetClientPacketHeader_JP_v127();

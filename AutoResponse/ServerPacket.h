@@ -55,6 +55,9 @@ enum SERVER_PACKET {
 	SP_KEY_SET,
 	SP_UPDATE_SKILL,
 	SP_PLAYER_SKILL_ALL,
+	SP_SKILL_COOLDOWN,
+	SP_RECOVER_HP,
+	SP_RECOVER_MP,
 	SP_FRIEND_REQUEST,
 	SP_GUILD_RANK_DOWN,
 	SP_TELESCOPE,
@@ -93,6 +96,7 @@ public:
 	void EncodeWStr2(std::wstring val);
 	void Encode8(ULONGLONG val);
 	void EncodeFloat(float val);
+	std::vector<BYTE> EncodeAll(std::vector<BYTE> v);
 };
 
 void SetServerPacketHeader_JP_v127();

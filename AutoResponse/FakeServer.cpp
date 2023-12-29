@@ -718,10 +718,28 @@ void PlayerStatPacket(TenviCharacter &chr) {
 		sp.EncodeFloat(0.0);
 		sp.Encode4(0);
 	}
-
-
 	SendPacket(sp);
 }
+
+// 0x48
+void HP_RecoverPacket(TenviCharacter& chr, WORD amount) {
+	ServerPacket sp(SP_RECOVER_HP); // 0046FBEE
+	sp.Encode4(chr.id); // 004650A4
+	sp.Encode2(amount); // 0043CC7D
+	sp.Encode4(0); // 0043CC87
+	sp.Encode2(0); // 0043CC91
+	sp.Encode1(0); // 0043CC9E
+	SendPacket(sp);
+}
+
+// 0x49
+void MP_RecoverPacket(TenviCharacter& chr, WORD amount) {
+	ServerPacket sp(SP_RECOVER_MP); // 0046FBEE
+	sp.Encode4(chr.id); // 004650C7
+	sp.Encode2(amount); // 0043CD88
+	SendPacket(sp);
+}
+
 
 // 0x4A
 void GuardianSummonPacket(TenviCharacter &chr, bool bSummon) {
@@ -823,10 +841,11 @@ void EnterItemShopErrorPacket() {
 }
 
 // 0x63
-void InitKeySet() {
+void InitKeySet(std::vector<BYTE> all) {
 	ServerPacket sp(SP_KEY_SET);
-	sp.Encode1(0);
-	sp.Encode1(0);
+	for (BYTE& data : all) {
+		sp.Encode1(data);
+	}
 	SendPacket(sp);
 }
 
@@ -836,6 +855,15 @@ void UpdateSkillPacket(TenviCharacter &chr, WORD skill_id) {
 	sp.Encode4(chr.id); // 00485E65, character id
 	sp.Encode2(skill_id); // 00485E6F, skill id
 	sp.Encode1(1); // 00485E7A, 0 = failed, 1 = success
+	DelaySendPacket(sp);
+}
+
+// 0x67
+void SkillCooldownPacket(WORD skill_id, DWORD time) {
+	ServerPacket sp(SP_SKILL_COOLDOWN);
+	sp.Encode1(1);
+	sp.Encode2(skill_id);
+	sp.Encode4(time);
 	DelaySendPacket(sp);
 }
 
@@ -1314,8 +1342,9 @@ bool FakeServer(ClientPacket &cp) {
 				InitSkillPacket(chr);
 				InitEquip(chr);
 				InitInventory(chr);
-				InitKeySet();
+				InitKeySet(chr.GetKeySet());
 				SetMap(chr, chr.map);
+				chr.isLoaded = true;
 				//BoardPacket(Board_Spawn, L"Suhan", L"Picket");
 				//BoardPacket(Board_AddInfo, L"Suhan", L"Non-commercial works");
 				return true;
@@ -1325,28 +1354,22 @@ bool FakeServer(ClientPacket &cp) {
 	}
 	// Create New Character
 	case CP_CREATE_CHARACTER: {
-		// TODO
-		// 
-		//std::wstring character_name = cp.DecodeWStr1();
-		//BYTE job_mask = cp.Decode1(); // 0x11 to 0x24
-		//WORD job_id = cp.Decode2(); // 4,5,6
-		//WORD character_skin = cp.Decode2(); // 1,2,3
-		//WORD character_hair = cp.Decode2();
-		//WORD character_face = cp.Decode2();
-		//WORD character_cloth = cp.Decode2();
-		//WORD guardian_color = cp.Decode2();
+		std::wstring character_name = cp.DecodeWStr1();
+		BYTE job_mask = cp.Decode1(); // 0x11 to 0x24
+		WORD job_id = cp.Decode2(); // 4,5,6
+		WORD character_skin = cp.Decode2(); // 1,2,3
+		WORD character_hair = cp.Decode2();
+		WORD character_face = cp.Decode2();
+		WORD character_cloth = cp.Decode2();
+		WORD guardian_color = cp.Decode2();
 
-		//WORD guardian_head = cp.Decode2();
-		//WORD guardian_body = cp.Decode2();
-		//WORD guardian_weapon = cp.Decode2();
+		WORD guardian_head = cp.Decode2();
+		WORD guardian_body = cp.Decode2();
+		WORD guardian_weapon = cp.Decode2();
 
-		//std::map<BYTE, Item> guardian_equip, character_equip;
-		//guardian_equip[_do] = TA.MakeItem(guardian_head);
-		//guardian_equip[am] = TA.MakeItem(guardian_body);
-		//guardian_equip[rh] = TA.MakeItem(guardian_weapon);
-
-		//TA.AddCharacter(character_name, job_mask, job_id, character_skin, character_hair, character_face, character_cloth, guardian_color, 0, character_equip, guardian_equip);
-		//CharacterListPacket_Test();
+		TA.AddCharacter(character_name, job_mask, job_id, character_skin, character_hair, character_face, character_cloth,
+			guardian_color, guardian_head, guardian_body, guardian_weapon);
+		CharacterListPacket_Test();
 		return true;
 	}
 	// Delete Character
@@ -1363,6 +1386,7 @@ bool FakeServer(ClientPacket &cp) {
 	}
 	// Game Server to Login Server
 	case CP_LOGOUT: {
+		TA.GetOnline().isLoaded = false;
 		GetLoginServerPacket();// notify login server ip
 		ConnectedPacket(); // connected
 		CharacterListPacket_Test();
@@ -1562,8 +1586,7 @@ bool FakeServer(ClientPacket &cp) {
 		if (hit_to == chr.id) {
 			WORD damage = 100;
 			PlayerHitPacket(chr, hit_from, damage);
-			chr.HP = (chr.HP <= damage) ? 0 : chr.HP - damage;
-			chr.RefreshHPMP();
+			chr.SetHP((chr.HP <= damage) ? 0 : chr.HP - damage);
 			PlayerStatPacket(chr);
 			if (chr.HP == 0) {
 				Die(chr);
@@ -1589,8 +1612,10 @@ bool FakeServer(ClientPacket &cp) {
 		return true;
 	}
 	case CP_END_CAST: {
+		TenviCharacter& chr = TA.GetOnline();
 		cp.Decode4(); // chr.id
 		DWORD type = cp.Decode2();
+		BYTE level = cp.Decode1();
 		switch (type) {
 		case 0xF638: {
 			// 천리경
@@ -1599,10 +1624,27 @@ bool FakeServer(ClientPacket &cp) {
 		}
 		case 0xEA5F: {
 			// 마을 이동 주문서
-			TenviCharacter& chr = TA.GetOnline();
 			DWORD return_town = tenvi_data.get_map(chr.map)->FindReturnTown();
 			// don't know why it makes error...
 			// SetMap(chr, return_town);
+			return true;
+		}
+		case 60000: {
+			// HP 물약
+			std::vector<WORD> healVal = { 0, 200, 380, 722, 1372, 2606, 0, 5, 25, 50, 25, 1509, 25, 2606 };
+			SkillCooldownPacket(type, 5000);
+			chr.HealHP(healVal[level]);
+			HP_RecoverPacket(chr, healVal[level]);
+			PlayerStatPacket(chr);
+			return true;
+		}
+		case 60001: {
+			// MP 물약
+			std::vector<WORD> healVal = { 0, 250, 475, 903, 1715, 3528, 0, 0, 0, 0, 0, 1886, 3528 };
+			SkillCooldownPacket(type, 5000);
+			chr.HealMP(healVal[level]);
+			MP_RecoverPacket(chr, healVal[level]);
+			PlayerStatPacket(chr);
 			return true;
 		}
 		}
@@ -1626,9 +1668,8 @@ bool FakeServer(ClientPacket &cp) {
 		TenviCharacter& chr = TA.GetOnline();
 		BYTE option = cp.Decode1(); // 1: tomb, 2: same pos, 3: revive potion
 		PlayerRevivePacket(TA.GetOnline());
-		chr.HP = chr.maxHP;
-		chr.MP = chr.maxMP;
-		chr.RefreshHPMP();
+		chr.SetHP(chr.maxHP);
+		chr.SetMP(chr.maxMP);
 		PlayerStatPacket(chr);
 
 		if (option == 1) {
@@ -1695,6 +1736,15 @@ bool FakeServer(ClientPacket &cp) {
 		if (dialog) {
 			pre_dialog = dialog;
 			NPC_TalkPacket(pre_npc, dialog);
+		}
+		return true;
+	}
+	case CP_KEY_SET: {
+		// update key set
+		TenviCharacter& chr = TA.GetOnline();
+		std::string packetStr = cp.GetPacketStr();
+		if (chr.isLoaded) {
+			chr.KeySet(packetStr);
 		}
 		return true;
 	}

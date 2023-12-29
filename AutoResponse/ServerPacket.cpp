@@ -53,3 +53,9 @@ void ServerPacket::Encode8(ULONGLONG val) {
 void ServerPacket::EncodeFloat(float val) {
 	Encode4(*(DWORD *)&val); // no cast
 }
+
+std::vector<BYTE> ServerPacket::EncodeAll(std::vector<BYTE> v) {
+	for (BYTE val : v) {
+		Encode1(val);
+	}
+}

@@ -40,7 +40,9 @@ void SetServerPacketHeader_KR_v200() {
 	header[SP_PLAYER_STAT_SP] = 0x45;
 	header[SP_PLAYER_STAT_AP] = 0x46;
 	header[SP_PLAYER_STAT_ALL] = 0x47;
-	header[SP_GUARDIAN_SUMMON] = 0x4A,
+	header[SP_RECOVER_HP] = 0x48;
+	header[SP_RECOVER_MP] = 0x49;
+	header[SP_GUARDIAN_SUMMON] = 0x4A;
 	header[SP_EMOTION] = 0x4B;
 	header[SP_UPDATE_PROFILE] = 0x4D;
 	header[SP_WORLD_MAP_UPDATE] = 0x54;
@@ -48,6 +50,7 @@ void SetServerPacketHeader_KR_v200() {
 	header[SP_ITEM_SHOP_ERROR] = 0x5C;
 	header[SP_KEY_SET] = 0x63;
 	header[SP_UPDATE_SKILL] = 0x65;
+	header[SP_SKILL_COOLDOWN] = 0x67;
 	header[SP_PLAYER_SKILL_ALL] = 0x6C;
 	header[SP_SHOP] = 0xA6;
 	header[SP_BANK] = 0xB0;

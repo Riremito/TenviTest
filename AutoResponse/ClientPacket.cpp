@@ -25,6 +25,16 @@ CLIENT_PACKET ClientPacket::DecodeHeader() {
 	return CP_UNKNOWN;
 }
 
+std::string ClientPacket::GetPacketStr() {
+	std::string str = "";
+	for (size_t i = 1; i < size(packet); i++) {
+		BYTE val = *(BYTE*)&packet[decoded];
+		str += std::to_string(val) + "/";
+		decoded++;
+	}
+	return str;
+}
+
 BYTE ClientPacket::Decode1() {
 	BYTE val = *(BYTE *)&packet[decoded];
 	decoded++;

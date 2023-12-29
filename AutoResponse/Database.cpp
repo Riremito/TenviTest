@@ -2,6 +2,7 @@
 #include"TenviItem.h"
 #include <string>
 #include"TenviData.h"
+#include<sstream>
 
 DWORD TenviCharacter::id_counter = 1337;
 DWORD TenviAccount::inventoryCount = 1;
@@ -48,6 +49,7 @@ TenviCharacter::TenviCharacter(std::wstring name, std::wstring profile, DWORD id
 	fly = 0;
 	aboard = 18;
 	direction = 0;
+	isLoaded = false;
 }
 
 Item extractItemRow(MYSQL_ROW item, std::map<std::string, BYTE> getf) {
@@ -397,10 +399,63 @@ void TenviCharacter::SetMap(WORD map_id) {
 	mysql_query(conn, query);
 }
 
-void TenviCharacter::RefreshHPMP() {
+void TenviCharacter::SetHP(WORD hp) {
 	char query[1024];
-	sprintf_s(query, 1024, "UPDATE tables.character set HP = %d, MP = %d WHERE id = %d", HP, MP, id);
+	HP = hp;
+	sprintf_s(query, 1024, "UPDATE tables.character set HP = %d WHERE id = %d", HP, id);
 	mysql_query(conn, query);
+}
+
+void TenviCharacter::SetMP(WORD mp) {
+	char query[1024];
+	MP = mp;
+	sprintf_s(query, 1024, "UPDATE tables.character set MP = %d WHERE id = %d", MP, id);
+	mysql_query(conn, query);
+}
+
+
+void TenviCharacter::HealHP(WORD amount) {
+	char query[1024];
+	HP = HP + amount > maxHP ? maxHP : HP + amount;
+	sprintf_s(query, 1024, "UPDATE tables.character set HP = %d WHERE id = %d", HP, id);
+	mysql_query(conn, query);
+}
+
+void TenviCharacter::HealMP(WORD amount) {
+	char query[1024];
+	MP = MP + amount > maxMP ? maxMP : MP + amount;
+	sprintf_s(query, 1024, "UPDATE tables.character set MP = %d WHERE id = %d", MP, id);
+	mysql_query(conn, query);
+}
+
+void TenviCharacter::KeySet(std::string str) {
+	char query[1024];
+	const char* keys = str.c_str();
+	sprintf_s(query, 1024, "UPDATE tables.character set keySet = \"%s\" WHERE id = %d", keys, id);
+	mysql_query(conn, query);
+}
+
+std::vector<BYTE> TenviCharacter::GetKeySet() {
+	char query[1024];
+	MYSQL_RES* result;
+	std::vector<BYTE> res;
+	sprintf_s(query, 1024, "SELECT keySet FROM tables.character WHERE id = %d AND keySet", id);
+	mysql_query(conn, query);
+	result = mysql_store_result(conn);
+	MYSQL_ROW keys = mysql_fetch_row(result);
+	if (!keys || !keys[0] || keys[0] == "0" || strcmp(keys[0], "") == 0) {
+		res.push_back(0);
+		res.push_back(0);
+		return res;
+	}
+	std::string key_string = std::string(keys[0]);
+
+	std::istringstream ss(key_string);
+	std::string stringBuffer;
+	while (getline(ss, stringBuffer, '/')) {
+		res.push_back(std::stoi(stringBuffer));
+	}
+	return res;
 }
 
 void TenviCharacter::ChangeTitle(BYTE code) {
@@ -494,16 +549,11 @@ TenviAccount::TenviAccount() {
 		characters.push_back(player);
 	}
 	mysql_free_result(result);
-
 }
 
-bool TenviAccount::AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, BYTE nAwakening, std::map<BYTE, Item> &nEquipped, std::map<BYTE, Item> &nGEquipped) {
-	if (slot <= GetCharacters().size()) {
-		return false;
-	}
+bool TenviAccount::AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth,
+	WORD nGColor, WORD gHead, WORD gBody, WORD gWeapon) {
 
-//	TenviCharacter character(nName, nJob_Mask, nJob, nSkin, nHair, nFace, nCloth, nGColor, nAwakening, nEquipped, nGEquipped);
-//	characters.push_back(character);
 	return true;
 }
 
@@ -576,6 +626,5 @@ TenviCharacter& TenviAccount::GetOnline() {
 			return character;
 		}
 	}
-
 	return characters[0];
 }

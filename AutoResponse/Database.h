@@ -90,6 +90,7 @@ public:
 	// data
 	float x;
 	float y;
+	bool isLoaded;
 
 	BYTE guardian_flag;
 	std::wstring profile;
@@ -113,7 +114,12 @@ public:
 	void ChangeItemLoc(DWORD inventoryID, BYTE loc);
 	void DeleteItem(DWORD inventoryID);
 	void ChangeItemNumber(DWORD inventoryID, WORD number);
-	void RefreshHPMP();
+	void SetHP(WORD hp);
+	void SetMP(WORD mp);
+	void HealHP(WORD amount);
+	void HealMP(WORD amount);
+	void KeySet(std::string str);
+	std::vector<BYTE> GetKeySet();
 	void ChangeTitle(BYTE code);
 	void ChangeMoney(DWORD money);
 	void SwitchRing(BYTE isCash);
@@ -132,11 +138,10 @@ private:
 public:
 	BYTE slot;
 	static DWORD inventoryCount;
-
 	TenviAccount();
 	bool FindCharacter(DWORD id, TenviCharacter *found);
 	std::vector<TenviCharacter>& GetCharacters();
-	bool AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, BYTE nAwakening, std::map<BYTE, Item> &nEquipped, std::map<BYTE, Item> &nGEquipped);
+	bool AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, WORD gHead, WORD gBody, WORD gWeapon);
 	static Item MakeItem(TenviCharacter& chr, WORD itemID, WORD number=1);
 	bool Login(DWORD id);
 	TenviCharacter& GetOnline();
