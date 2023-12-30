@@ -14,6 +14,7 @@ void SetClientPacketHeader_KR_v200() {
 	header[CP_UNEQUIP] = 0x0E;
 	header[CP_SWITCH_RING] = 0x0F;
 	header[CP_LOGOUT] = 0x09;
+	header[CP_DROP_ITEM] = 0x10;
 	header[CP_MOVE_ITEM] = 0x13;
 	header[CP_DIVIDE_ITEM] = 0x14;
 	header[CP_GUARDIAN_RIDE] = 0x18;
@@ -23,6 +24,7 @@ void SetClientPacketHeader_KR_v200() {
 	header[CP_EMOTION] = 0x1C;
 	header[CP_UPDATE_PROFILE] = 0x20;
 	header[CP_WORLD_MAP_OPEN] = 0x23;
+	header[CP_PICK_UP] = 0x37;
 	header[CP_ITEM_SHOP] = 0x38;
 	header[CP_HIT] = 0x44;
 	header[CP_END_CAST] = 0x45;

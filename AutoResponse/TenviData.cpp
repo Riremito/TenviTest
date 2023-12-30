@@ -20,10 +20,11 @@ std::wstring StrToWstr(const std::string& var) {
 	auto& facet = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc);
 	return std::wstring_convert<std::remove_reference<decltype(facet)>::type, wchar_t>(&facet).from_bytes(var);
 }
-std::string WstrToStr(const std::wstring& wstr) {
-	using convert_typeX = std::codecvt_utf8<wchar_t>;
-	std::wstring_convert<convert_typeX, wchar_t> converterX;
-	return converterX.to_bytes(wstr);
+
+std::string WstrToStr(const std::wstring& var) {
+	static std::locale loc("");
+	auto& facet = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc);
+	return std::wstring_convert<std::remove_reference<decltype(facet)>::type, wchar_t>(&facet).to_bytes(var);
 }
 
 

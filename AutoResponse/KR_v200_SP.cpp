@@ -52,6 +52,9 @@ void SetServerPacketHeader_KR_v200() {
 	header[SP_UPDATE_SKILL] = 0x65;
 	header[SP_SKILL_COOLDOWN] = 0x67;
 	header[SP_PLAYER_SKILL_ALL] = 0x6C;
+	header[SP_DROP_ITEM] = 0x6E;
+	header[SP_PICK_UP] = 0x6F;
+	header[SP_PICK_UP_ERROR] = 0x70;
 	header[SP_SHOP] = 0xA6;
 	header[SP_BANK] = 0xB0;
 	header[SP_MAIL] = 0xB4;

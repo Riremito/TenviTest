@@ -492,6 +492,7 @@ TenviAccount::TenviAccount() {
 
 	int fields = mysql_num_fields(result);
 	slot = mysql_num_rows(result);
+	objectCounter = 1;
 
 	std::map<std::string, BYTE> getf;
 	MYSQL_FIELD* field;
@@ -654,6 +655,15 @@ Item TenviAccount::MakeItem(TenviCharacter& chr, WORD itemID, WORD number) {
 	item.rank = FindRank(itemID);
 	return item;
 }
+
+DWORD TenviAccount::GetObjectID() {
+	return objectCounter++;
+}
+
+void TenviAccount::ClearObjectID() {
+	objectCounter = 1;
+}
+
 
 TenviCharacter& TenviAccount::GetOnline() {
 	for (auto &character : characters) {
