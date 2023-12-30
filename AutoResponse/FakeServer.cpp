@@ -916,7 +916,8 @@ void PickUpPacket(TenviCharacter& chr, DWORD drop_no) {
 void PickUpErrorPacket(TenviCharacter& chr, DWORD drop_no) {
 	ServerPacket sp(SP_PICK_UP_ERROR);
 	sp.Encode4(drop_no);
-	sp.Encode4(chr.id);
+	sp.Encode1(2); // 2: 인벤토리 꽉참
+	sp.Encode1(dropItems[drop_no].type);
 	SendPacket(sp);
 }
 
@@ -1588,7 +1589,6 @@ bool FakeServer(ClientPacket &cp) {
 			int loc = chr.GetEmptyLoc(item2pick.type);
 			if (loc == -1) {
 				PickUpErrorPacket(chr, dropNo);
-				ErrorInventoryFull();
 				return true;
 			}
 			item2pick.loc = loc;
