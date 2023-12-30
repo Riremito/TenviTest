@@ -382,6 +382,7 @@ void CreateObjectPacket(TenviRegen &regen) {
 	SendPacket(sp);
 }
 
+// 0x18
 void WeatherPacket(BYTE type, float factor, BYTE red, BYTE green, BYTE blue) {
 	ServerPacket sp(SP_WEATHER);
 	sp.Encode1(type); // weather type
@@ -897,6 +898,26 @@ void DropItemPacket(TenviCharacter& chr, Item item, DWORD dropNo) {
 	sp.Encode4(chr.id); // 00488DD7 - owner id
 	sp.Encode2(item.itemID); // 00488DE1 - item code
 	sp.Encode4(1); // 00488DEC - item amount
+	sp.Encode4(0); // 00488DF6 - droper object id
+	sp.Encode1(0); // 00488E00 - 1 = close picking
+	sp.Encode1(0); // 00488E0D - 1 = translucent , need to close picking
+	sp.Encode1(1); // 00488E1A - 0 = grow out | 1 = drop to right
+	sp.EncodeFloat(0); // 00488E27  - drop vel x
+	sp.EncodeFloat(-450); // 00488E31 - drop vel y
+	sp.EncodeFloat(chr.x); // 00488E57 - drop to x
+	sp.EncodeFloat(chr.y - 20); // 00488E61 - drop to y
+	sp.Encode1(0); // 00488E6B - 1 = create and close effects
+	sp.Encode4(chr.id); // 00488E7B - droper object id
+	sp.Encode1(0); // 00488E85 - ?
+	sp.Encode1(0); // 00488E92 - ?
+	SendPacket(sp);
+}
+void DropCoinPacket(TenviCharacter& chr, DWORD dropNo, DWORD money) {
+	ServerPacket sp(SP_DROP_ITEM);
+	sp.Encode4(dropNo); // 00488DC8 - drop item object id
+	sp.Encode4(chr.id); // 00488DD7 - owner id
+	sp.Encode2(-1); // 00488DE1 - item code
+	sp.Encode4(money); // 00488DEC - item amount
 	sp.Encode4(0); // 00488DF6 - droper object id
 	sp.Encode1(0); // 00488E00 - 1 = close picking
 	sp.Encode1(0); // 00488E0D - 1 = translucent , need to close picking
@@ -1592,12 +1613,34 @@ bool FakeServer(ClientPacket &cp) {
 		chr.DeleteItem(inventoryID);
 		return true;
 	}
+	case CP_DROP_COIN: {
+		TenviCharacter& chr = TA.GetOnline();
+		DWORD money = cp.Decode8();
+		WORD dropNo = TA.GetObjectID();
+		chr.ChangeMoney(chr.money - money);
+		MoneyPacket(chr);
+		DropCoinPacket(chr, dropNo, money);
+
+		Item coin = {};
+		coin.itemID = 0xFFFF;
+		coin.number = money;
+		dropItems[dropNo] = coin;
+		return true;
+	}
 	case CP_PICK_UP: {
 		TenviCharacter& chr = TA.GetOnline();
 		DWORD dropNo = cp.Decode4();
 		Item item2pick = dropItems[dropNo];
 		Item existingItem = chr.GetItemByItemID(item2pick.itemID);
 		BYTE num = item2pick.number;
+
+		if (item2pick.itemID == 0xFFFF) {
+			DWORD money = item2pick.number;
+			chr.ChangeMoney(chr.money + money);
+			MoneyPacket(chr);
+			PickUpPacket(chr, dropNo);
+			return true;
+		}
 
 		if ((item2pick.type == 1 || item2pick.type == 2) && existingItem.itemID) {
 			// 기타, 퀘스트 템인 경우 이미 가지고 있으면 개수만 늘리기
