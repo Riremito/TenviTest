@@ -433,10 +433,10 @@ void HitPacket(DWORD hit_from, DWORD hit_to, DWORD skill_id) {
 }
 
 // 0x23
-void ShowObjectPacket(TenviRegen &regen) {
+void ShowObjectPacket(TenviRegen &regen, BYTE gravity=1) {
 	ServerPacket sp(SP_SHOW_OBJECT);
 	sp.Encode4(regen.id);
-	sp.Encode1(1);
+	sp.Encode1(gravity);
 	sp.Encode1(1);
 	sp.Encode2(0);
 	sp.EncodeFloat(regen.area.left);
@@ -511,6 +511,14 @@ void EditInventory(Item item, BYTE isDelay=0) {
 	else {
 		SendPacket(sp);
 	}
+}
+
+// 0x36
+void NewItemPacket(Item item) {
+	ServerPacket sp(SP_NEW_ITEM);
+	sp.Encode8(item.inventoryID);
+	sp.Encode2(item.number);
+	SendPacket(sp);
 }
 
 // 0x3C
@@ -975,6 +983,16 @@ void ErrorInventoryFull() {
 	SendPacket(sp);
 }
 
+// 0xCA
+void BuyOrSellMessage(BYTE isBuy, Item item) {
+	ServerPacket sp(SP_BUY_SELL_MSG); // 0046FBEE
+	sp.Encode1(isBuy ? 5 : 6); // 005444F9 / 5 아이템 구매 / 6 판매
+	sp.Encode1(0); // 00543B1E / 0=정상구매,판매 / 1~5 거래불가 문구 출력
+	sp.Encode2(item.itemID); // 00543B88 / 아이템코드
+	sp.Encode2(item.number); // 00543C68 / (판매시에만, 구매엔 필요없음) 판매 갯수
+	SendPacket(sp);
+}
+
 // 0xCC
 void UseTelescope() {
 	ServerPacket sp(SP_TELESCOPE);
@@ -1075,11 +1093,14 @@ void EventCounter(DWORD time) {
 // ========== Functions ==================
 
 void SpawnObjects(TenviCharacter &chr, WORD map_id) {
+	BYTE gravity = 1;
+	std::set<DWORD> nonGravityNPC = {};
 	for (auto &regen : tenvi_data.get_map(map_id)->GetRegen()) {
+		gravity = nonGravityNPC.count(regen.object.id) ? 0 : 1;
 		regen.area = { regen.area.left, 0, 0, regen.area.bottom };
 		regen.id = TA.GetObjectID();
 		CreateObjectPacket(regen);
-		ShowObjectPacket(regen);
+		ShowObjectPacket(regen, gravity);
 		ActivateObjectPacket(regen);
 	}
 }
@@ -1360,8 +1381,8 @@ void CheckShip() {
 // ========== TENVI Server Main ==========
 bool FakeServer(ClientPacket &cp) {
 	CLIENT_PACKET header = cp.DecodeHeader();
-	srand((unsigned int)time(NULL));
-	CheckShip();
+	//srand((unsigned int)time(NULL));
+	//CheckShip();
 
 	switch (header) {
 	// Select Character
@@ -1596,6 +1617,7 @@ bool FakeServer(ClientPacket &cp) {
 			chr.AddItem(item2pick);
 		}
 		PickUpPacket(chr, dropNo);
+		NewItemPacket(item2pick);
 		return true;
 	}
 	case CP_MOVE_ITEM: {
@@ -1899,6 +1921,7 @@ bool FakeServer(ClientPacket &cp) {
 				}
 			}
 		}
+		BuyOrSellMessage(1, item2buy);
 		return true;
 	}
 	case CP_SELL: {
@@ -1911,7 +1934,7 @@ bool FakeServer(ClientPacket &cp) {
 		MoneyPacket(chr);
 		chr.DeleteItem(inventoryID);
 		RemoveFromInventory(item2sell.loc, item2sell.type);
-
+		BuyOrSellMessage(0, item2sell);
 		return true;
 	}
 	case CP_PLAYER_CHAT: {
