@@ -48,6 +48,7 @@ std::pair<int, std::vector<ShopItem>> parse_shop(WORD obj_id);
 std::vector<BoardInfo> parse_board(WORD map_id);
 void writeDebugLog(std::string str);
 std::wstring StrToWstr(const std::string& var);
+std::string WstrToStr(const std::wstring& wstr);
 extern TenviData tenvi_data;
 
 #endif

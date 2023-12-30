@@ -48,7 +48,7 @@ TenviCharacter::TenviCharacter(std::wstring name, std::wstring profile, DWORD id
 	titles = { 8, 9, 10, 11, 12, 13, 14 };
 	fly = 0;
 	aboard = 18;
-	direction = 0;
+	direction = 1;
 	isLoaded = false;
 }
 
@@ -553,6 +553,41 @@ TenviAccount::TenviAccount() {
 
 bool TenviAccount::AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth,
 	WORD nGColor, WORD gHead, WORD gBody, WORD gWeapon) {
+	if (slot == 6) {
+		return false;
+	}
+
+	DWORD highestID = 1;
+	for (TenviCharacter& _chr : characters) {
+		if (_chr.id > highestID) {
+			highestID = _chr.id;
+		}
+	}
+
+	TenviCharacter character(nName, L"", highestID + 1, nJob_Mask, nJob, nSkin, nHair, nFace, nCloth, nGColor,
+		0, 5501, 1, 1000, 20, 20, 20, 20, 20, 20, 1000, 1000, 800, 800, 0, 12345678);
+	characters.push_back(character);
+	char query[4096];
+	MYSQL_RES* skill_list;
+
+	sprintf_s(query, 4096, "INSERT INTO tables.character (no, id, name, job_mask, job, skin, \
+hair, face, cloth, gcolor, awakening, map, level, sp, ap, stat_str, stat_dex, stat_hp, stat_int, \
+stat_mp, maxHP, HP, maxMP, MP, titleEquipped, money, profile, keySet) VALUES \
+(%d, %d, \"%s\", %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, \"%s\", \"%s\")",
+++slot, highestID + 1, WstrToStr(nName).c_str(), nJob_Mask, nJob, nSkin, nHair, nFace, nCloth, nGColor,
+0, 5501, 1, 1000, 20, 10, 10, 10, 10, 10, 1000, 800, 900, 800, 0, 12345678, "", "");
+	mysql_query(conn, query);
+
+	character.AddItem(MakeItem(character, gHead, 1));
+	character.AddItem(MakeItem(character, gBody, 1));
+	character.AddItem(MakeItem(character, gWeapon, 1));
+
+	sprintf_s(query, 1024, "UPDATE tables.inventory SET isEquip = 1, loc = 0 WHERE chr_id = %d AND itemID = %d", character.id, gHead);
+	mysql_query(conn, query);
+	sprintf_s(query, 1024, "UPDATE tables.inventory SET isEquip = 1, loc = 0 WHERE chr_id = %d AND itemID = %d", character.id, gBody);
+	mysql_query(conn, query);
+	sprintf_s(query, 1024, "UPDATE tables.inventory SET isEquip = 1, loc = 0 WHERE chr_id = %d AND itemID = %d", character.id, gWeapon);
+	mysql_query(conn, query);
 
 	return true;
 }
