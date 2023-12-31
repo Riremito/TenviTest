@@ -98,7 +98,7 @@ public:
 	std::vector<BYTE> titles;
 
 	TenviCharacter(std::wstring name, std::wstring profile, DWORD id, BYTE job_mask, WORD job, WORD skin,
-		WORD hair, WORD face, WORD cloth, WORD gcolor, BYTE awakening, WORD map, BYTE level, WORD sp, WORD ap,
+		WORD hair, WORD face, WORD gcolor, BYTE awakening, WORD map, BYTE level, WORD sp, WORD ap,
 		WORD stat_str, WORD stat_dex, WORD stat_hp, WORD stat_int, WORD stat_mp, WORD maxHP, WORD HP, WORD maxMP,
 		WORD MP, BYTE titleEquipped, DWORD money);
 

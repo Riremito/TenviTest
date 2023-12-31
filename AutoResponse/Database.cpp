@@ -11,7 +11,7 @@ MYSQL* conn;
 
 // new character
 TenviCharacter::TenviCharacter(std::wstring name, std::wstring profile, DWORD id, BYTE job_mask, WORD job, WORD skin,
-	WORD hair, WORD face, WORD cloth, WORD gcolor, BYTE awakening, WORD map, BYTE level, WORD sp, WORD ap,
+	WORD hair, WORD face, WORD gcolor, BYTE awakening, WORD map, BYTE level, WORD sp, WORD ap,
 	WORD stat_str, WORD stat_dex, WORD stat_hp, WORD stat_int, WORD stat_mp, WORD maxHP, WORD HP, WORD maxMP,
 	WORD MP, BYTE titleEquipped, DWORD money) {
 
@@ -23,7 +23,6 @@ TenviCharacter::TenviCharacter(std::wstring name, std::wstring profile, DWORD id
 	this->skin = skin;
 	this->hair = hair;
 	this->face = face;
-	this->cloth = cloth;
 	this->gcolor = gcolor;
 	this->awakening = awakening;
 	this->map = map;
@@ -539,7 +538,6 @@ TenviAccount::TenviAccount() {
 		WORD skin = getInt("skin");
 		WORD hair = getInt("hair");
 		WORD face = getInt("face");
-		WORD cloth = getInt("cloth");
 		WORD gcolor = getInt("gcolor");
 		BYTE awakening = getInt("awakening");
 		WORD map = getInt("map");
@@ -558,7 +556,7 @@ TenviAccount::TenviAccount() {
 		BYTE titleEquipped = getInt("titleEquipped");
 		DWORD money = getInt("money");
 
-		TenviCharacter player(name, profile, id, job_mask, job, skin, hair, face, cloth, gcolor, awakening,
+		TenviCharacter player(name, profile, id, job_mask, job, skin, hair, face, gcolor, awakening,
 			map, level, sp, ap, stat_str, stat_dex, stat_hp, stat_int, stat_mp, maxHP, HP, maxMP, MP,
 			titleEquipped, money);
 
@@ -597,7 +595,7 @@ bool TenviAccount::AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, W
 		}
 	}
 
-	TenviCharacter character(nName, L"", highestID + 1, nJob_Mask, nJob, nSkin, nHair, nFace, nCloth, nGColor,
+	TenviCharacter character(nName, L"", highestID + 1, nJob_Mask, nJob, nSkin, nHair, nFace, nGColor,
 		0, 5501, 1, 1000, 20, 20, 20, 20, 20, 20, 1000, 1000, 800, 800, 0, 12345678);
 	characters.push_back(character);
 	char query[4096];
@@ -605,22 +603,25 @@ bool TenviAccount::AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, W
 
 	std::string _name = base64_encode(WstrToStr(nName), true);
 	sprintf_s(query, 4096, "INSERT INTO tables.character (no, id, name, job_mask, job, skin, \
-hair, face, cloth, gcolor, awakening, map, level, sp, ap, stat_str, stat_dex, stat_hp, stat_int, \
+hair, face, gcolor, awakening, map, level, sp, ap, stat_str, stat_dex, stat_hp, stat_int, \
 stat_mp, maxHP, HP, maxMP, MP, titleEquipped, money, profile, keySet) VALUES \
-(%d, %d, \"%s\", %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, \"%s\", \"%s\")",
-++slot, highestID + 1, _name.c_str(), nJob_Mask, nJob, nSkin, nHair, nFace, nCloth, nGColor,
+(%d, %d, \"%s\", %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, \"%s\", \"%s\")",
+++slot, highestID + 1, _name.c_str(), nJob_Mask, nJob, nSkin, nHair, nFace, nGColor,
 0, 5501, 1, 1000, 20, 10, 10, 10, 10, 10, 1000, 800, 900, 800, 0, 12345678, "", "");
 	mysql_query(conn, query);
 
 	character.AddItem(MakeItem(character, gHead, 1));
 	character.AddItem(MakeItem(character, gBody, 1));
 	character.AddItem(MakeItem(character, gWeapon, 1));
+	character.AddItem(MakeItem(character, nCloth, 1));
 
 	sprintf_s(query, 1024, "UPDATE tables.inventory SET isEquip = 1, loc = 0 WHERE chr_id = %d AND itemID = %d", character.id, gHead);
 	mysql_query(conn, query);
 	sprintf_s(query, 1024, "UPDATE tables.inventory SET isEquip = 1, loc = 0 WHERE chr_id = %d AND itemID = %d", character.id, gBody);
 	mysql_query(conn, query);
 	sprintf_s(query, 1024, "UPDATE tables.inventory SET isEquip = 1, loc = 0 WHERE chr_id = %d AND itemID = %d", character.id, gWeapon);
+	mysql_query(conn, query);
+	sprintf_s(query, 1024, "UPDATE tables.inventory SET isEquip = 1, loc = 0 WHERE chr_id = %d AND itemID = %d", character.id, nCloth);
 	mysql_query(conn, query);
 
 	return true;

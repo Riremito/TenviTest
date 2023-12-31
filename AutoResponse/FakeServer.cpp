@@ -77,7 +77,7 @@ void CharacterListPacket_Test() {
 		sp.Encode2(chr.skin);
 		sp.Encode2(chr.hair);
 		sp.Encode2(chr.face);
-		sp.Encode2(chr.cloth);
+		sp.Encode2(0); // cloth?
 		sp.Encode2(chr.gcolor);
 		// guardian equip, max 15
 		for (int i = 0; i < 15; i++) {
@@ -257,7 +257,7 @@ void CharacterSpawnPacket(TenviCharacter &chr, float x = 0, float y = 0) {
 	sp.Encode2(chr.skin); // 0048DCB7
 	sp.Encode2(chr.hair); // 0048DCC5
 	sp.Encode2(chr.face); // 0048DCD3
-	sp.Encode2(chr.cloth); // 0048DCE1
+	sp.Encode2(0); // 0048DCE1 cloth?
 	sp.Encode2(chr.gcolor); // 0048DCEF
 	sp.Encode1(chr.awakening); // 0048DCFD, awakening
 
