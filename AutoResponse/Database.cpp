@@ -4,6 +4,7 @@
 #include"Base64.h"
 #include<string>
 #include<sstream>
+#include<algorithm>
 
 DWORD TenviCharacter::id_counter = 1337;
 DWORD TenviAccount::inventoryCount = 1;
@@ -479,6 +480,69 @@ void TenviCharacter::ChangeProfile(std::wstring wText) {
 	mysql_query(conn, query);
 }
 
+std::vector<TenviSkill> TenviAccount::GetAwakening(BYTE job, WORD awakening) {
+	// awakening skill map
+	// 100 => 111 => 112 => 113 => 114
+	// 100 => 121 => 122 => 123 => 124
+	// 200 => 211 => 212 => 213 => 214
+	// 200 => 221 => 222 => 223 => 224
+
+	std::vector<TenviSkill> awakeningSkill;
+	auto pushSkill = [&](WORD awakening) {
+		awakeningSkill.push_back(AwakeningMap[awakening][(job - 4) * 2]);
+		awakeningSkill.push_back(AwakeningMap[awakening][(job - 4) * 2 + 1]);
+		};
+
+	switch (awakening) {
+	case 0:
+		return awakeningSkill;
+	case 114:
+		pushSkill(114);
+	case 113:
+		pushSkill(113);
+	case 112:
+		pushSkill(112);
+	case 111:
+		pushSkill(111);
+	case 100:
+		pushSkill(100);
+		break;
+	case 124:
+		pushSkill(124);
+	case 123:
+		pushSkill(123);
+	case 122:
+		pushSkill(122);
+	case 121:
+		pushSkill(121);
+		pushSkill(100);
+		break;
+	case 214:
+		pushSkill(214);
+	case 213:
+		pushSkill(213);
+	case 212:
+		pushSkill(212);
+	case 211:
+		pushSkill(211);
+	case 200:
+		pushSkill(200);
+		break;
+	case 224:
+		pushSkill(224);
+	case 223:
+		pushSkill(223);
+	case 222:
+		pushSkill(222);
+	case 221:
+		pushSkill(221);
+		pushSkill(200);
+		break;
+	}
+	std::reverse(awakeningSkill.begin(), awakeningSkill.end());
+	return awakeningSkill;
+}
+
 // init
 TenviAccount::TenviAccount() {
 	unsigned int timeout_sec = 1;
@@ -506,26 +570,6 @@ TenviAccount::TenviAccount() {
 	for (unsigned int i = 0; (field = mysql_fetch_field(result)); i++) {
 		getf[field->name] = i;
 	}
-
-	std::map<WORD, std::vector<TenviSkill>> AwakeningMap;
-	AwakeningMap[100] = {}; // 어택 머신		로그			엘리멘탈 위자드
-	AwakeningMap[200] = {}; // 슈팅 머신		디버퍼			프레이어
-	AwakeningMap[111] = {}; // 투핸드 머신		대거 블레이더	파이어 메이지
-	AwakeningMap[121] = {}; // 원핸드 머신		클로 블레이더	콜드 메이지
-	AwakeningMap[211] = {}; // 스피드 머신		데빌 위치		홀리 메이지
-	AwakeningMap[221] = {}; // 마인 머신		다크 위치		프리스트
-	AwakeningMap[112] = {}; // 배틀 머신		대거 어쌔신		파이어 소서러
-	AwakeningMap[122] = {}; // 쉴드 머신		클로 어쌔신		콜드 소서러
-	AwakeningMap[212] = {}; // 스나이프 머신	데빌 서머너		홀리 서머너
-	AwakeningMap[222] = {}; // 캐논 머신		다크 헥스		하이 프리스트
-	AwakeningMap[113] = {}; // 버서크 머신		대거 어벤져		파이어 마스터
-	AwakeningMap[123] = {}; // 가드 머신		클로 어벤져		콜드 마스터
-	AwakeningMap[213] = {}; // 데스 머신		데빌 마스터		홀리 마스터
-	AwakeningMap[223] = {}; // 로켓 머신		다크 마스터		아크 프리스트
-	AwakeningMap[114] = {}; // 디스트로이어		스위시 버클러	불의 화신
-	AwakeningMap[124] = {}; // 프로텍터			슬레이어		얼음의 화신
-	AwakeningMap[214] = {}; // 데스페라도		이모탈			이블 져지
-	AwakeningMap[224] = {}; // 테크니션			카오스			빛의 화신
 
 	MYSQL_ROW chr;
 	while (chr = mysql_fetch_row(result)) {
@@ -572,7 +616,7 @@ TenviAccount::TenviAccount() {
 			s.level = atoi(skill[1]);
 			player.skill.push_back(s);
 		}
-		for (TenviSkill& skill : AwakeningMap[awakening]) {
+		for (TenviSkill& skill : GetAwakening(job, awakening)) {
 			player.skill.push_back(skill);
 		}
 
