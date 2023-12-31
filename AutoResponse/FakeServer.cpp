@@ -1697,7 +1697,7 @@ bool FakeServer(ClientPacket &cp) {
 	case CP_UPDATE_PROFILE: {
 		TenviCharacter& chr = TA.GetOnline();
 		std::wstring wText = cp.DecodeWStr1();
-		chr.profile = wText;
+		chr.ChangeProfile(wText);
 		UpdateProfile(wText);
 		return true;
 	}

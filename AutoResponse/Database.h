@@ -122,6 +122,7 @@ public:
 	std::vector<BYTE> GetKeySet();
 	void ChangeTitle(BYTE code);
 	void ChangeMoney(DWORD money);
+	void ChangeProfile(std::wstring wText);
 	void SwitchRing(BYTE isCash);
 	void AddItem(Item item);
 	void EquipItem(Item item, BYTE ring4 = 0);

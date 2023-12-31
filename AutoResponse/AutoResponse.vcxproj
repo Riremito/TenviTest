@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClCompile Include="..\EmuMainTenvi\ConfigTenvi.cpp" />
     <ClCompile Include="AutoResponse.cpp" />
+    <ClCompile Include="Base64.cpp" />
     <ClCompile Include="ClientPacket.cpp" />
     <ClCompile Include="CN_v126_CP.cpp" />
     <ClCompile Include="DllMain.cpp" />
@@ -175,6 +176,7 @@
   <ItemGroup>
     <ClInclude Include="..\EmuMainTenvi\ConfigTenvi.h" />
     <ClInclude Include="AutoResponse.h" />
+    <ClInclude Include="Base64.h" />
     <ClInclude Include="ClientPacket.h" />
     <ClInclude Include="FakeServer.h" />
     <ClInclude Include="rapidxml\rapidxml.hpp" />

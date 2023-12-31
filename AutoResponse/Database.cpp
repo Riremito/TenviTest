@@ -1,7 +1,8 @@
 #include"Database.h"
 #include"TenviItem.h"
-#include <string>
 #include"TenviData.h"
+#include"Base64.h"
+#include<string>
 #include<sstream>
 
 DWORD TenviCharacter::id_counter = 1337;
@@ -472,6 +473,13 @@ void TenviCharacter::ChangeMoney(DWORD money) {
 	mysql_query(conn, query);
 }
 
+void TenviCharacter::ChangeProfile(std::wstring wText) {
+	profile = wText;
+	char query[1024];
+	sprintf_s(query, 1024, "UPDATE tables.character set profile = \"%s\" WHERE id = %d", base64_encode(WstrToStr(wText), true).c_str(), id);
+	mysql_query(conn, query);
+}
+
 // init
 TenviAccount::TenviAccount() {
 	unsigned int timeout_sec = 1;
@@ -500,11 +508,31 @@ TenviAccount::TenviAccount() {
 		getf[field->name] = i;
 	}
 
+	std::map<WORD, std::vector<TenviSkill>> AwakeningMap;
+	AwakeningMap[100] = {}; // 어택 머신		로그			엘리멘탈 위자드
+	AwakeningMap[200] = {}; // 슈팅 머신		디버퍼			프레이어
+	AwakeningMap[111] = {}; // 투핸드 머신		대거 블레이더	파이어 메이지
+	AwakeningMap[121] = {}; // 원핸드 머신		클로 블레이더	콜드 메이지
+	AwakeningMap[211] = {}; // 스피드 머신		데빌 위치		홀리 메이지
+	AwakeningMap[221] = {}; // 마인 머신		다크 위치		프리스트
+	AwakeningMap[112] = {}; // 배틀 머신		대거 어쌔신		파이어 소서러
+	AwakeningMap[122] = {}; // 쉴드 머신		클로 어쌔신		콜드 소서러
+	AwakeningMap[212] = {}; // 스나이프 머신	데빌 서머너		홀리 서머너
+	AwakeningMap[222] = {}; // 캐논 머신		다크 헥스		하이 프리스트
+	AwakeningMap[113] = {}; // 버서크 머신		대거 어벤져		파이어 마스터
+	AwakeningMap[123] = {}; // 가드 머신		클로 어벤져		콜드 마스터
+	AwakeningMap[213] = {}; // 데스 머신		데빌 마스터		홀리 마스터
+	AwakeningMap[223] = {}; // 로켓 머신		다크 마스터		아크 프리스트
+	AwakeningMap[114] = {}; // 디스트로이어		스위시 버클러	불의 화신
+	AwakeningMap[124] = {}; // 프로텍터			슬레이어		얼음의 화신
+	AwakeningMap[214] = {}; // 데스페라도		이모탈			이블 져지
+	AwakeningMap[224] = {}; // 테크니션			카오스			빛의 화신
+
 	MYSQL_ROW chr;
 	while (chr = mysql_fetch_row(result)) {
 		auto getInt = [&](std::string field_name) { return atoi(chr[getf[field_name]]); };
-		std::wstring name = StrToWstr(std::string(chr[getf["name"]]));
-		std::wstring profile = StrToWstr(std::string(chr[getf["profile"]]));
+		std::wstring name = StrToWstr(base64_decode(chr[getf["name"]], true));
+		std::wstring profile = StrToWstr(base64_decode(chr[getf["profile"]], true));
 		DWORD id = getInt("id");
 		BYTE job_mask = getInt("job_mask");
 		WORD job = getInt("job");
@@ -546,6 +574,10 @@ TenviAccount::TenviAccount() {
 			s.level = atoi(skill[1]);
 			player.skill.push_back(s);
 		}
+		for (TenviSkill& skill : AwakeningMap[awakening]) {
+			player.skill.push_back(skill);
+		}
+
 		mysql_free_result(skill_list);
 		characters.push_back(player);
 	}
@@ -571,11 +603,12 @@ bool TenviAccount::AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, W
 	char query[4096];
 	MYSQL_RES* skill_list;
 
+	std::string _name = base64_encode(WstrToStr(nName), true);
 	sprintf_s(query, 4096, "INSERT INTO tables.character (no, id, name, job_mask, job, skin, \
 hair, face, cloth, gcolor, awakening, map, level, sp, ap, stat_str, stat_dex, stat_hp, stat_int, \
 stat_mp, maxHP, HP, maxMP, MP, titleEquipped, money, profile, keySet) VALUES \
 (%d, %d, \"%s\", %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, \"%s\", \"%s\")",
-++slot, highestID + 1, WstrToStr(nName).c_str(), nJob_Mask, nJob, nSkin, nHair, nFace, nCloth, nGColor,
+++slot, highestID + 1, _name.c_str(), nJob_Mask, nJob, nSkin, nHair, nFace, nCloth, nGColor,
 0, 5501, 1, 1000, 20, 10, 10, 10, 10, 10, 1000, 800, 900, 800, 0, 12345678, "", "");
 	mysql_query(conn, query);
 

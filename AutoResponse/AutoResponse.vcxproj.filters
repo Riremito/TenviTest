@@ -90,6 +90,9 @@
     <ClCompile Include="TenviItem.cpp">
       <Filter>ソース ファイル\data</Filter>
     </ClCompile>
+    <ClCompile Include="Base64.cpp">
+      <Filter>ソース ファイル\data</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AutoResponse.h">
@@ -132,6 +135,9 @@
       <Filter>ヘッダー ファイル\packet</Filter>
     </ClInclude>
     <ClInclude Include="TenviItem.h">
+      <Filter>ヘッダー ファイル\data</Filter>
+    </ClInclude>
+    <ClInclude Include="Base64.h">
       <Filter>ヘッダー ファイル\data</Filter>
     </ClInclude>
   </ItemGroup>
