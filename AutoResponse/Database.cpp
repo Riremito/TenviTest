@@ -326,10 +326,11 @@ bool TenviCharacter::UseSP(WORD skill_id) {
 		mysql_query(conn, query);
 
 		MYSQL_RES* skillFound;
-		sprintf_s(query, 1024, "SELECT tables.skill WHERE chr_id = %d AND skill_id = %d", id, skill_id);
+		sprintf_s(query, 1024, "SELECT level FROM tables.skill WHERE chr_id = %d AND skill_id = %d", id, skill_id);
 		mysql_query(conn, query);
 		skillFound = mysql_store_result(conn);
 		MYSQL_ROW s;
+
 		if (s = mysql_fetch_row(skillFound)) {
 			sprintf_s(query, 1024, "UPDATE tables.skill SET level = level + 1 WHERE chr_id = %d AND skill_id = %d", id, skill_id);
 			mysql_query(conn, query);
@@ -465,6 +466,7 @@ std::vector<BYTE> TenviCharacter::GetKeySet() {
 	if (!keys || !keys[0] || keys[0] == "0" || strcmp(keys[0], "") == 0) {
 		res.push_back(0);
 		res.push_back(0);
+		mysql_free_result(result);
 		return res;
 	}
 	std::string key_string = std::string(keys[0]);
@@ -474,6 +476,7 @@ std::vector<BYTE> TenviCharacter::GetKeySet() {
 	while (getline(ss, stringBuffer, '/')) {
 		res.push_back(std::stoi(stringBuffer));
 	}
+	mysql_free_result(result);
 	return res;
 }
 
@@ -720,8 +723,10 @@ DWORD TenviAccount::GetHighestInventoryID() {
 
 	MYSQL_ROW item;
 	if (item = mysql_fetch_row(result)) {
+		mysql_free_result(result);
 		return atoi(item[0]);
 	}
+	mysql_free_result(result);
 	return 0;
 }
 
