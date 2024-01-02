@@ -325,22 +325,20 @@ bool TenviCharacter::UseSP(WORD skill_id) {
 		sprintf_s(query, 1024, "UPDATE tables.character SET sp = %d WHERE id = %d", sp, id);
 		mysql_query(conn, query);
 
-		for (auto &v : skill) {
-			if (v.id == skill_id) {
-				v.level++;
-				MYSQL_RES* result;
-				sprintf_s(query, 1024, "UPDATE tables.skill SET level = level + 1 WHERE chr_id = %d AND skill_id = %d", id, skill_id);
-				mysql_query(conn, query);
-				return true;
-			}
-		}
-		TenviSkill learn_skill;
-		learn_skill.id = skill_id;
-		learn_skill.level = 1;
-		skill.push_back(learn_skill);
-
-		sprintf_s(query, 1024, "INSERT INTO tables.skill VALUES (%d, %d, %d)", id, skill_id, 1);
+		MYSQL_RES* skillFound;
+		sprintf_s(query, 1024, "SELECT tables.skill WHERE chr_id = %d AND skill_id = %d", id, skill_id);
 		mysql_query(conn, query);
+		skillFound = mysql_store_result(conn);
+		MYSQL_ROW s;
+		if (s = mysql_fetch_row(skillFound)) {
+			sprintf_s(query, 1024, "UPDATE tables.skill SET level = level + 1 WHERE chr_id = %d AND skill_id = %d", id, skill_id);
+			mysql_query(conn, query);
+		}
+		else {
+			sprintf_s(query, 1024, "INSERT INTO tables.skill VALUES (%d, %d, %d)", id, skill_id, 1);
+			mysql_query(conn, query);
+		}
+		mysql_free_result(skillFound);
 		return true;
 	}
 	return false;
@@ -400,6 +398,27 @@ void TenviCharacter::SetMap(WORD map_id) {
 	mysql_query(conn, query);
 }
 
+std::vector<TenviSkill> TenviCharacter::GetSkill() {
+	char query[1024];
+	MYSQL_RES* skill_list;
+	sprintf_s(query, 1024, "SELECT skill_id, level FROM tables.skill WHERE chr_id = %d", id);
+	mysql_query(conn, query);
+	skill_list = mysql_store_result(conn);
+	MYSQL_ROW skill;
+	std::vector<TenviSkill> res_skill;
+	while (skill = mysql_fetch_row(skill_list)) {
+		TenviSkill s;
+		s.id = atoi(skill[0]);
+		s.level = atoi(skill[1]);
+		res_skill.push_back(s);
+	}
+	for (TenviSkill& skill : TenviAccount::GetAwakening(job, awakening)) {
+		res_skill.push_back(skill);
+	}
+	mysql_free_result(skill_list);
+	return res_skill;
+}
+
 void TenviCharacter::SetHP(WORD hp) {
 	char query[1024];
 	HP = hp;
@@ -413,7 +432,6 @@ void TenviCharacter::SetMP(WORD mp) {
 	sprintf_s(query, 1024, "UPDATE tables.character set MP = %d WHERE id = %d", MP, id);
 	mysql_query(conn, query);
 }
-
 
 void TenviCharacter::HealHP(WORD amount) {
 	char query[1024];
@@ -604,23 +622,6 @@ TenviAccount::TenviAccount() {
 			map, level, sp, ap, stat_str, stat_dex, stat_hp, stat_int, stat_mp, maxHP, HP, maxMP, MP,
 			titleEquipped, money);
 
-		char query[1024];
-		MYSQL_RES* skill_list;
-		sprintf_s(query, 1024, "SELECT skill_id, level FROM tables.skill WHERE chr_id = %d", player.id);
-		mysql_query(conn, query);
-		skill_list = mysql_store_result(conn);
-		MYSQL_ROW skill;
-		while (skill = mysql_fetch_row(skill_list)) {
-			TenviSkill s;
-			s.id = atoi(skill[0]);
-			s.level = atoi(skill[1]);
-			player.skill.push_back(s);
-		}
-		for (TenviSkill& skill : GetAwakening(job, awakening)) {
-			player.skill.push_back(skill);
-		}
-
-		mysql_free_result(skill_list);
 		characters.push_back(player);
 	}
 	mysql_free_result(result);
@@ -646,11 +647,12 @@ bool TenviAccount::AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, W
 	MYSQL_RES* skill_list;
 
 	std::string _name = base64_encode(WstrToStr(nName), true);
+	DWORD id = highestID + 1;
 	sprintf_s(query, 4096, "INSERT INTO tables.character (no, id, name, job_mask, job, skin, \
 hair, face, gcolor, awakening, map, level, sp, ap, stat_str, stat_dex, stat_hp, stat_int, \
 stat_mp, maxHP, HP, maxMP, MP, titleEquipped, money, profile, keySet) VALUES \
 (%d, %d, \"%s\", %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, \"%s\", \"%s\")",
-++slot, highestID + 1, _name.c_str(), nJob_Mask, nJob, nSkin, nHair, nFace, nGColor,
+++slot, id, _name.c_str(), nJob_Mask, nJob, nSkin, nHair, nFace, nGColor,
 0, 5501, 1, 1000, 20, 10, 10, 10, 10, 10, 1000, 800, 900, 800, 0, 12345678, "", "");
 	mysql_query(conn, query);
 
@@ -658,6 +660,7 @@ stat_mp, maxHP, HP, maxMP, MP, titleEquipped, money, profile, keySet) VALUES \
 	character.AddItem(MakeItem(character, gBody, 1));
 	character.AddItem(MakeItem(character, gWeapon, 1));
 	character.AddItem(MakeItem(character, nCloth, 1));
+	character.AddItem(MakeItem(character, 63163, 0)); // telescope
 
 	sprintf_s(query, 1024, "UPDATE tables.inventory SET isEquip = 1, loc = 0 WHERE chr_id = %d AND itemID = %d", character.id, gHead);
 	mysql_query(conn, query);
@@ -667,6 +670,16 @@ stat_mp, maxHP, HP, maxMP, MP, titleEquipped, money, profile, keySet) VALUES \
 	mysql_query(conn, query);
 	sprintf_s(query, 1024, "UPDATE tables.inventory SET isEquip = 1, loc = 0 WHERE chr_id = %d AND itemID = %d", character.id, nCloth);
 	mysql_query(conn, query);
+
+	std::map<BYTE, std::vector<TenviSkill>> basicSkill;
+	basicSkill[4] = { {1, 1}, {2, 1}, {10001, 1}, {10004, 1} };
+	basicSkill[5] = { {1, 1}, {20000, 1}, {30001, 1}, {30004, 1} };
+	basicSkill[6] = { {1, 1}, {40019, 1}, {50000, 1}, {50003, 1} };
+
+	for(TenviSkill& skill : basicSkill[nJob]) {
+		sprintf_s(query, 1024, "INSERT INTO tables.skill VALUES (%d, %d, %d)", id, skill.id, skill.level);
+		mysql_query(conn, query);
+	}
 
 	return true;
 }
@@ -751,3 +764,24 @@ TenviCharacter& TenviAccount::GetOnline() {
 	}
 	return characters[0];
 }
+
+std::map<WORD, std::vector<TenviSkill>> TenviAccount::AwakeningMap = {
+	{100, { {31, 10}, {32, 10}, {20035, 10}, {20036, 10}, {40035, 10}, {40036, 10}, }}, // 어택 머신		로그			엘리멘탈 위자드
+	{200, { {33, 10}, {34, 10}, {20037, 10}, {20038, 10}, {40037, 10}, {40038, 10}, }}, // 슈팅 머신		디버퍼			프레이어
+	{111, { {35, 10}, {36, 10}, {20039, 10}, {20040, 10}, {40039, 10}, {40040, 10}, }}, // 투핸드 머신		대거 블레이더	파이어 메이지
+	{121, { {37, 10}, {38, 10}, {20041, 10}, {20042, 10}, {40041, 10}, {40042, 10}, } }, // 원핸드 머신		클로 블레이더	콜드 메이지
+	{211, { {39, 10}, {40, 10}, {20043, 10}, {20044, 10}, {40043, 10}, {40044, 10}, }}, // 스피드 머신		데빌 위치		홀리 메이지
+	{221, { {41, 10}, {42, 10}, {20045, 10}, {20046, 10}, {40045, 10}, {40046, 10}, }}, // 마인 머신		다크 위치		프리스트
+	{112, { {43, 3}, {44, 10}, {20047, 3}, {20048, 10}, {40051, 3}, {40052, 10}, }},	 // 배틀 머신		대거 어쌔신		파이어 소서러
+	{122, { {43, 3}, {45, 10}, {20047, 3}, {20049, 10}, {40053, 3}, {40054, 10}, }},    // 쉴드 머신		클로 어쌔신		콜드 소서러
+	{212, { {46, 3}, {47, 10}, {20050, 3}, {20051, 10}, {40055, 3}, {40056, 10}, }},    // 스나이프 머신	데빌 서머너		홀리 서머너
+	{222, { {46, 3}, {48, 10}, {20050, 3}, {20052, 10}, {40055, 3}, {40057, 10}, }},    // 캐논 머신		다크 헥스		하이 프리스트
+	{113, { {56, 10}, {57, 10}, {20024, 10}, {20029, 10}, {40021, 10}, {40026, 10}, }}, // 버서크 머신		대거 어벤져		파이어 마스터
+	{123, { {58, 10}, {59, 10}, {20030, 10}, {20061, 10}, {40029, 10}, {40031, 10}, }}, // 가드 머신		클로 어벤져		콜드 마스터
+	{213, { {60, 10}, {61, 10}, {20062, 10}, {20063, 10}, {40067, 10}, {40068, 10}, }}, // 데스 머신		데빌 마스터		홀리 마스터
+	{223, { {62, 10}, {63, 10}, {20064, 10}, {20065, 10}, {40069, 10}, {40070, 10}, }}, // 로켓 머신		다크 마스터		아크 프리스트
+	{114, { {64, 10}, {65, 10}, {20066, 10}, {20067, 10}, {40071, 10}, {40072, 10}, }}, // 디스트로이어		스위시 버클러	불의 화신
+	{124, { {66, 10}, {67, 10}, {20068, 10}, {20069, 10}, {40073, 10}, {40074, 10}, }}, // 프로텍터			슬레이어		얼음의 화신
+	{214, { {68, 10}, {69, 10}, {20070, 10}, {20071, 10}, {40075, 10}, {40076, 10}, }}, // 데스페라도		이모탈			이블 져지
+	{224, { {70, 10}, {71, 10}, {20072, 10}, {20073, 10}, {40077, 10}, {40078, 10}, }}  // 테크니션			카오스			빛의 화신
+};

@@ -879,9 +879,9 @@ void SkillCooldownPacket(WORD skill_id, DWORD time) {
 // 0x6C
 void InitSkillPacket(TenviCharacter &chr) {
 	ServerPacket sp(SP_PLAYER_SKILL_ALL);
-	sp.Encode1((BYTE)chr.skill.size()); // 0049977E, number of skills
+	sp.Encode1((BYTE)chr.GetSkill().size()); // 0049977E, number of skills
 
-	for (auto v : chr.skill) {
+	for (auto v : chr.GetSkill()) {
 		sp.Encode1(1); // 00499792, idk
 		sp.Encode2(v.id); // 0049979F, skill id
 		sp.Encode1(v.level); // 004997AA, skill point
