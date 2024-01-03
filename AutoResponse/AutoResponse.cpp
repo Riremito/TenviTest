@@ -27,10 +27,11 @@ void OnPacketDirectExec(InPacket *p, bool context = true) {
 		void (__thiscall *_OnPacket2)(void *, InPacket*) = (decltype(_OnPacket2))Addr_OnPacket2;
 		_OnPacket2(OnPacketClass2, p);
 	}
-	//if (p->packet[4] == 0x1B) { // chat header code
-	//	void(__thiscall * _ChatOnPacket)(wchar_t*) = (decltype(_ChatOnPacket))0x004A44B1; // chat log function
-	//	_ChatOnPacket((wchar_t*)p);
-	//}
+//	if (p->packet[4] == 0x1B) { // chat header code
+//		ServerPacket sp(0x01);
+//		void(__thiscall * _ChatOnPacket)(InPacket*) = (decltype(_ChatOnPacket))0x004A44B1; // chat log function
+//		_ChatOnPacket(p);
+//	}
 }
 
 void ProcessPacketExec(std::vector<BYTE> &packet, bool context = true) {
@@ -81,15 +82,17 @@ DWORD __fastcall LoginButton_Hook(void *ecx) {
 	WorldListPacket();
 	return 0;
 }
-#include <string>
+
 #include <sstream>
-DWORD(__thiscall* _sample)(void* ecx) = NULL;
-DWORD __fastcall sample_Hook(void* ecx, void* edx) {
-	std::stringstream ss;
-	ss << ecx;
-	std::string name = ss.str();
-	writeDebugLog(name);
-	return _sample(ecx);
+int(__thiscall* _AddChatMsg)(void* ecx, int code, wchar_t* string) = NULL;
+int __fastcall AddChatMsg_Hook(void* ecx, void* edx, int code, wchar_t* string) {
+	if (string[1] == (WORD)L'@') {
+		int code;
+		wchar_t msg[1000];
+		swscanf_s(string, L"[@%d %[^\t]", &code, msg, sizeof(msg));
+		return _AddChatMsg(ecx, code, msg);
+	}
+	return _AddChatMsg(ecx, code, string);
 }
 
 
@@ -232,6 +235,7 @@ bool AutoResponseHook() {
 		SHookFunction(EnterSendPacket, 0x00593F4B);
 		SHookFunction(ConnectCaller, 0x00566AB8);
 		SHookFunction(ProcessPacketCaller, 0x00566EF8);
+		SHookFunction(AddChatMsg, 0x004ADB72);
 		Addr_OnPacketClass2 = 0x0073178C;
 		Addr_OnPacket2 = 0x004B202F;
 

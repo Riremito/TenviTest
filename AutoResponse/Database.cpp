@@ -501,6 +501,38 @@ void TenviCharacter::ChangeProfile(std::wstring wText) {
 	mysql_query(conn, query);
 }
 
+void TenviCharacter::SortInventory(BYTE method, BYTE type) {
+	// type: 0, 1, 2
+	// 0: loc, 1: group, 3: rank
+	char query[4096];
+	MYSQL_RES* result;
+	switch (method) {
+	case 0: {
+		sprintf_s(query, 4096, "SELECT inventoryID FROM tables.inventory WHERE chr_id = %d AND type = %d AND isEquip = 0 ORDER BY loc", id, type);
+		break;
+	}
+	case 1: {
+		sprintf_s(query, 4096, "SELECT inventoryID FROM tables.inventory WHERE chr_id = %d AND type = %d AND isEquip = 0 ORDER BY _group", id, type);
+		break;
+	}
+	case 2: {
+		sprintf_s(query, 4096, "SELECT inventoryID FROM tables.inventory WHERE chr_id = %d AND type = %d AND isEquip = 0 ORDER BY rank", id, type);
+		break;
+	}
+	}
+	mysql_query(conn, query);
+	result = mysql_store_result(conn);
+
+	for (int newLoc = 0; newLoc < mysql_num_rows(result); newLoc++) {
+		MYSQL_ROW item = mysql_fetch_row(result);
+		DWORD inventoryID = atoi(item[0]);
+		writeDebugLog(std::to_string(inventoryID));
+		sprintf_s(query, 1024, "UPDATE tables.inventory SET loc = %d WHERE chr_id = %d AND inventoryID = %d", newLoc, id, inventoryID);
+		mysql_query(conn, query);
+	}
+	mysql_free_result(result);
+}
+
 std::vector<TenviSkill> TenviAccount::GetAwakening(BYTE job, WORD awakening) {
 	// awakening skill map
 	// 100 => 111 => 112 => 113 => 114
@@ -714,12 +746,6 @@ DWORD TenviAccount::GetHighestInventoryID() {
 	sprintf_s(query, 1024, "SELECT inventoryID FROM tables.inventory ORDER BY inventoryID DESC");
 	mysql_query(conn, query);
 	result = mysql_store_result(conn);
-
-	std::map<std::string, BYTE> getf;
-	MYSQL_FIELD* field;
-	for (unsigned int i = 0; (field = mysql_fetch_field(result)); i++) {
-		getf[field->name] = i;
-	}
 
 	MYSQL_ROW item;
 	if (item = mysql_fetch_row(result)) {

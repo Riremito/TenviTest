@@ -950,6 +950,17 @@ void PickUpErrorPacket(TenviCharacter& chr, DWORD drop_no) {
 	SendPacket(sp);
 }
 
+// 0x7E
+void HackedMessagePacket(BYTE msg_type, std::wstring msg) {
+	// msg_type:
+	// 12 = chat message
+	// 1 = error message (middle)
+
+	ServerPacket sp(SP_KICKOUT_MSG);
+	sp.EncodeWStr1(L"@" + std::to_wstring(msg_type) + L" " + msg + L"\t");
+	SendPacket(sp);
+}
+
 // 0xA6
 void ShopPacket(DWORD npc_id, int currency, std::vector<ShopItem>& items) {
 	ServerPacket sp(SP_SHOP);
@@ -1988,6 +1999,7 @@ bool FakeServer(ClientPacket &cp) {
 		std::wstring message = cp.DecodeWStr1();
 
 		ChatPacket(message);
+		HackedMessagePacket(12, L"[" + chr.name + L"] : " + message);
 
 		// command test
 		if (message.length() && message.at(0) == L'@') {
@@ -2022,6 +2034,22 @@ bool FakeServer(ClientPacket &cp) {
 			return true;
 		}
 
+		return true;
+	}
+	case CP_SORT_INVENTORY: {
+		TenviCharacter& chr = TA.GetOnline();
+		BYTE method = cp.Decode1();
+		BYTE type = cp.Decode1();
+		chr.SortInventory(method, type);
+		std::vector<Item> inventory = chr.GetInventory();
+		for (int i = 0; i < 40; i++) {
+			RemoveFromInventory(i, type);
+		}
+		for (Item& item : inventory) {
+			if (item.type == type) {
+				EditInventory(item);
+			}
+		}
 		return true;
 	}
 	case CP_WARP: {

@@ -48,4 +48,5 @@ void SetClientPacketHeader_KR_v200() {
 	header[CP_TIME_GET_TIME] = 0xC8;
 	header[CP_WARP] = 0xCD;
 	header[CP_CE] = 0xCE;
+	header[CP_SORT_INVENTORY] = 0xD0;
 }

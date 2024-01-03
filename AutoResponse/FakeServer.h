@@ -19,5 +19,6 @@ void WorldListPacket();
 void CharacterSelectPacket();
 void CharacterListPacket();
 void CharacterListPacket_Test();
+void ChatPacket(std::wstring msg);
 
 #endif

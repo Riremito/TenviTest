@@ -123,6 +123,7 @@ public:
 	void ChangeTitle(BYTE code);
 	void ChangeMoney(DWORD money);
 	void ChangeProfile(std::wstring wText);
+	void SortInventory(BYTE method, BYTE type);
 	void SwitchRing(BYTE isCash);
 	void AddItem(Item item);
 	void EquipItem(Item item, BYTE ring4 = 0);

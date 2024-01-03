@@ -56,6 +56,7 @@ void SetServerPacketHeader_KR_v200() {
 	header[SP_DROP_ITEM] = 0x6E;
 	header[SP_PICK_UP] = 0x6F;
 	header[SP_PICK_UP_ERROR] = 0x70;
+	header[SP_KICKOUT_MSG] = 0x7E;
 	header[SP_SHOP] = 0xA6;
 	header[SP_BANK] = 0xB0;
 	header[SP_MAIL] = 0xB4;
