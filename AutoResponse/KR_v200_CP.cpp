@@ -10,6 +10,7 @@ void SetClientPacketHeader_KR_v200() {
 	header[CP_DELETE_CHARACTER] = 0x06;
 	header[CP_INVITED] = 0x07;
 	header[CP_BACK_TO_LOGIN_SERVER] = 0x0A;
+	header[CP_GAME_EXIT] = 0x0B;
 	header[CP_EQUIP] = 0x0D;
 	header[CP_UNEQUIP] = 0x0E;
 	header[CP_SWITCH_RING] = 0x0F;

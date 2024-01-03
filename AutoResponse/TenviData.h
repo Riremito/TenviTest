@@ -43,7 +43,7 @@ public:
 	std::string get_region_str();
 };
 
-DWORD parse_dialog(DWORD dialog, DWORD action_id);
+std::pair<std::string, DWORD> parse_action(DWORD dialog, DWORD action_id);
 std::pair<int, std::vector<ShopItem>> parse_shop(WORD obj_id);
 std::vector<BoardInfo> parse_board(WORD map_id);
 void writeDebugLog(std::string str);

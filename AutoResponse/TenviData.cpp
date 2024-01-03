@@ -90,7 +90,7 @@ bool TenviData::parse_weather() {
 	}
 }
 
-DWORD parse_dialog(DWORD dialog, DWORD action_id) {
+std::pair<std::string, DWORD> parse_action(DWORD dialog, DWORD action_id) {
 	std::string dialog_str = (dialog < 10000) ? ("0" + std::to_string(dialog)) : std::to_string(dialog);
 	std::string map_xml = tenvi_data.get_xml_path() + +"\\" + tenvi_data.get_region_str() + "\\dialog\\" + dialog_str + ".xml";
 	rapidxml::xml_document<> doc;
@@ -100,13 +100,13 @@ DWORD parse_dialog(DWORD dialog, DWORD action_id) {
 		doc.parse<0>(xmlFile.data());
 	}
 	catch (...) {
-		return 0;
+		return {};
 	}
 
 	rapidxml::xml_node<>* root = doc.first_node();
 
 	if (!root) {
-		return 0;
+		return {};
 	}
 
 	for (rapidxml::xml_node<>* child = root->first_node()->first_node(); child; child = child->next_sibling()) {
@@ -115,14 +115,17 @@ DWORD parse_dialog(DWORD dialog, DWORD action_id) {
 				int id = atoi(action->first_attribute("id")->value());
 				if (id == action_id) {
 					if (strcmp(action->first_attribute("type")->value(), "dialog") == 0) {
-						return atoi(action->first_attribute("value")->value());
+						return { "dialog", atoi(action->first_attribute("value")->value()) };
 					}
-					return 0;
+					if (strcmp(action->first_attribute("type")->value(), "function") == 0) {
+						return { "function", atoi(action->first_attribute("value")->value()) };
+					}
+					return {};
 				}
 			}
 		}
 	}
-	return 0;
+	return {};
 }
 
 std::pair<int, std::vector<ShopItem>> parse_shop(WORD obj_id) {

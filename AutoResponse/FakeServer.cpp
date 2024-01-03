@@ -7,7 +7,6 @@
 #include<ctime>
 #include <clocale>
 #include <locale>
-int regenCount = 100;
 
 TenviAccount TA;
 // ========== TENVI Packet Response ==========s
@@ -1186,8 +1185,6 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 		else{
 			ShipPacket(36000);
 		}
-		chr.SetMapReturn(chr.map);
-		chr.SetMap(map_id);
 		break;
 	}
 	case MAPID_SHIP0:
@@ -1195,15 +1192,7 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 	{
 		ShipPacket();
 		chr.SetMapReturn(chr.map);
-		chr.map = map_id;
 		SetTimer(map_id, 20);
-		break;
-	}
-	case MAPID_ITEM_SHOP:
-	case MAPID_PARK:
-	{
-		// do not change last map id
-		chr.SetMapReturn(chr.map);
 		break;
 	}
 	case MAPID_EVENT + 2:
@@ -1211,19 +1200,11 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 	case MAPID_EVENT + 4:
 	case MAPID_EVENT + 5:
 	{
-		// do not change last map id
-		chr.SetMapReturn(chr.map);
 		chr.guardian_flag = 0;
 		break;
-
-	}
-	default:
-	{
-		chr.SetMapReturn(chr.map);
-		chr.SetMap(map_id);
-		break;
 	}
 	}
+	chr.SetMap(map_id);
 	TA.ClearObjectID();
 	SpawnObjects(chr, map_id);
 	CharacterSpawnPacket(chr, x, y);
@@ -1287,19 +1268,23 @@ void GoTomb(TenviCharacter& chr) {
 
 void ItemShop(TenviCharacter &chr, bool bEnter) {
 	if (bEnter) {
+		chr.SetMapReturn(chr.map);
 		SetMap(chr, MAPID_ITEM_SHOP);
 	}
 	else {
 		SetMap(chr, chr.map_return);
+		chr.SetMapReturn(0);
 	}
 }
 
 void Park(TenviCharacter &chr, bool bEnter) {
 	if (bEnter) {
+		chr.SetMapReturn(chr.map);
 		SetMap(chr, MAPID_PARK);
 	}
 	else {
 		SetMap(chr, chr.map_return);
+		chr.SetMapReturn(0);
 	}
 }
 
@@ -1308,10 +1293,12 @@ void Event(TenviCharacter &chr, BYTE type) {
 		chr.aboard = 0;
 		chr.fly = 0;
 		chr.guardian_flag = 0;
+		chr.SetMapReturn(chr.map);
 		SetMap(chr, MAPID_EVENT + type);
 	}
 	else {
 		SetMap(chr, chr.map_return);
+		chr.SetMapReturn(0);
 	}
 }
 
@@ -1482,10 +1469,19 @@ bool FakeServer(ClientPacket &cp) {
 	}
 	// Game Server to Login Server
 	case CP_LOGOUT: {
-		TA.GetOnline().isLoaded = false;
+		TenviCharacter& chr = TA.GetOnline();
+		chr.isLoaded = false;
+		chr.SetMap(chr.map_return ? chr.map_return : chr.map);
+		chr.SetMapReturn(0);
+
 		GetLoginServerPacket();// notify login server ip
 		ConnectedPacket(); // connected
 		CharacterListPacket_Test();
+		return true;
+	}
+	case CP_GAME_EXIT: {
+		TenviCharacter& chr = TA.GetOnline();
+		chr.SetMap(chr.map_return ? chr.map_return : chr.map);
 		return true;
 	}
 	case CP_GUARDIAN_RIDE: {
@@ -1890,10 +1886,39 @@ bool FakeServer(ClientPacket &cp) {
 		TenviCharacter& chr = TA.GetOnline();
 		DWORD action_id = cp.Decode4();
 		DWORD pre_npc = tenvi_data.get_map(chr.map)->pre_npc, pre_dialog = tenvi_data.get_map(chr.map)->pre_dialog;
-		DWORD dialog = parse_dialog(pre_dialog, action_id);
-		if (dialog) {
-			pre_dialog = dialog;
+		std::pair<std::string, DWORD> action = parse_action(pre_dialog, action_id);
+		if (action.first == "dialog") {
+			DWORD dialog = action.second;
+			tenvi_data.get_map(chr.map)->pre_dialog = dialog;
 			NPC_TalkPacket(pre_npc, dialog);
+		}
+		if (action.first == "function") {
+			DWORD func = action.second;
+			switch (func) {
+			case 132: {
+				Item cam = TA.MakeItem(chr, 60100, 1);
+				if (cam.itemID) {
+					chr.AddItem(cam);
+					EditInventory(cam, 1);
+				}
+				else {
+					HackedMessagePacket(1, L"인벤토리가 부족합니다.");
+				}
+				break;
+			}
+			case 258: {
+				SetMap(chr, 4009);
+				break;
+			}
+			case 259: {
+				SetMap(chr, 4024);
+				break;
+			}
+			case 260: {
+				SetMap(chr, 4039);
+				break;
+			}
+			}
 		}
 		return true;
 	}
