@@ -90,7 +90,11 @@ void CharacterListPacket_Test() {
 	}
 
 	if (GetRegion() == TENVI_KR) {
+		sp.Encode1(1);
 		sp.Encode1(0);
+		sp.Encode1(0);
+		sp.Encode1(0);
+		sp.EncodeWStr1(L"unknown");
 	}
 
 	sp.Encode1(TA.slot); // character slots
@@ -1458,7 +1462,8 @@ bool FakeServer(ClientPacket &cp) {
 	// Delete Character
 	case CP_DELETE_CHARACTER: {
 		DWORD character_id = cp.Decode4();
-		// not coded
+		TA.DeleteCharacter(character_id);
+		CharacterListPacket_Test();
 		return true;
 	}
 	// Character Select to World Select

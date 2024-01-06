@@ -615,7 +615,6 @@ TenviAccount::TenviAccount() {
 	result = mysql_store_result(conn);
 
 	int fields = mysql_num_fields(result);
-	slot = mysql_num_rows(result);
 	objectCounter = 1;
 
 	std::map<std::string, BYTE> getf;
@@ -659,6 +658,7 @@ TenviAccount::TenviAccount() {
 
 		characters.push_back(player);
 	}
+	slot = characters.size();
 	mysql_free_result(result);
 }
 
@@ -717,6 +717,33 @@ stat_mp, maxHP, HP, maxMP, MP, titleEquipped, money, profile, keySet) VALUES \
 	}
 
 	return true;
+}
+
+bool TenviAccount::DeleteCharacter(DWORD chr_id) {
+	char query[1024];
+	bool isFound = false;
+	for (auto it = characters.begin(); it != characters.end(); it++) {
+		if (it->id == chr_id) {
+			sprintf_s(query, 1024, "DELETE FROM tables.character WHERE id = %d", it->id);
+			mysql_query(conn, query);
+			sprintf_s(query, 1024, "DELETE FROM tables.inventory WHERE chr_id = %d", it->id);
+			mysql_query(conn, query);
+			sprintf_s(query, 1024, "DELETE FROM tables.skill WHERE chr_id = %d", it->id);
+			mysql_query(conn, query);
+			characters.erase(it);
+			isFound = true;
+			break;
+		}
+	}
+	if (isFound) {
+		slot = characters.size();
+		for (int i = 0; i < characters.size(); i++) {
+			sprintf_s(query, 1024, "UPDATE tables.character SET no = %d WHERE id = %d", i+1, characters[i].id);
+			mysql_query(conn, query);
+		}
+		return true;
+	}
+	return false;
 }
 
 bool TenviAccount::FindCharacter(DWORD id, TenviCharacter *found) {

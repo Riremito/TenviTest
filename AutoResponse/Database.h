@@ -153,6 +153,7 @@ public:
 	TenviCharacter& GetOnline();
 	static DWORD GetHighestInventoryID();
 	static std::vector<TenviSkill> GetAwakening(BYTE job, WORD awakening);
+	bool DeleteCharacter(DWORD chr_id);
 };
 
 #endif

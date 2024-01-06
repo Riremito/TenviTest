@@ -239,7 +239,6 @@ bool AutoResponseHook() {
 		Addr_OnPacketClass2 = 0x0073178C;
 		Addr_OnPacket2 = 0x004B202F;
 
-
 		// portal id to map id
 		//r.Patch(0x00410513 + 0x02, L"18");
 		return true;
