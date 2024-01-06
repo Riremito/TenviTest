@@ -7,10 +7,12 @@
 #include<ctime>
 #include <clocale>
 #include <locale>
+#include<queue>
 
 TenviAccount TA;
 // ========== TENVI Packet Response ==========s
 #define TENVI_VERSION 0x1023
+std::queue<std::pair<unsigned long int, DWORD>> detect_queue;
 
 // 0x01
 void VersionPacket() {
@@ -341,7 +343,7 @@ void CharacterSpawnPacket(TenviCharacter &chr, float x = 0, float y = 0) {
 void RemoveObjectPacket(DWORD object_id) {
 	ServerPacket sp(SP_REMOVE_OBJECT);
 	sp.Encode4(object_id); // not only for character
-	SendPacket(sp);
+	DelaySendPacket(sp);
 }
 
 // 0x13
@@ -411,10 +413,10 @@ void ChatPacket(std::wstring msg) {
 }
 
 // 0x20
-void ActivateObjectPacket(TenviRegen &regen) {
+void ActivateObjectPacket(DWORD regen_id, BYTE state=3) {
 	ServerPacket sp(SP_ACTIVATE_OBJECT);
-	sp.Encode4(regen.id);
-	sp.Encode1(3); // 1 = fade in, 2 = !, 3 = walk, 4 = dash
+	sp.Encode4(regen_id);
+	sp.Encode1(state); // 1 = fade in, 2 = !, 3 = walk, 4 = dash, 5 = death?
 	SendPacket(sp);
 }
 
@@ -425,15 +427,15 @@ void HitPacket(DWORD hit_from, DWORD hit_to, DWORD skill_id) {
 	sp.Encode4(hit_to); // 004867C8
 	sp.Encode1(0); // 00470977, Knock back
 	sp.Encode4(hit_from); // 00470984
-	sp.Encode2(skill_id); // 0047098E
+	sp.Encode2(0); // 0047098E skill id?
 	sp.Encode1(1); // 0047099B, hit count
 	sp.Encode4(1); // 004709AC, damage
 	sp.Encode1(0); // 004709C1
 	sp.Encode1(0); // 004709CE
 	sp.Encode1(0); // 004709DB
-	sp.Encode2(0); // 004709E8 skill id?
+	sp.Encode2(skill_id); // 004709E8 skill id?
 	sp.Encode1(0); // 004709F5
-	DelaySendPacket(sp);
+	SendPacket(sp);
 }
 
 // 0x23
@@ -445,6 +447,26 @@ void ShowObjectPacket(TenviRegen &regen, BYTE gravity=1) {
 	sp.Encode2(0);
 	sp.EncodeFloat(regen.area.left);
 	sp.EncodeFloat(regen.area.bottom);
+	SendPacket(sp);
+}
+
+// 0x24
+void ObjectStatPacket(TenviRegen &regen) {
+	ServerPacket sp(SP_OBJECT_STAT);
+	sp.Encode4(regen.id);
+	sp.Encode4(3000); // hp
+	sp.Encode2(3000); // mp
+	sp.Encode4(4000); // max hp
+	sp.Encode2(4000); // max mp
+	sp.Encode2(100); // def
+	sp.Encode2(100); // str
+	sp.Encode2(100); // vit
+	sp.Encode4(100); // ggi
+	sp.Encode2(100); // int
+	sp.Encode2(100); // wis
+	sp.Encode2(100); // dor
+	sp.Encode2(100); // wsp
+	sp.Encode2(100); // fsp
 	SendPacket(sp);
 }
 
@@ -631,7 +653,7 @@ void MoneyPacket(TenviCharacter&chr) {
 }
 
 // 0x41
-void PlayerHitPacket(TenviCharacter& chr, DWORD hit_from, WORD damage) {
+void PlayerHitPacket(TenviCharacter& chr, DWORD hit_from, WORD damage, WORD skill_id) {
 	ServerPacket sp(SP_PLAYER_HIT);
 	sp.Encode4(1); // 0048693A
 	sp.Encode4(chr.id); // 00486941
@@ -642,7 +664,7 @@ void PlayerHitPacket(TenviCharacter& chr, DWORD hit_from, WORD damage) {
 	sp.Encode2(64); // 0045D865 64: knockback, 32: no knockback, 30: miss 
 	sp.Encode1(0); // 0045D872
 	sp.Encode1(0); // 0045D87F
-	sp.Encode2(0); // 0045D88C
+	sp.Encode2(skill_id); // 0045D88C
 	sp.Encode1(1); // 0045D899
 	SendPacket(sp);
 }
@@ -1136,7 +1158,8 @@ void SpawnObjects(TenviCharacter &chr, WORD map_id) {
 		regen.id = TA.GetObjectID();
 		CreateObjectPacket(regen);
 		ShowObjectPacket(regen, gravity);
-		ActivateObjectPacket(regen);
+		ActivateObjectPacket(regen.id);
+		ObjectStatPacket(regen);
 	}
 }
 
@@ -1221,6 +1244,7 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 void SetMap(TenviCharacter &chr, WORD map_id) {
 	TenviMap* map = tenvi_data.get_map(map_id);
 	TenviSpawnPoint spawn_point = map->FindSpawnPoint(0);
+	detect_queue = std::queue<std::pair<unsigned long int, DWORD>>();
 	ChangeMap(chr, map_id, spawn_point.x, spawn_point.y);
 }
 
@@ -1401,11 +1425,24 @@ void CheckShip() {
 
 }
 
+void CheckDetect() {
+	if (detect_queue.empty()) {
+		return;
+	}
+	std::pair<unsigned long int, DWORD> mob = detect_queue.front();
+	if (clock() - mob.first > 1000) {
+		ActivateObjectPacket(mob.second, 4);
+		detect_queue.pop();
+	}
+}
+
+
 // ========== TENVI Server Main ==========
 bool FakeServer(ClientPacket &cp) {
 	CLIENT_PACKET header = cp.DecodeHeader();
 	//srand((unsigned int)time(NULL));
 	//CheckShip();
+	CheckDetect();
 
 	switch (header) {
 	// Select Character
@@ -1738,13 +1775,14 @@ bool FakeServer(ClientPacket &cp) {
 
 		if (chr.id != hit_to) {
 			HitPacket(hit_from, hit_to, skill_id);
+//			ActivateObjectPacket(hit_to, 5);
 //			RemoveObjectPacket(hit_to);
 			return true;
 		}
 
 		if (hit_to == chr.id) {
 			WORD damage = 100;
-			PlayerHitPacket(chr, hit_from, damage);
+			PlayerHitPacket(chr, hit_from, damage, skill_id);
 			chr.SetHP((chr.HP <= damage) ? 0 : chr.HP - damage);
 			PlayerStatPacket(chr);
 			if (chr.HP == 0) {
@@ -1838,6 +1876,12 @@ bool FakeServer(ClientPacket &cp) {
 	}
 	case CP_CHANGE_CHANNEL: {
 		BYTE channel = cp.Decode1();
+		return true;
+	}
+	case CP_MOB_DETECT: {
+		DWORD mobID = cp.Decode4();
+		detect_queue.push({ clock(), mobID });
+		ActivateObjectPacket(mobID, 2);
 		return true;
 	}
 	case CP_NPC_TALK: {
@@ -2046,7 +2090,7 @@ bool FakeServer(ClientPacket &cp) {
 				regen.object.id = npc_id;
 				CreateObjectPacket(regen);
 				ShowObjectPacket(regen);
-				ActivateObjectPacket(regen);
+				ActivateObjectPacket(regen.id);
 			}
 			else if (_wcsicmp(message.c_str(), L"@event") == 0) {
 				EventAlarm(2);
