@@ -116,11 +116,17 @@ void __fastcall WorldSelectButton_Hook(void *ecx) {
 	CharacterListPacket_Test();
 }
 
-bool(__thiscall* _ConnectCaller)(void* ecx, void* v1, void* v2, void* v3) = NULL; 
-bool __fastcall ConnectCaller_Hook(void *ecx, void *edx, void *v1, void *v2, void *v3) {
+bool(__thiscall* _ConnectCaller)(void* ecx, void* v1, int v2, int v3) = NULL; 
+bool __fastcall ConnectCaller_Hook(void *ecx, void *edx, void *v1, int v2, int v3) {
 	DEBUG(L"Connect is called!");
 	// ignore connect checks
 	return true;
+}
+
+int (__thiscall* _GetChannel)(void* ecx, int a1) = NULL;
+int __fastcall GetChannel_Hook(void* ecx, void* edx, int channel) {
+	tenvi_data.set_channel(channel);
+	return _GetChannel(ecx, channel);
 }
 
 
@@ -204,7 +210,7 @@ bool AutoResponseHook() {
 		Addr_OnPacket2 = 0x004BB0A5;
 
 		// portal id to map id
-		r.Patch(0x0041048F + 0x02, L"18");
+		// r.Patch(0x0041048F + 0x02, L"18");
 		return true;
 	}
 	case TENVI_KRX: {
@@ -236,6 +242,7 @@ bool AutoResponseHook() {
 		SHookFunction(ConnectCaller, 0x00566AB8);
 		SHookFunction(ProcessPacketCaller, 0x00566EF8);
 		SHookFunction(AddChatMsg, 0x004ADB72);
+		SHookFunction(GetChannel, 0x00473709);
 		Addr_OnPacketClass2 = 0x0073178C;
 		Addr_OnPacket2 = 0x004B202F;
 

@@ -211,3 +211,10 @@ std::string TenviData::get_xml_path() {
 std::string TenviData::get_region_str() {
 	return region_str;
 }
+
+void TenviData::set_channel(BYTE nChannel) {
+	channel = nChannel;
+}
+BYTE TenviData::get_channel() {
+	return channel;
+}

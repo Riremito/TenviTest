@@ -33,6 +33,7 @@ private:
 	std::vector<TenviMap*> data_map;
 	std::string xml_path;
 	std::string region_str;
+	BYTE channel;
 
 public:
 	std::map<WORD, std::vector<Weather>> data_weather;
@@ -41,7 +42,10 @@ public:
 	bool parse_weather();
 	std::string get_xml_path();
 	std::string get_region_str();
+	void set_channel(BYTE nChannel);
+	BYTE get_channel();
 };
+
 
 std::pair<std::string, DWORD> parse_action(DWORD dialog, DWORD action_id);
 std::pair<int, std::vector<ShopItem>> parse_shop(WORD obj_id);

@@ -627,7 +627,7 @@ void AccountDataPacket(TenviCharacter &chr) {
 		sp.Encode1(0);
 		*/
 	}
-	sp.Encode1(0); // 00499101, ???
+	sp.Encode1(tenvi_data.get_channel()); // 00499101, channel
 	sp.Encode4(0); // 00499117
 	sp.Encode1(0); // 00499124
 	sp.Encode1(0); // 00499134, Married?
@@ -1536,7 +1536,12 @@ bool FakeServer(ClientPacket &cp) {
 		TenviCharacter& chr = TA.GetOnline();
 		float x = cp.DecodeFloat();
 		chr.y = cp.DecodeFloat();
-		chr.direction = (chr.x < x) ? 1 : 0;
+		if (chr.x < x && chr.x != 0) {
+			chr.direction = 1;
+		}
+		else if (chr.x > x && chr.x != 0) {
+			chr.direction = 0;
+		}
 		chr.x = x;
 		cp.Decode1();
 		chr.fly = (cp.Decode1() ? 10 : 0);
@@ -1875,7 +1880,11 @@ bool FakeServer(ClientPacket &cp) {
 		return true;
 	}
 	case CP_CHANGE_CHANNEL: {
+		TenviCharacter& chr = TA.GetOnline();
 		BYTE channel = cp.Decode1();
+		tenvi_data.set_channel(channel);
+		AccountDataPacket(chr);
+		SetMap(chr, chr.map); // has no meaning
 		return true;
 	}
 	case CP_MOB_DETECT: {
