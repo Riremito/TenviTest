@@ -300,12 +300,23 @@ void CharacterSpawnPacket(TenviCharacter &chr, float x = 0, float y = 0) {
 	sp.Encode1(0); // 0057B52F
 	sp.Encode1(0); // 0057B53C
 	sp.Encode1(0); // 0057B549
-	sp.Encode1(0); // 0048DE7F
-	sp.Encode1(0); // 0048DE8C
-	sp.Encode1(0); // 0048DE9F
-	sp.Encode1(0); // 0048DEAC
-	sp.Encode1(0); // 0048DEB9
-	sp.Encode1(0); // 0048E4F3
+
+	sp.Encode1(0); // 0048DE7F guardian star?
+	sp.Encode1(0); // 0048DE8C ?
+	sp.Encode1(0); // 0048DE9F hp ap display?
+	sp.Encode1(0); // 0048DEAC ?
+	sp.Encode1(0); // 0048DEB9 buy sell on
+
+	sp.Encode1(size(chr.buff)); // 0048E4F3 buff quantity
+	for (auto& buff : chr.buff) {
+		sp.Encode4(buff.first.buff_no); // buff_no
+		sp.Encode2(buff.first.skill_id); // skill id
+		sp.Encode1(buff.first.level); // level
+		sp.Encode4(buff.first.duration - clock() + buff.second); // duration
+		sp.Encode4(0); // ?
+		sp.Encode1(1); // buff stack
+	}
+
 	sp.Encode4(0); // 0048E513
 	sp.Encode1(0); // 0048E51D
 	sp.Encode1(0); // 0048E5F9
