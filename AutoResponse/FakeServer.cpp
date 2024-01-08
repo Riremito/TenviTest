@@ -1476,6 +1476,7 @@ void CheckBuff() {
 	for (auto it = chr.buff.begin(); it != chr.buff.end(); it++) {
 		if (clock() - it->second > it->first.duration) {
 			CancelBuffPacket(chr.id, it->first.buff_no);
+			buff_no_free(it->first.buff_no);
 			chr.buff.erase(it);
 			break;
 		}
@@ -1486,6 +1487,7 @@ void CheckBuff() {
 			writeDebugLog(std::to_string(clock()) + ", " + std::to_string(it->second) + ", " + std::to_string(it->first.duration));
 			if (clock() - it->second > it->first.duration) {
 				CancelBuffPacket(_mob.first, it->first.buff_no);
+				buff_no_free(it->first.buff_no);
 				mob.buff.erase(it);
 				break;
 			}
@@ -1507,6 +1509,7 @@ bool FakeServer(ClientPacket &cp) {
 		BYTE channel = cp.Decode1();
 
 		TA.Login(character_id);
+		init_buff_queue();
 		tenvi_data.parse_weather();
 
 		for (auto &chr : TA.GetCharacters()) {
@@ -1844,12 +1847,12 @@ bool FakeServer(ClientPacket &cp) {
 		if (hit_to != chr.id) {
 			// mob이 맞은 경우
 			if (skill.isBuff) {
-				skill.buff_no = TA.GetObjectID();
 				std::vector<std::pair<SkillInfo, unsigned long int>>& buff = mob_manager.GetMob(hit_to).buff;
 				for (auto it = buff.begin(); it != buff.end(); it++) {
 					if (it->first.skill_id == skill.skill_id) {
 						// 이미 가진 버프는 제거
 						CancelBuffPacket(hit_to, it->first.buff_no);
+						buff_no_free(it->first.buff_no);
 						buff.erase(it);
 						break;
 					}
@@ -1871,11 +1874,11 @@ bool FakeServer(ClientPacket &cp) {
 
 		if (hit_to == chr.id) {
 			if (skill.isBuff) {
-				skill.buff_no = TA.GetObjectID();
 				for (auto it = chr.buff.begin(); it != chr.buff.end(); it++) {
 					if (it->first.skill_id == skill.skill_id) {
 						// 이미 가진 버프는 제거
 						CancelBuffPacket(chr.id, it->first.buff_no);
+						buff_no_free(it->first.buff_no);
 						chr.buff.erase(it);
 						break;
 					}
@@ -1910,7 +1913,6 @@ bool FakeServer(ClientPacket &cp) {
 		if (skill.duration < 2000) {
 			skill.duration = 2000;
 		}
-		skill.buff_no = TA.GetObjectID();
 
 		std::vector<std::pair<SkillInfo, unsigned long int>>& buff = ((hit_to == chr.id) ? chr.buff : mob_manager.GetMob(hit_to).buff);
 		for (auto it = buff.begin(); it != buff.end(); it++) {

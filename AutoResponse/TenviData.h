@@ -4,6 +4,7 @@
 #include"TenviMap.h"
 #include<map>
 #include<vector>
+#include<queue>
 
 typedef struct {
 	BYTE type;
@@ -50,6 +51,7 @@ private:
 
 public:
 	std::map<WORD, std::vector<Weather>> data_weather;
+	static std::priority_queue<DWORD> buff_no_queue;
 	TenviMap* get_map(DWORD id);
 	void set_xml_path(std::wstring path);
 	bool parse_weather();
@@ -64,6 +66,8 @@ std::pair<std::string, DWORD> parse_action(DWORD dialog, DWORD action_id);
 std::pair<int, std::vector<ShopItem>> parse_shop(WORD obj_id);
 std::vector<BoardInfo> parse_board(WORD map_id);
 SkillInfo parse_skill_info(WORD skill_id, WORD level);
+void init_buff_queue();
+void buff_no_free(DWORD buff_no);
 void writeDebugLog(std::string str);
 std::wstring StrToWstr(const std::string& var);
 std::string WstrToStr(const std::wstring& wstr);

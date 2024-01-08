@@ -6,6 +6,7 @@
 #include<codecvt>
 #include<fstream>
 #include<algorithm>
+#include<queue>
 
 TenviData tenvi_data; // global
 
@@ -220,17 +221,23 @@ BYTE TenviData::get_channel() {
 	return channel;
 }
 
+std::priority_queue<DWORD> TenviData::buff_no_queue;
+
+void init_buff_queue() {
+	TenviData::buff_no_queue = std::priority_queue<DWORD>();
+	for (int i = 0; i < 3000; i++) {
+		TenviData::buff_no_queue.push(i);
+	}
+}
+
+void buff_no_free(DWORD buff_no) {
+	TenviData::buff_no_queue.push(buff_no);
+}
+
 SkillInfo parse_skill_info(WORD skill_id, WORD level) {
 	SkillInfo skill = {};
-	//typedef struct {
-	//	WORD skill_id; (completed)
-	//	WORD level; (completed)
-	//	BYTE isHostile;  (completed)
-	//	BYTE isBuff; (completed)
-	//	DWORD mpCon; (completed)
-	//	DWORD rate;
-	//	DWORD duration; (completed)
-	//} SkillInfo;
+	skill.buff_no = TenviData::buff_no_queue.top();
+	TenviData::buff_no_queue.pop();
 	skill.skill_id = skill_id;
 	skill.level = level;
 	skill.rate = 200;
