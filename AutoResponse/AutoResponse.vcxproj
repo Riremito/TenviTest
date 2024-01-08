@@ -163,6 +163,7 @@
     <ClCompile Include="KRX_v107_CP.cpp" />
     <ClCompile Include="KR_v200_CP.cpp" />
     <ClCompile Include="KR_v200_SP.cpp" />
+    <ClCompile Include="MobManager.cpp" />
     <ClCompile Include="ServerPacket.cpp" />
     <ClCompile Include="CN_v126_SP.cpp" />
     <ClCompile Include="HK_v102_SP.cpp" />
@@ -179,6 +180,7 @@
     <ClInclude Include="Base64.h" />
     <ClInclude Include="ClientPacket.h" />
     <ClInclude Include="FakeServer.h" />
+    <ClInclude Include="MobManager.h" />
     <ClInclude Include="rapidxml\rapidxml.hpp" />
     <ClInclude Include="rapidxml\rapidxml_iterators.hpp" />
     <ClInclude Include="rapidxml\rapidxml_print.hpp" />

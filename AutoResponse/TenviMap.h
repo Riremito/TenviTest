@@ -42,6 +42,7 @@ typedef struct {
 	TenviArea area;
 	TenviObject object;
 	BYTE friendship;
+	DWORD vit;
 } TenviRegen;
 
 class TenviMap {

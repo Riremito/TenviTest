@@ -597,8 +597,12 @@ std::vector<TenviSkill> TenviAccount::GetAwakening(BYTE job, WORD awakening) {
 }
 
 // init
+DWORD TenviAccount::objectCounter = 1;
+
 TenviAccount::TenviAccount() {
 	unsigned int timeout_sec = 1;
+	objectCounter = 1;
+
 	conn = mysql_init(NULL);
 	mysql_options(conn, MYSQL_OPT_CONNECT_TIMEOUT, &timeout_sec);
 	try {

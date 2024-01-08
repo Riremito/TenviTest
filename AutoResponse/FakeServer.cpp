@@ -2,6 +2,7 @@
 #include"AutoResponse.h"
 #include"Database.h"
 #include"TenviItem.h"
+#include"MobManager.h"
 #include<map>
 #include<set>
 #include<ctime>
@@ -12,7 +13,6 @@
 TenviAccount TA;
 // ========== TENVI Packet Response ==========s
 #define TENVI_VERSION 0x1023
-std::queue<std::pair<unsigned long int, DWORD>> detect_queue;
 
 // 0x01
 void VersionPacket() {
@@ -355,10 +355,10 @@ void DeathPacket(TenviCharacter& chr) {
 }
 
 // 0x14
-void CreateObjectPacket(TenviRegen &regen) {
+void CreateObjectPacket(Mob mob) {
 	ServerPacket sp(SP_CREATE_OBJECT);
-	sp.Encode4(regen.id);
-	sp.Encode2(regen.object.id); // npc, mob id
+	sp.Encode4(mob.regen.id);
+	sp.Encode2(mob.regen.object.id); // npc, mob id
 	sp.Encode1(0);
 
 	if (GetRegion() == TENVI_KRX) {
@@ -366,18 +366,18 @@ void CreateObjectPacket(TenviRegen &regen) {
 	}
 
 	sp.Encode4(0);
-	sp.Encode1(regen.flip); // face right
+	sp.Encode1(mob.regen.flip); // face right
 	sp.Encode1(0); // fade in
 	sp.Encode4(0);
 	sp.Encode1(1); //show, if coordinate is far from your character, the object will be invisible
 	sp.Encode2(0);
-	sp.EncodeFloat(regen.area.left);
-	sp.EncodeFloat(regen.area.bottom);
+	sp.EncodeFloat(mob.regen.area.left);
+	sp.EncodeFloat(mob.regen.area.bottom);
 	sp.Encode2(0);
-	sp.EncodeFloat(regen.area.left);
-	sp.EncodeFloat(regen.area.top);
-	sp.EncodeFloat(regen.area.right);
-	sp.EncodeFloat(regen.area.bottom);
+	sp.EncodeFloat(mob.regen.area.left);
+	sp.EncodeFloat(mob.regen.area.top);
+	sp.EncodeFloat(mob.regen.area.right);
+	sp.EncodeFloat(mob.regen.area.bottom);
 	sp.Encode1(0);
 	sp.Encode1(0);
 
@@ -413,23 +413,23 @@ void ChatPacket(std::wstring msg) {
 }
 
 // 0x20
-void ActivateObjectPacket(DWORD regen_id, BYTE state=3) {
+void ActivateObjectPacket(DWORD mobID, BYTE state = 3) {
 	ServerPacket sp(SP_ACTIVATE_OBJECT);
-	sp.Encode4(regen_id);
+	sp.Encode4(mobID);
 	sp.Encode1(state); // 1 = fade in, 2 = !, 3 = walk, 4 = dash, 5 = death?
 	SendPacket(sp);
 }
 
 // 0x21
-void HitPacket(DWORD hit_from, DWORD hit_to, DWORD skill_id) {
+void HitPacket(DWORD hit_from, DWORD hit_to, DWORD skill_id, DWORD damage) {
 	ServerPacket sp(SP_HIT);
 	sp.Encode4(hit_from); // 004867C1
 	sp.Encode4(hit_to); // 004867C8
 	sp.Encode1(0); // 00470977, Knock back
 	sp.Encode4(hit_from); // 00470984
-	sp.Encode2(0); // 0047098E skill id?
+	sp.Encode2(skill_id); // 0047098E skill id?
 	sp.Encode1(1); // 0047099B, hit count
-	sp.Encode4(1); // 004709AC, damage
+	sp.Encode4(damage); // 004709AC, damage
 	sp.Encode1(0); // 004709C1
 	sp.Encode1(0); // 004709CE
 	sp.Encode1(0); // 004709DB
@@ -439,33 +439,33 @@ void HitPacket(DWORD hit_from, DWORD hit_to, DWORD skill_id) {
 }
 
 // 0x23
-void ShowObjectPacket(TenviRegen &regen, BYTE gravity=1) {
+void ShowObjectPacket(Mob mob, BYTE gravity=1) {
 	ServerPacket sp(SP_SHOW_OBJECT);
-	sp.Encode4(regen.id);
+	sp.Encode4(mob.regen.id);
 	sp.Encode1(gravity);
 	sp.Encode1(1);
 	sp.Encode2(0);
-	sp.EncodeFloat(regen.area.left);
-	sp.EncodeFloat(regen.area.bottom);
+	sp.EncodeFloat(mob.regen.area.left);
+	sp.EncodeFloat(mob.regen.area.bottom);
 	SendPacket(sp);
 }
 
 // 0x24
-void ObjectStatPacket(TenviRegen &regen) {
+void ObjectStatPacket(Mob mob) {
 	ServerPacket sp(SP_OBJECT_STAT);
-	sp.Encode4(regen.id);
-	sp.Encode4(3000); // hp
+	sp.Encode4(mob.regen.id);
+	sp.Encode4(mob.HP); // hp
 	sp.Encode2(3000); // mp
-	sp.Encode4(4000); // max hp
+	sp.Encode4(mob.regen.vit); // max hp
 	sp.Encode2(4000); // max mp
 	sp.Encode2(100); // def
 	sp.Encode2(100); // str
 	sp.Encode2(100); // vit
-	sp.Encode4(100); // ggi
+	sp.Encode4(100); // agi
 	sp.Encode2(100); // int
 	sp.Encode2(100); // wis
 	sp.Encode2(100); // dor
-	sp.Encode2(100); // wsp
+	sp.Encode2(100); // wsp speed
 	sp.Encode2(100); // fsp
 	SendPacket(sp);
 }
@@ -484,6 +484,28 @@ void NPC_TalkPacket(DWORD npc_id, DWORD dialog, BYTE isDelay=1) {
 		SendPacket(sp);
 	}
 }
+
+// 0x2C
+void ApplyBuffPacket(DWORD id, SkillInfo skill) {
+	ServerPacket sp(SP_APPLY_BUFF); // 0046FBEE
+	sp.Encode4(id); // 00464F37
+	sp.Encode4(skill.buff_no); // 0045D816
+	sp.Encode2(skill.skill_id); // 0045D820
+	sp.Encode1(skill.level); // 0045D82D
+	sp.Encode4(skill.duration); // 0045D83A
+	sp.Encode4(0); // 0045D844
+	sp.Encode1(0); // 0045D84E
+	SendPacket(sp);
+}
+
+// 0x2D
+void CancelBuffPacket(DWORD id, DWORD buff_no) {
+	ServerPacket sp(SP_CANCEL_BUFF);
+	sp.Encode4(id);
+	sp.Encode4(buff_no);
+	SendPacket(sp);
+}
+
 
 // 0x2F
 void EquipItem(Item item) {
@@ -658,14 +680,14 @@ void PlayerHitPacket(TenviCharacter& chr, DWORD hit_from, WORD damage, WORD skil
 	sp.Encode4(1); // 0048693A
 	sp.Encode4(chr.id); // 00486941
 	sp.Encode4(hit_from); // 0045D825,
-	sp.Encode2(0); // 0045D82F, skill id, 0: body attack
+	sp.Encode2(skill_id); // 0045D82F, skill id, 0: body attack
 	sp.Encode1(1); // 0045D83C, hit count
 	sp.Encode2(damage); // 0045D84D, damage
 	sp.Encode2(64); // 0045D865 64: knockback, 32: no knockback, 30: miss 
 	sp.Encode1(0); // 0045D872
 	sp.Encode1(0); // 0045D87F
 	sp.Encode2(skill_id); // 0045D88C
-	sp.Encode1(1); // 0045D899
+	sp.Encode1(0); // 0045D899
 	SendPacket(sp);
 }
 
@@ -1148,18 +1170,16 @@ void EventCounter(DWORD time) {
 }
 
 // ========== Functions ==================
-
+MobManager mob_manager;
 void SpawnObjects(TenviCharacter &chr, WORD map_id) {
-	BYTE gravity = 1;
-	std::set<DWORD> nonGravityNPC = {};
 	for (auto &regen : tenvi_data.get_map(map_id)->GetRegen()) {
-		gravity = nonGravityNPC.count(regen.object.id) ? 0 : 1;
 		regen.area = { regen.area.left, 0, 0, regen.area.bottom };
-		regen.id = TA.GetObjectID();
-		CreateObjectPacket(regen);
-		ShowObjectPacket(regen, gravity);
-		ActivateObjectPacket(regen.id);
-		ObjectStatPacket(regen);
+		regen.id = TenviAccount::GetObjectID();
+		Mob mob = mob_manager.AddMob(regen);
+		CreateObjectPacket(mob);
+		ShowObjectPacket(mob, 1);
+		ActivateObjectPacket(mob.regen.id);
+		ObjectStatPacket(mob);
 	}
 }
 
@@ -1232,7 +1252,7 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 	}
 	}
 	chr.SetMap(map_id);
-	TA.ClearObjectID();
+	mob_manager.ClearMobs();
 	SpawnObjects(chr, map_id);
 	CharacterSpawnPacket(chr, x, y);
 	HaveTitle(chr, chr.titles);
@@ -1244,7 +1264,6 @@ void ChangeMap(TenviCharacter &chr, WORD map_id, float x, float y) {
 void SetMap(TenviCharacter &chr, WORD map_id) {
 	TenviMap* map = tenvi_data.get_map(map_id);
 	TenviSpawnPoint spawn_point = map->FindSpawnPoint(0);
-	detect_queue = std::queue<std::pair<unsigned long int, DWORD>>();
 	ChangeMap(chr, map_id, spawn_point.x, spawn_point.y);
 }
 
@@ -1425,14 +1444,41 @@ void CheckShip() {
 
 }
 
-void CheckDetect() {
-	if (detect_queue.empty()) {
-		return;
+void CheckMob() {
+	Mob runner = mob_manager.Runner();
+	if (runner.regen.id) {
+		ActivateObjectPacket(runner.regen.id, 4);
 	}
-	std::pair<unsigned long int, DWORD> mob = detect_queue.front();
-	if (clock() - mob.first > 1000) {
-		ActivateObjectPacket(mob.second, 4);
-		detect_queue.pop();
+
+	Mob respawn = mob_manager.Respawn();
+	if (respawn.regen.id) {
+		CreateObjectPacket(respawn);
+		ShowObjectPacket(respawn, 1);
+		ActivateObjectPacket(respawn.regen.id, 1);
+		ActivateObjectPacket(respawn.regen.id, 3);
+		ObjectStatPacket(respawn);
+	}
+}
+
+void CheckBuff() {
+	TenviCharacter& chr = TA.GetOnline();
+	for (auto it = chr.buff.begin(); it != chr.buff.end(); it++) {
+		if (clock() - it->second > it->first.duration) {
+			CancelBuffPacket(chr.id, it->first.buff_no);
+			chr.buff.erase(it);
+			break;
+		}
+	}
+	for (auto& _mob : mob_manager.mobs) {
+		Mob& mob = mob_manager.GetMob(_mob.first);
+		for (auto it = mob.buff.begin(); it != mob.buff.end(); it++) {
+			writeDebugLog(std::to_string(clock()) + ", " + std::to_string(it->second) + ", " + std::to_string(it->first.duration));
+			if (clock() - it->second > it->first.duration) {
+				CancelBuffPacket(_mob.first, it->first.buff_no);
+				mob.buff.erase(it);
+				break;
+			}
+		}
 	}
 }
 
@@ -1442,7 +1488,6 @@ bool FakeServer(ClientPacket &cp) {
 	CLIENT_PACKET header = cp.DecodeHeader();
 	//srand((unsigned int)time(NULL));
 	//CheckShip();
-	CheckDetect();
 
 	switch (header) {
 	// Select Character
@@ -1545,6 +1590,9 @@ bool FakeServer(ClientPacket &cp) {
 		chr.x = x;
 		cp.Decode1();
 		chr.fly = (cp.Decode1() ? 10 : 0);
+
+		CheckMob();
+		CheckBuff();
 		return true;
 	}
 	case CP_USE_AP: {
@@ -1773,20 +1821,58 @@ bool FakeServer(ClientPacket &cp) {
 		DWORD hit_from = cp.Decode4();
 		DWORD hit_to = cp.Decode4();
 		WORD skill_id = cp.Decode2();
+		WORD level = cp.Decode1();
 
-		if (hit_from > 0xFF && hit_to == chr.id) {
+		SkillInfo skill = parse_skill_info(skill_id, level);
+
+		if (hit_from > 0xFF && hit_from != hit_to && hit_to == chr.id) {
+			// 자동 회복??
 			return true;
 		}
 
-		if (chr.id != hit_to) {
-			HitPacket(hit_from, hit_to, skill_id);
-//			ActivateObjectPacket(hit_to, 5);
-//			RemoveObjectPacket(hit_to);
+		if (hit_to != chr.id) {
+			// mob이 맞은 경우
+			if (skill.isBuff) {
+				skill.buff_no = TA.GetObjectID();
+				std::vector<std::pair<SkillInfo, unsigned long int>>& buff = mob_manager.GetMob(hit_to).buff;
+				for (auto it = buff.begin(); it != buff.end(); it++) {
+					if (it->first.skill_id == skill.skill_id) {
+						// 이미 가진 버프는 제거
+						CancelBuffPacket(hit_to, it->first.buff_no);
+						buff.erase(it);
+						break;
+					}
+				}
+				mob_manager.GetMob(hit_to).buff.push_back({ skill, clock() });
+				ApplyBuffPacket(hit_to, skill);
+			}
+			WORD damage = (skill.isHostile ? skill.maxDamage : 0);
+			HitPacket(hit_from, hit_to, skill_id, damage);
+			bool isDead = mob_manager.Damage(hit_to, damage);
+			ActivateObjectPacket(hit_to, 4);
+			ObjectStatPacket(mob_manager.GetMob(hit_to));
+			if (isDead) {
+				ActivateObjectPacket(hit_to, 5);
+				RemoveObjectPacket(hit_to);
+			}
 			return true;
 		}
 
 		if (hit_to == chr.id) {
-			WORD damage = 100;
+			if (skill.isBuff) {
+				skill.buff_no = TA.GetObjectID();
+				for (auto it = chr.buff.begin(); it != chr.buff.end(); it++) {
+					if (it->first.skill_id == skill.skill_id) {
+						// 이미 가진 버프는 제거
+						CancelBuffPacket(chr.id, it->first.buff_no);
+						chr.buff.erase(it);
+						break;
+					}
+				}
+				chr.buff.push_back({ skill, clock() });
+				ApplyBuffPacket(chr.id, skill);
+			}
+			WORD damage = (skill.isHostile ? skill.maxDamage : 0);
 			PlayerHitPacket(chr, hit_from, damage, skill_id);
 			chr.SetHP((chr.HP <= damage) ? 0 : chr.HP - damage);
 			PlayerStatPacket(chr);
@@ -1797,6 +1883,36 @@ bool FakeServer(ClientPacket &cp) {
 			return true;
 		}
 
+		return true;
+	}
+	case CP_APPLY_DOT: { // not sure
+		TenviCharacter& chr = TA.GetOnline();
+
+		DWORD hit_from = cp.Decode4();
+		cp.Decode4();
+		WORD skill_id = cp.Decode2();
+		BYTE level = cp.Decode1();
+		cp.Decode8();
+		DWORD hit_to = cp.Decode4();
+
+		SkillInfo skill = parse_skill_info(skill_id, level);
+		if (skill.duration < 2000) {
+			skill.duration = 2000;
+		}
+		skill.buff_no = TA.GetObjectID();
+
+		std::vector<std::pair<SkillInfo, unsigned long int>>& buff = ((hit_to == chr.id) ? chr.buff : mob_manager.GetMob(hit_to).buff);
+		for (auto it = buff.begin(); it != buff.end(); it++) {
+			if (it->first.skill_id == skill.skill_id) {
+				// 이미 가진 버프는 제거
+				CancelBuffPacket(hit_to, it->first.buff_no);
+				buff.erase(it);
+				break;
+			}
+		}
+		buff.push_back({ skill, clock() });
+
+		ApplyBuffPacket(hit_to, skill);
 		return true;
 	}
 	case CP_USE_SP: {
@@ -1818,6 +1934,7 @@ bool FakeServer(ClientPacket &cp) {
 		cp.Decode4(); // chr.id
 		DWORD type = cp.Decode2();
 		BYTE level = cp.Decode1();
+
 		switch (type) {
 		case 0xF638: {
 			// 천리경
@@ -1889,7 +2006,7 @@ bool FakeServer(ClientPacket &cp) {
 	}
 	case CP_MOB_DETECT: {
 		DWORD mobID = cp.Decode4();
-		detect_queue.push({ clock(), mobID });
+		mob_manager.Detect(mobID);
 		ActivateObjectPacket(mobID, 2);
 		return true;
 	}
@@ -2091,15 +2208,15 @@ bool FakeServer(ClientPacket &cp) {
 				SetMap(TA.GetOnline(), map_id);
 			}
 			else if (_wcsnicmp(message.c_str(), L"@mob ", 5) == 0) {
-				int npc_id = _wtoi(&message.c_str()[5]);
-				TenviRegen regen = {};
-				regen.area.left = chr.x;
-				regen.area.bottom = chr.y;
-				regen.id = 0xFFF0;
-				regen.object.id = npc_id;
-				CreateObjectPacket(regen);
-				ShowObjectPacket(regen);
-				ActivateObjectPacket(regen.id);
+				//int npc_id = _wtoi(&message.c_str()[5]);
+				//TenviRegen regen = {};
+				//regen.area.left = chr.x;
+				//regen.area.bottom = chr.y;
+				//regen.id = 0xFFF0;
+				//regen.object.id = npc_id;
+				//CreateObjectPacket(regen);
+				//ShowObjectPacket(regen);
+				//ActivateObjectPacket(regen.id);
 			}
 			else if (_wcsicmp(message.c_str(), L"@event") == 0) {
 				EventAlarm(2);

@@ -176,6 +176,17 @@ bool TenviMap::LoadNPCDialog() {
 					break;
 				}
 			}
+			bool noVit = true;
+			for (rapidxml::xml_node<>* child = root->first_node()->first_node()->first_node(); child; child = child->next_sibling()) {
+				if (strcmp("vit", child->name()) == 0) {
+					regen.vit = atoi(child->first_attribute("value")->value());
+					noVit = false;
+					break;
+				}
+			}
+			if (noVit) {
+				regen.vit = 8000;
+			}
 			continue;
 
 		}

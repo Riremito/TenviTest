@@ -32,6 +32,7 @@ void SetClientPacketHeader_KR_v200() {
 	header[CP_END_CAST] = 0x45;
 	header[CP_USE_SP] = 0x46;
 	header[CP_START_CAST] = 0x47;
+	header[CP_APPLY_DOT] = 0x48;
 	header[CP_USE_PORTAL] = 0x4F;
 	header[CP_PLAYER_REVIVE] = 0x50;
 	header[CP_CHANGE_CHANNEL] = 0x51;

@@ -27,6 +27,19 @@ typedef struct {
 	float y;
 } BoardInfo;
 
+typedef struct {
+	DWORD buff_no;
+	WORD skill_id;
+	WORD level;
+	BYTE isHostile;
+	BYTE isBuff;
+	DWORD mpCon;
+	DWORD rate;
+	DWORD duration;
+	DWORD minDamage;
+	DWORD maxDamage;
+} SkillInfo;
+
 // loaded xml data list
 class TenviData {
 private:
@@ -50,6 +63,7 @@ public:
 std::pair<std::string, DWORD> parse_action(DWORD dialog, DWORD action_id);
 std::pair<int, std::vector<ShopItem>> parse_shop(WORD obj_id);
 std::vector<BoardInfo> parse_board(WORD map_id);
+SkillInfo parse_skill_info(WORD skill_id, WORD level);
 void writeDebugLog(std::string str);
 std::wstring StrToWstr(const std::string& var);
 std::string WstrToStr(const std::wstring& wstr);

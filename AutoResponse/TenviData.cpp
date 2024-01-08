@@ -5,6 +5,7 @@
 #include<locale>
 #include<codecvt>
 #include<fstream>
+#include<algorithm>
 
 TenviData tenvi_data; // global
 
@@ -217,4 +218,110 @@ void TenviData::set_channel(BYTE nChannel) {
 }
 BYTE TenviData::get_channel() {
 	return channel;
+}
+
+SkillInfo parse_skill_info(WORD skill_id, WORD level) {
+	SkillInfo skill = {};
+	//typedef struct {
+	//	WORD skill_id; (completed)
+	//	WORD level; (completed)
+	//	BYTE isHostile;  (completed)
+	//	BYTE isBuff; (completed)
+	//	DWORD mpCon; (completed)
+	//	DWORD rate;
+	//	DWORD duration; (completed)
+	//} SkillInfo;
+	skill.skill_id = skill_id;
+	skill.level = level;
+	skill.rate = 200;
+	skill.isBuff = 0;
+	int temp_dot = 1;
+	bool dotFlag = true;
+
+	std::string str = std::to_string(skill_id);
+	int precision = 5 - (5 < str.size() ? 5 : str.size());
+	std::string skill_str = std::string(precision, '0').append(str);
+
+	std::string filename = tenvi_data.get_xml_path() + +"\\" + tenvi_data.get_region_str() + "\\skill\\" + skill_str + ".xml";
+	rapidxml::xml_document<> doc;
+	try {
+		rapidxml::file<> xmlFile(filename.c_str());
+		doc.parse<0>(xmlFile.data());
+	}
+	catch (...) {
+		return {};
+	}
+
+	rapidxml::xml_node<>* root = doc.first_node();
+	if (!root) {
+		return {};
+	}
+	for (rapidxml::xml_node<>* child = root->first_node(); child; child = child->next_sibling()) {
+		if (strcmp(child->name(), "basic") == 0) {
+			for (rapidxml::xml_node<>* sub = child->first_node(); sub; sub = sub->next_sibling()) {
+				if (strcmp(sub->name(), "hostile") == 0) {
+					skill.isHostile = atoi(sub->first_attribute("value")->value());
+				}
+				else if (strcmp(sub->name(), "normalbuff") == 0) {
+					skill.isBuff = atoi(sub->first_attribute("value")->value());
+				}
+			}
+		}
+		else if (strcmp(child->name(), "levels") == 0) {
+			for (rapidxml::xml_node<>* _level = child->first_node(); _level; _level = _level->next_sibling()) {
+				if (atoi(_level->first_attribute("value")->value()) == level) {
+					for (rapidxml::xml_node<>* sub = _level->first_node(); sub; sub = sub->next_sibling()) {
+						if (strcmp(sub->name(), "mpcon") == 0) {
+							skill.mpCon = atoi(sub->first_attribute("value")->value());
+						}
+						else if (strcmp(sub->name(), "mindamage") == 0) {
+							skill.minDamage = atoi(sub->first_attribute("value")->value());
+						}
+						else if (strcmp(sub->name(), "maxdamage") == 0) {
+							skill.maxDamage = atoi(sub->first_attribute("value")->value());
+						}
+						else if (strcmp(sub->name(), "RemainTick") == 0) {
+							skill.isBuff = 1;
+							skill.duration = atoi(sub->first_attribute("value")->value());
+						}
+						else if (strcmp(sub->name(), "buffinterval") == 0) {
+							skill.isBuff = 1;
+							dotFlag = false;
+							temp_dot *= atoi(sub->first_attribute("value")->value());
+						}
+						else if (strcmp(sub->name(), "DotAttackCount") == 0) {
+							skill.isBuff = 1;
+							temp_dot *= atoi(sub->first_attribute("value")->value());
+						}
+						else if (strcmp(sub->name(), "MazeRate") == 0) {
+							skill.isBuff = 1;
+							skill.rate = atoi(sub->first_attribute("value")->value());
+						}
+						else if (strcmp(sub->name(), "buffsuccessrate") == 0) {
+							skill.isBuff = 1;
+							skill.rate = atoi(sub->first_attribute("value")->value());
+						}
+						else if (strcmp(sub->name(), "DotSuccessRate") == 0) {
+							skill.isBuff = 1;
+							skill.rate = atoi(sub->first_attribute("value")->value());
+						}
+					}
+					break;
+				}
+			}
+		}
+	}
+	if (temp_dot > 1) {
+		if (dotFlag) {
+			temp_dot *= 2000;
+		}
+		skill.duration = temp_dot;
+	}
+	if (skill.rate != 200) {
+		srand((unsigned int)time(NULL));
+		if ((rand() % 100) + 1 > skill.rate) {
+			skill.isBuff = 0;
+		}
+	}
+	return skill;
 }

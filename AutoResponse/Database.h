@@ -3,6 +3,7 @@
 
 #include<Windows.h>
 #include <mysql.h>
+#include"TenviData.h"
 #include<string>
 #include<vector>
 #include<map>
@@ -87,6 +88,8 @@ public:
 	BYTE direction;
 	DWORD money;
 
+	std::vector<std::pair<SkillInfo, unsigned long int>> buff;
+
 	// data
 	float x;
 	float y;
@@ -136,7 +139,7 @@ class TenviAccount {
 private:
 	std::vector<TenviCharacter> characters;
 	DWORD online_id;
-	DWORD objectCounter;
+	static DWORD objectCounter;
 
 public:
 	BYTE slot;
@@ -147,8 +150,8 @@ public:
 	std::vector<TenviCharacter>& GetCharacters();
 	bool AddCharacter(std::wstring nName, BYTE nJob_Mask, WORD nJob, WORD nSkin, WORD nHair, WORD nFace, WORD nCloth, WORD nGColor, WORD gHead, WORD gBody, WORD gWeapon);
 	static Item MakeItem(TenviCharacter& chr, WORD itemID, WORD number=1);
-	DWORD GetObjectID();
-	void ClearObjectID();
+	static DWORD GetObjectID();
+	static void ClearObjectID();
 	bool Login(DWORD id);
 	TenviCharacter& GetOnline();
 	static DWORD GetHighestInventoryID();
